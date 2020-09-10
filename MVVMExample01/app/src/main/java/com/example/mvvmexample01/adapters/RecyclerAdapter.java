@@ -37,7 +37,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
     @Override
     public RecyclerAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.list_item, parent);
+                .inflate(R.layout.list_item, parent, false);
         return new MyViewHolder(view);
     }
 
@@ -47,9 +47,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
         TextView txtName = myViewHolder.itemView.findViewById(R.id.txtName);
         Place place = places.get(position);
         txtName.setText(place.getName());
+        String x = place.getImageUrl();
         Glide.with(context)
                 .setDefaultRequestOptions(new RequestOptions().error(R.drawable.ic_launcher_background))
-                .load( place.getImageUrl())
+                .load(place.getImageUrl())
                 .centerCrop()
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .into(imageView);

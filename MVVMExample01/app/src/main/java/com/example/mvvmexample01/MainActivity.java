@@ -29,17 +29,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        recyclerAdapter = new RecyclerAdapter(this,
-            mainActivityViewModel.getPlaces().getValue());
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(recyclerAdapter);
+        setupUI();
         mainActivityViewModel = (new ViewModelProvider(this)).get(MainActivityViewModel.class);
+        mainActivityViewModel.init();
         mainActivityViewModel.getPlaces().observe(this, new Observer<List<Place>>() {
             @Override
             public void onChanged(List<Place> places) {
                 recyclerAdapter.notifyDataSetChanged();
             }
         });
+        recyclerAdapter = new RecyclerAdapter(this,
+                mainActivityViewModel.getPlaces().getValue());
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(recyclerAdapter);
+    }
+    public void setupUI() {
+        floatingActionButton = findViewById(R.id.floatingActionButton);
+        recyclerView = findViewById(R.id.recyclerView);
+        progressBar = findViewById(R.id.progressBar);
     }
     private void showProgressBar(){
         progressBar.setVisibility(View.VISIBLE);
