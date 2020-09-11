@@ -22,12 +22,14 @@ public class PlaceController {
     @PostMapping(path="/add") // Map ONLY POST Requests
     public @ResponseBody String addNewUser (@RequestParam String name
             , @RequestParam String imageUrl) {
-        Place place = new Place();
-        place.setName(name);
-        place.setImageUrl(imageUrl);
+        Place place = new Place(name, imageUrl);
         placeRepository.save(place);
         return "Saved";
     }
-    
+    @GetMapping(path="/all")
+    public @ResponseBody Iterable<Place> getAllUsers() {
+        // This returns a JSON or XML with the users
+        return placeRepository.findAll();
+    }
 
 }

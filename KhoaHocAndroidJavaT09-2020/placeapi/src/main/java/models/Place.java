@@ -31,3 +31,14 @@ public class Place {
         this.imageUrl = imageUrl;
     }
 }
+/*
+CREATE DATABASE KhoaHocAndroidJavaT092020;
+USE KhoaHocAndroidJavaT092020;
+create user 'student'@'%' identified by '123456';
+grant all on KhoaHocAndroidJavaT092020.* to 'student'@'%';
+CREATE TABLE Place(
+id INT PRIMARY KEY AUTO_INCREMENT,
+name VARCHAR(300) NOT NULL,
+imageUrl VARCHAR(300) NOT NULL
+);
+* */
