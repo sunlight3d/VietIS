@@ -5,8 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".BooksActivity">
+    <TextView
+        android:id="@+id/textViewFake"
+        android:text="Quay ngang roi ne"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+    </TextView>
 <androidx.recyclerview.widget.RecyclerView
     android:id="@+id/bookRecyclerView"
+    app:layout_constraintTop_toBottomOf="@id/textViewFake"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 

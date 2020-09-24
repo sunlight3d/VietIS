@@ -51,23 +51,22 @@ public class MainActivity extends AppCompatActivity
         buttonLogin.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View v) {
-                 if(MainActivity.this.isValidEmail) {
-                     //navigate
-                     //intent = segue
-                     Intent intent = new Intent(MainActivity.this, BooksActivity.class);
-                     intent.putExtra("x", 10);
-                     intent.putExtra("y", "Hoang");
-                     MainActivity.this.startActivity(intent);
-                     /*
+                 User foundUser = new Database(MainActivity.this).getLoggedInUser();
+                 if(MainActivity.this.isValidEmail && foundUser != null) {
+
+                 }else {
                      new Database(MainActivity.this).insertUser(
                              txtEmail.getText().toString(),
                              "12345457aaa",
                              "aa1122bb"
                      );
-                     */
-                     User foundUser = new Database(MainActivity.this).getLoggedInUser();
-                     System.out.println("aha");
                  }
+                 //navigate
+                 //intent = segue
+                 Intent intent = new Intent(MainActivity.this, BooksActivity.class);
+                 intent.putExtra("x", 10);
+                 intent.putExtra("y", "Hoang");
+                 MainActivity.this.startActivity(intent);
              }
          });
         //validate kieu realtime
