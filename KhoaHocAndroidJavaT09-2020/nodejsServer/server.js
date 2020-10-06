@@ -15,7 +15,11 @@ app.use('/books', BookRouter)
 const UserRouter = require('./routings/User')
 app.use('/users', UserRouter)
 
-
 app.listen(PORT, () => {
     console.log(`Server listening at http://localhost:${PORT}`)
 })
+
+/**
+npm install mysql mysql2 sequelize bcrypt express-validator
+
+ */
