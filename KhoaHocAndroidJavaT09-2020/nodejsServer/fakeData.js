@@ -1,4 +1,16 @@
+const { values } = require("sequelize/types/lib/operators")
+
 //thay cho Database
+/*
+INSERT INTO book(imageUrl, name, author, rate, description)
+values(
+    'https://www.scotsman.com/images-e.jpimedia.uk/imagefetch/http://www.scotsman.com/webimage/1.4921351!image/image.jpg?&width=640',
+    'Lap trinh C',
+    'Nguyen Van A',
+    3,
+    'Day la quteb CCC'
+); */
+/*
 var fakeBooks = [
     {
         id: 1,
@@ -26,3 +38,4 @@ var fakeBooks = [
     },
 ]
 module.exports = {fakeBooks}
+*/

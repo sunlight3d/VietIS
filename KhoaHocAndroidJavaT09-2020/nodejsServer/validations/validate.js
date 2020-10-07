@@ -22,14 +22,11 @@ const validateRegisterUser = () => {
 const validateLogin = () => {
   return [ 
     check('email', 'Invalid does not Empty').not().isEmpty(),
-    check('email', 'Invalid email').isEmail(),
-    check('password', 'password more than 6 degits').isLength({ min: 6 })
+    check('email', 'Invalid email').isEmail(),    
   ]; 
 }
 
-let validate = {
+module.exports = {
   validateRegisterUser: validateRegisterUser,
   validateLogin: validateLogin
-};
-
-module.exports = {validate};
+}

@@ -20,6 +20,6 @@ app.listen(PORT, () => {
 })
 
 /**
-npm install mysql mysql2 sequelize bcrypt express-validator
+npm install mysql mysql2 sequelize bcrypt express-validator key-creator
 
  */
