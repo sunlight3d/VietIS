@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     if(isValidToken == false) {
         res.json({
             result: "failed",
-            data:{},
+            data:[],
             message: 'Token is invalid'
         })    
         return;
