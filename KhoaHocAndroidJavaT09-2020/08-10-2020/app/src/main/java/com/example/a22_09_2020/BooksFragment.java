@@ -1,5 +1,6 @@
 package com.example.a22_09_2020;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -25,28 +26,28 @@ public class BooksFragment extends Fragment implements  IActivity {
     private RecyclerView bookRecyclerView;
     private BooksActivityViewModel booksActivityViewModel;
     private RecyclerView.Adapter recyclerViewAdapter;
-    private ViewGroup viewGroup;
+    private View view;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup viewGroup, @Nullable Bundle savedInstanceState) {
-        this.viewGroup = viewGroup;
+        view = inflater.inflate(R.layout.fragment_books, viewGroup, false);
         setupUI();
-        return inflater.inflate(R.layout.fragment_books, viewGroup, false);
+        return view;
     }
     @Override
     public void setupUI() {
-        bookRecyclerView = viewGroup.findViewById(R.id.bookRecyclerView);
+        bookRecyclerView = view.findViewById(R.id.bookRecyclerView);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(
                 //getApplicationContext(),
-                viewGroup.getContext(),
+                view.getContext().getApplicationContext(),
                 RecyclerView.VERTICAL,false);
         bookRecyclerView.setLayoutManager(layoutManager);
         booksActivityViewModel = (new ViewModelProvider(this))
                 .get(BooksActivityViewModel.class);
         booksActivityViewModel.init();
         BookAdapter bookAdapter = new BookAdapter(
-                viewGroup.getContext(),
+                view.getContext().getApplicationContext(),
                 new ArrayList<Book>()
         );
         booksActivityViewModel.getBooks().observe(this,
