@@ -1,17 +1,28 @@
 package com.example.a22_09_2020;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.a22_09_2020.notifications.MyFirebaseMessagingService;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +37,8 @@ import viewmodels.LoginActivityViewModel;
 
 public class LoginActivity extends AppCompatActivity
         implements IActivity {
-    public static String TAG_MAIN_ACTIVITY = "MainActivity";
+
+    public static String TAG = "LoginActivity";
     private EditText txtEmail;
     private EditText txtPassword;
     private TextView txtErrorEmail;
@@ -34,9 +46,49 @@ public class LoginActivity extends AppCompatActivity
     private Boolean isValidEmail = false;
     private LoginActivityViewModel loginActivityViewModel;
 
+    private void createNotificationChannels() {
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            NotificationChannel channel1 = new NotificationChannel(
+                    MyFirebaseMessagingService.CHANNEL_1_ID,
+                    "Channel 1",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel1.setDescription("This is channel 1 ");
+            NotificationChannel channel2 = new NotificationChannel(
+                    MyFirebaseMessagingService.CHANNEL_2_ID,
+                    "Channel 2",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel1.setDescription("This is channel 2 ");
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel1);
+            manager.createNotificationChannel(channel2);
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FirebaseMessaging.getInstance().setAutoInitEnabled(true);
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                            return;
+                        }
+
+                        // Get new FCM registration token
+                        String token = task.getResult();
+
+                        // Log and toast
+                        String msg = getString(R.string.msg_token_fmt, token);
+                        Log.d(TAG, msg);
+                        Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        createNotificationChannels();
         setContentView(R.layout.login_activity);
         //map UI to property
         setupUI();

@@ -77,31 +77,23 @@ public class MyLocationFragment extends Fragment implements IActivity {
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-//        setupUI();
-    }
-
-    @Override
     public void setupUI() {
         //SupportMapFragment mapFragment = (SupportMapFragment) getFragmentManager().findFragmentById(R.id.map);
-        FragmentManager fm = getChildFragmentManager();
+        //FragmentManager fm = getChildFragmentManager();
         //fragment = (SupportMapFragment) fm.findFragmentById(R.id.map);
         if (fragment == null) {
             fragment = SupportMapFragment.newInstance();
             fragment.getMapAsync(new OnMapReadyCallback() {
                 @Override
                 public void onMapReady(GoogleMap googleMap) {
-                    MyLocationFragment.this.googleMap = googleMap;
-                    LatLng sydney = new LatLng(-34, 151);
-                    MyLocationFragment.this.googleMap.addMarker(new MarkerOptions()
-                            .position(sydney)
-                            .title("Marker in Sydney"));
-                    MyLocationFragment.this.googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+                    LatLng latLng = new LatLng(1.289545, 103.849972);
+                    googleMap.addMarker(new MarkerOptions().position(latLng)
+                            .title("Singapore"));
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
                 }
             });
         }
-        fm.beginTransaction().replace(R.id.map, fragment).commit();
+        getChildFragmentManager().beginTransaction().replace(R.id.map, fragment).commit();
 
     }
 

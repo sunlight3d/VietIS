@@ -14,6 +14,7 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.2.0",
     "express-validator": "^6.6.1",
+    "firebase-admin": "^9.2.0",
     "key-creator": "^1.3.8",
     "mysql": "^2.18.1",
     "mysql2": "^2.2.5",
