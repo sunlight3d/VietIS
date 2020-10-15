@@ -12,8 +12,12 @@ app.use(fileUpload({
 //routings
 const BookRouter = require('./routings/Book')
 app.use('/books', BookRouter)
+
 const UserRouter = require('./routings/User')
 app.use('/users', UserRouter)
+
+const PhotoRouter = require('./routings/Photo')
+app.use('/photos', PhotoRouter)
 
 app.listen(PORT, () => {
     console.log(`Server listening at http://localhost:${PORT}`)

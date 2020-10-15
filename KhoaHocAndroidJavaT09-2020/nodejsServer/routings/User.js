@@ -3,11 +3,16 @@ var express = require('express')
 var router = express.Router()
 const bcrypt = require('bcrypt')
 const {validationResult} = require('express-validator')
-const {validateRegisterUser, validateLogin} = require('../validations/validate')
+const {
+    validateRegisterUser, 
+    validateLogin,
+    validateTokenKey
+} = require('../validations/validate')
 
 const { Op } = require("sequelize");
 const {sequelize} = require('../databases/database')
 const UserModel = require('../models/User')(sequelize)
+const {checkToken} = require('../helpers/TokenCheck')
 
 //http://192.168.1.142:3000/users/register
 router.post('/register', validateRegisterUser(), async (req, res) => {    
@@ -53,7 +58,7 @@ router.post('/register', validateRegisterUser(), async (req, res) => {
 })
 //http://192.168.1.142:3000/users/login
 router.post('/login', validateLogin(), async (req, res) => {    
-    //validate du lieu tu client gui len    
+    //validate du lieu tu client gui len        
     const errors = validationResult(req);        
     if (!errors.isEmpty()) {
         res.status(422).json({ 
@@ -113,5 +118,60 @@ router.post('/login', validateLogin(), async (req, res) => {
         })
     }
 })
-
+router.post('/getDetailUser', validateTokenKey(), async (req, res) => {    
+    //validate du lieu tu client gui len        
+    const errors = validationResult(req);        
+    if (!errors.isEmpty()) {
+        res.status(422).json({ 
+            result: 'failed',
+            data: {},
+            message: 'Validation input error',
+            errors: errors.errors
+        });
+        return;
+    }
+    //lay du lieu tu client        
+    const {tokenKey} = req.body                
+    const isValidToken = await checkToken({tokenkey: tokenKey})
+    if(isValidToken == false) {
+        res.json({
+            result: "failed",
+            data:[],
+            message: 'Token is invalid'
+        })    
+        return;
+    }
+    try {
+        let foundUsers = await UserModel.findAll({
+            where:{
+                [Op.and]: [                    
+                    {tokenKey: {[Op.eq] : tokenKey} },
+                ]
+            }
+        })
+        if(foundUsers.length == 0) {
+            res.json({
+                result: 'failed',
+                data: {},
+                message: 'Cannot found user'
+            })    
+            return
+        }
+        let foundUser = foundUsers[0]
+        res.status(200).json({
+            result: 'ok',                
+            data: foundUser,                
+            message: 'Login user successfully'
+        })
+        return        
+    }catch(exception) {
+        res.status(500).json({
+            result: 'failed',
+            data: {},
+            message: `Error details: ${exception.toString()}`,
+            errors: []
+        })
+        return
+    }
+})
 module.exports = router

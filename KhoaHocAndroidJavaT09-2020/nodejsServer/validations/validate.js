@@ -25,8 +25,14 @@ const validateLogin = () => {
     check('email', 'Invalid email').isEmail(),    
   ]; 
 }
+const validateTokenKey = () => {
+  return [ 
+    check('tokenKey', 'tokenKey must not be empty').not().isEmpty(),    
+  ]; 
+}
 
 module.exports = {
-  validateRegisterUser: validateRegisterUser,
-  validateLogin: validateLogin
+  validateRegisterUser,
+  validateLogin,
+  validateTokenKey
 }
