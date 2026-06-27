@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="120dp"
+    android:gravity="start|center"
+    android:layout_marginStart="10dp"
+    android:orientation="vertical"
+    >
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="10dp"
+            android:src="@mipmap/ic_launcher"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="start|center"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical"
+            >
+            <TextView
+                android:id="@+id/textViewName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorDodgerBlue"
+                android:text="Lap trinh C"
+                android:textStyle="bold"
+                />
+            <TextView
+                android:id="@+id/textViewAuthor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorDodgerBlue"
+                android:text="Erric AA"
+                android:textAllCaps="true"
+                />
+            <RatingBar
+                android:id="@+id/ratingBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="1.0"
+                android:layout_gravity="start"
+                style="?android:attr/ratingBarStyleIndicator"
+                android:progressTint="@color/colorGold"
+                android:rating="3" />
+            <TextView
+                android:id="@+id/textViewDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Quyen C nay hay lam"
+                />
+        </LinearLayout>
+
+    </LinearLayout>
+    <View
+        android:id="@+id/bottomView"
+        android:background="@color/colorRed"
+        android:layout_width="match_parent"
+        android:layout_marginHorizontal="10dp"
+        android:layout_height="2dp"/>
+</LinearLayout>
+

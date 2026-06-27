@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name" translatable="false">22-09-2020</string>
+    <string name="open_drawer" translatable="false">Open Drawer</string>
+    <string name="close_drawer" translatable="false">Close Drawer</string>
+    <string name="maps_api_key"
+        templateMergeStrategy="preserve" translatable="false"
+        >AIzaSyCacDm3LHClPTBciYhBHxIMRdBQ0TLPTBI</string>
+
+<!--    <string name="maps_api_key" translatable="false">AIzaSyBFmNwmL0weEQYu4F0uFmnY8xymnusmTtk</string>-->
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
+    <!-- [START fcm_default_icon_string] -->
+    <string name="default_notification_channel_name" translatable="true">VietISTestRemotePushNotification</string>
+    <!-- [END fcm_default_icon_string] -->
+    <string name="fcm_message">FCM Message</string>
+
+</resources>

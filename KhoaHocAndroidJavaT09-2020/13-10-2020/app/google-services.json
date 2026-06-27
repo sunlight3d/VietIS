@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "513864650194",
+    "firebase_url": "https://vietis-292002.firebaseio.com",
+    "project_id": "vietis-292002",
+    "storage_bucket": "vietis-292002.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513864650194:android:03bbb2bb8d4caf70cf8c0b",
+        "android_client_info": {
+          "package_name": "com.example.a22_09_2020"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "513864650194-scievqdmf2ch3cq5r8eu8dhj05emvurd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCacDm3LHClPTBciYhBHxIMRdBQ0TLPTBI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "513864650194-scievqdmf2ch3cq5r8eu8dhj05emvurd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
