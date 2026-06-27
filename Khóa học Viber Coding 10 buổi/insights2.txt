@@ -1,0 +1,79 @@
+Departments:
+2. Số năm kinh nghiệm:
+<1 năm     5
+>5 năm     4
+3–5 năm    4
+1–3 năm    2
+Name: count, dtype: int64
+
+
+What they use AI for:
+B4. Hạn chế lớn nhất khi sử dụng AI của Anh/Chị là gì?
+ko có                                                                                                                                                                                                                            1
+1. Viết promt còn kém: chưa biết tạo câu hỏi hiệu quả để AI cho câu trả lời chính xác nhất.  Hiện tại có khá nhiều tool AI, chưa biết được hết ưu/nhược điểm, thế mạnh của các tool để sử dụng trong các trường hợp thích hợp    1
+Nghi ngờ tính chính xác                                                                                                                                                                                                          1
+chưa biết cách áp dụng AI nhiều cho công việc                                                                                                                                                                                    1
+cách tạo promt chuẩn nhất để AI gent đúng cái mình cần. Vì ko có bản pro nên nhiều hoạt động cũng bị hạn chế                                                                                                                     1
+AI hay quên ngữ cảnh                                                                                                                                                                                                             1
+Mới dùng AI ở mức đơn giản; Viết câu lệnh promt chưa thành thạo; Chưa biết nên áp dụng AI trong những phần công việc nào                                                                                                         1
+AI hallucination                                                                                                                                                                                                                 1
+AI sẽ không đưa ra được câu trả lời phù hợp nếu không hiểu toàn cảnh vấn đề                                                                                                                                                      1
+chưa sử dụng hết ứng dụng của AI                                                                                                                                                                                                 1
+chưa có                                                                                                                                                                                                                          1
+Hạn chế lớn nhất của tôi khi sử dụng AI là đôi khi thông tin AI trả về chưa hoàn toàn chính xác nên vẫn cần kiểm tra và đối chiếu lại trước khi áp dụng vào công việc.                                                           1
+Hạn chế lớn nhất khi sử dụng AL là phụ thuộc nhiều vào dữ liệu và công nghệ, dẫn đến kết quả có thể thiếu chính xác nếu dữ liệu đầu vào không tốt.                                                                               1
+AI đôi khi trả lời chưa đúng ngữ cảnh dự án hoặc thông tin chưa chính xác, nên vẫn cần kiểm tra và chỉnh sửa lại trước khi sử dụng trong công việc.                                                                              1
+Viết prompt chưa đủ chi tiết nên đôi khi ra kết quả không như ý, mất thêm thời gian bổ sung và điều chỉnh                                                                                                                        1
+Name: count, dtype: int64
+
+
+Time-consuming tasks:
+3.3. Trong bộ phận của Anh/Chị, công việc nào lặp lại nhiều nhất?\n (Câu hỏi mở, yêu cầu list tối thiểu 3 công việc)
+tư vấn                                                                                                                                                                                              1
+N/A: mới nhận công việc mới nên chưa phát sinh                                                                                                                                                      1
+- Tập hợp hóa đơn mua vào, Phát hành hóa đơn bán ra, làm các báo cáo                                                                                                                                1
+1. Lập báo cáo đi muộn, về sớm, nghỉ phép hàng tháng - 2. Đăng ký bảo hiểm xã hội (tăng, giảm bhxh hàng tháng) - 3. Tính OT cho nhân viên hàng tháng                                                1
+- Review CV ứng viên, điền thông tin UV vào database, soạn email, gửi thư mời PV                                                                                                                    1
+Viết content, làm podcast, radio, lên idea                                                                                                                                                          1
+Thu thập CV, tổng hợp, sàng lọc, phỏng vấn; Thủ tục hợp đồng, thủ tục nghỉ việc, onboarding; Viết content để làm thương hiệu cá nhân và thương hiệu công ty                                         1
+Viết đề án cho khách, trả lời mail khách, phân tích thông tin công ty khách hàng.                                                                                                                   1
+gửi email, trao đổi khách hàng                                                                                                                                                                      1
+1. tạo mail phản hồi khách hàng 2. phân tích doanh nghiệp 3. phản hồi mail khách hàng                                                                                                               1
+Gửi mail cho khách hàng ( học viên ) + Soạn mess gửi thông báo vào nhóm lớp + Tìm kiếm thông tin, phân tích chân dung của khách hàng                                                                1
+check task và cập nhật tiến độ trên redmine, kiểm tra, log và theo dõi defect/bug, report daily về tiến độ công việc và kế hoạch thực hiện                                                          1
+check task, check timesheet, theo dõi tiến độ                                                                                                                                                       1
+- Giám sát việc thực hiện quy trình của dự án, tổng hợp và cập nhật báo cáo chất lượng dự án,  Kiểm tra dữ liệu thủ công giữa nhiều file/tài liệu, Soạn email/chat trao đổi và confirm thông tin    1
+Tổng kết chi phí hàng tháng của công ty, tổng kết lương và trao đổi email liên tục với bộ phận kế toán/ cố vấn lao động...                                                                          1
+Name: count, dtype: int64
+
+
+Specific time-consuming task examples:
+['hướng dẫn trả lời các câu hỏi của khách hàng', '1. Soạn thảo email và tự động gửi.', 'Đưa bảng kê hóa đơn mua vào hàng tháng, từng hóa đơn cụ thể sẽ được tập hợp đầy đủ theo bảng kê vào 1 file lưu ', 'Tìm hiểu sâu các thông tin về bảo hiểm', 'Vị trí Tư vấn tuyển sinh có nhiều yêu cầu và nhiều file sản phẩm. Sau khi tự review mình muốn tóm tắt cụ thể hơn về kinh nghiệm của UV nên đã dùng ứng dụng NotebookLM để cô đọng lại kinh nghiệm của bạn ', 'Viết content - post bài lên các trang facebook, web. Thiết kế ảnh', '(1) Từ một database cơ sở dữ liệu về nhân sự có sẵn, phân tích dữ liệu. Thống kê số CV, số cuộc phỏng vấn, số UV Pass/Fail của 1 HR. Từ đó đánh giá kết quả tuyển dụng của cá nhân hoặc lập thành báo cáo. (2) Từ nội dung đã có, tạo slide tài liệu đào tạo hoặc báo cáo ', 'Viết đề án cho khách.', 'phân tích dữ liệu công ty khách hàng ', 'Phân tích doanh nghiệp, tìm kiếm point mình có thể hợp tác cùng khách hàng, làm teian ']
+
+
+Repetitive tasks:
+['Thiếu kỹ năng prompt', 'Thiếu kỹ năng prompt', 'Không biết cách dùng', 'Không biết cách dùng', 'Thiếu kỹ năng prompt', 'Thiếu kỹ năng prompt', 'Thiếu kỹ năng prompt', 'Thiếu kỹ năng prompt', 'Thiếu kỹ năng prompt', 'Thiếu kỹ năng prompt']
+
+
+Real situations to apply AI:
+['AI cơ bản', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering)', 'Ứng dụng theo công việc', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering)', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering)', 'Tự động hóa quy trình công việc (Automation workflow)', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering), Phân tích dữ liệu & báo cáo', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering), Tự động hóa quy trình công việc (Automation workflow)', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering), Ứng dụng theo công việc', 'Kỹ thuật đặt câu lệnh/thiết kế câu lệnh ( Prompt engineering), Ứng dụng theo công việc']
+
+
+Top things to learn:
+7.2. Theo Anh/Chị, AI sẽ thay đổi công việc của mình trong 1–2 năm tới như thế nào?
+tốt hơn                                                                                                                                                                                                                                                                                                                                                                                                                     1
+1. Tăng hiệu suất, giảm thời gian cho công việc. Chất lượng công việc đạt được tốt hơn. Có thể khiến bản thân ko làm việc độc lập tốt được nếu không có tool AI.                                                                                                                                                                                                                                                            1
+Nhanh chóng, hiệu quả hơn.                                                                                                                                                                                                                                                                                                                                                                                                  1
+Giúp tiết kiệm thời gian, tăng độ chính xác hơn cho công việc                                                                                                                                                                                                                                                                                                                                                               1
+Nếu AI chất lượng có thể review CV chính xác. Viết bài tuyển dụng (trong trường hợp người dùng dùng đúng promt sẽ cho sản phẩm tự nhiên hơn)                                                                                                                                                                                                                                                                                1
+.                                                                                                                                                                                                                                                                                                                                                                                                                           1
+AI sẽ tham gia sâu hơn vào các công việc mang tính lặp lại: sàng lọc, đánh giá CV; lên lịch hẹn PV; tham gia phỏng vấn sơ loại; tạo bài test PV; hướng dẫn onboarding và trả lời các thắc mắc của nhân sự. MÌnh sẽ cần làm tốt hơn ở vai trò giao tiếp, quản lý đội nhóm. Chính sách nhân sự cũng sẽ có những thay đổi khi AI trở thành 1 lực lượng lao động mới.                                                           1
+AI hỗ trợ hầu hết các quy trình BO tăng hiệu suất công việc.                                                                                                                                                                                                                                                                                                                                                                1
+AI sẽ tự đề xuất cách giao tiếp với khách hàng, làm tài liệu                                                                                                                                                                                                                                                                                                                                                                1
+AI sẽ giúp con người phản biện, tạo task công việc cho từng đối tượng khách hàng                                                                                                                                                                                                                                                                                                                                            1
+Nếu sử dụng tốt AI vào công việc , tôi sẽ tiết kiệm được nhiều thời gian và tăng hiệu suất công việc hơn                                                                                                                                                                                                                                                                                                                    1
+Theo tôi, trong 1–2 năm tới AI sẽ hỗ trợ tự động hóa nhiều công việc lặp lại như tổng hợp dữ liệu, viết report, tìm kiếm thông tin hoặc hỗ trợ phân tích nhanh, từ đó giúp tiết kiệm thời gian và nâng cao hiệu suất làm việc. Đồng thời, AI cũng sẽ trở thành công cụ hỗ trợ học tập và làm việc phổ biến hơn, nên mỗi cá nhân cần biết cách sử dụng AI hiệu quả và kiểm tra lại kết quả trước khi áp dụng vào thực tế.    1
+Theo tôi, trong 1–2 năm tới AI sẽ hỗ trợ nhiều hơn trong các công việc lặp lại như tổng hợp dữ liệu, kiểm tra tài liệu, theo dõi tiến độ task và tạo báo cáo.                                                                                                                                                                                                                                                               1
+AI sẽ hỗ trợ tự động hóa nhiều công việc thủ công lặp lại như tổng hợp dữ liệu, làm báo cáo, theo dõi tiến độ và hỗ trợ phân tích dữ liệu dự án. Vai trò của PQA sẽ tập trung nhiều hơn vào phân tích, đánh giá rủi ro và đưa ra đề xuất cải tiến thay vì xử lý thủ công như hiện tại.                                                                                                                                      1
+Có thể xử lý các vấn đề mượt hơn, tránh việc mất thời gian và các tiểu tiết. Ngoài ra mình làm việc chủ yếu bằng tiếng Nhật nên AI sẽ là trợ thủ đắc lực khi cần trao đổi các case khó nhằn.                                                                                                                                                                                                                                1
+Name: count, dtype: int64

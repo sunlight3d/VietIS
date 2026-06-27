@@ -1,0 +1,29 @@
+Timestamp
+Email Address
+PHẦN 1: THÔNG TIN CƠ BẢN  
+1. Bộ phận/Vị trí công việc
+2. Số năm kinh nghiệm:
+ PHẦN 2: MỨC ĐỘ SỬ DỤNG AI  
+2.1. Anh/Chị đã từng sử dụng AI trong công việc chưa?
+A1. Anh/Chị đã từng nghe về các công cụ AI nào?
+A2. Lý do chính khiến Anh/Chị chưa sử dụng AI:
+A3. Mức độ sẵn sàng học và sử dụng AI:
+B1. Tần suất sử dụng AI:
+B2. Anh/Chị đã từng dùng AI để làm gì? 
+B3. Đánh giá hiệu quả AI mang lại:
+B4. Hạn chế lớn nhất khi sử dụng AI của Anh/Chị là gì?
+3.1. Những công việc nào đang chiếm nhiều thời gian nhất của Anh/Chị?
+ (Chọn tối đa 3)  
+3.2. Mô tả cụ thể một task gần đây khiến Anh/Chị mất nhiều thời gian:
+3.3. Trong bộ phận của Anh/Chị, công việc nào lặp lại nhiều nhất?
+ (Câu hỏi mở, yêu cầu list tối thiểu 3 công việc)
+4.1. Nếu AI có thể hỗ trợ tốt nhất 1 hạng mục trong công việc của Anh/Chị, Anh/Chị chọn:
+4.2. Mô tả 1 tình huống thực tế Anh/Chị muốn áp dụng AI:
+5.1. Rào cản cá nhân:
+5.2. Rào cản tổ chức:
+6.1.   Nếu output AI sinh ra không đúng hoặc không đạt mong muốn của bạn thì bạn sẽ làm gì tiếp theo?
+6.2.  TOP 2 nội dung Anh/Chị thấy cần học nhất:
+6.3. Anh/Chị muốn nhận được gì sau khóa học:
+6.4. Hình thức đào tạo mong muốn:
+7.1. Mục tiêu lớn nhất khi học AI của Anh/Chị (Chọn 1 đáp án)
+7.2. Theo Anh/Chị, AI sẽ thay đổi công việc của mình trong 1–2 năm tới như thế nào?
