@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldMasterIdLst>
+    <p:sldMasterId id="2147483648" r:id="rId1"/>
+  </p:sldMasterIdLst>
+  <p:notesMasterIdLst>
+    <p:notesMasterId r:id="rId6"/>
+  </p:notesMasterIdLst>
+  <p:handoutMasterIdLst>
+    <p:handoutMasterId r:id="rId7"/>
+  </p:handoutMasterIdLst>
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId2"/>
+    <p:sldId id="323" r:id="rId3"/>
+    <p:sldId id="324" r:id="rId4"/>
+    <p:sldId id="273" r:id="rId5"/>
+  </p:sldIdLst>
+  <p:sldSz cx="18288000" cy="10287000"/>
+  <p:notesSz cx="18288000" cy="10287000"/>
+  <p:defaultTextStyle>
+    <a:defPPr>
+      <a:defRPr kern="0"/>
+    </a:defPPr>
+  </p:defaultTextStyle>
+  <p:extLst>
+    <p:ext uri="{EFAFB233-063F-42B5-8137-9DF3F51BA10A}">
+      <p15:sldGuideLst xmlns:p15="http://schemas.microsoft.com/office/powerpoint/2012/main">
+        <p15:guide id="1" orient="horz" pos="2880">
+          <p15:clr>
+            <a:srgbClr val="A4A3A4"/>
+          </p15:clr>
+        </p15:guide>
+        <p15:guide id="2" pos="2160">
+          <p15:clr>
+            <a:srgbClr val="A4A3A4"/>
+          </p15:clr>
+        </p15:guide>
+      </p15:sldGuideLst>
+    </p:ext>
+  </p:extLst>
+</p:presentation>

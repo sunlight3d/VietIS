@@ -1,0 +1,51 @@
+DANH SÁCH PROMPT TẠO ẢNH CHO 12 SLIDE (PHONG CÁCH INFOGRAPHIC 16:9, MÀU TEAL & CAM CỦA VIETIS EDUCATION)
+
+Lưu ý chung cho công cụ tạo ảnh (Midjourney/DALL-E): Các prompt này được viết bằng tiếng Anh để AI tạo ảnh hiểu tốt nhất. Định dạng mặc định là 16:9, phong cách vector phẳng, hiện đại, không có chữ (no text).
+
+---
+Slide 1: Tiêu đề - Bí Quyết Tăng Hiệu Suất Làm Việc X10 Với AI Tools & Công Thức RCESF
+Prompt: A 16:9 modern flat vector infographic illustration representing 10x work efficiency with AI. A glowing brain surrounded by ascending bar charts, gears, and a rocket ship taking off. Color palette strictly uses teal, bright orange, and dark grey on a light cyan background. Corporate, professional, tech-education aesthetic, clean lines, no text. --ar 16:9
+
+---
+Slide 2: Tại sao 90% người dùng AI chưa hiệu quả?
+Prompt: A 16:9 modern flat vector infographic illustration showing confusion and low efficiency. A stylized human figure scratching their head while looking at a chaotic web of tangled lines and a confused robot face. A target board with missed arrows. Color palette: teal, bright orange, dark grey, light cyan background. Clean vector art, no text. --ar 16:9
+
+---
+Slide 3: Giải pháp - Công thức RCESF là gì?
+Prompt: A 16:9 modern flat vector infographic illustration representing a clear, structured formula. A glowing golden key unlocking a puzzle box, surrounded by 5 interconnected geometric puzzle pieces glowing in teal and orange. A glowing AI robot giving a thumbs up. Professional tech style, clean vector art, no text. --ar 16:9
+
+---
+Slide 4: Chi tiết công thức RCESF (Phần 1: Role, Context, Example)
+Prompt: A 16:9 modern flat vector infographic illustration showing structured AI communication. Three distinct icons: a user profile badge (Role), a location pin on a document (Context), and a magnifying glass over a sample template (Example), all connected by glowing data lines to an AI brain. Teal, bright orange, dark grey colors. Clean vector art, no text. --ar 16:9
+
+---
+Slide 5: Chi tiết công thức RCESF (Phần 2: Style, Format)
+Prompt: A 16:9 modern flat vector infographic illustration focusing on output customization. A stylized fountain pen drawing a smooth curve (Style) and a perfectly structured checklist document (Format), feeding into a bright glowing lightbulb. Teal, bright orange, dark grey palette on light cyan. Clean corporate vector style, no text. --ar 16:9
+
+---
+Slide 6: Ví dụ thực tế về Prompt chuẩn RCESF
+Prompt: A 16:9 modern flat vector infographic illustration showing practical application. A split screen concept: on the left, a disorganized pile of documents; on the right, a perfectly structured, glowing email and a targeted bullseye, with an AI wand transforming the mess into order. Teal, bright orange, dark grey palette. Clean vector art, no text. --ar 16:9
+
+---
+Slide 7: Tổng quan Hệ sinh thái Công cụ AI
+Prompt: A 16:9 modern flat vector infographic illustration representing a diverse AI ecosystem. A central glowing AI core with branching nodes leading to distinct tech icons representing writing, images, video, and audio. A well-organized network diagram style. Teal, bright orange, dark grey palette on light cyan. Minimalist, no text. --ar 16:9
+
+---
+Slide 8: Nhóm Công cụ AI Chuyên Viết & Xử lý Tài liệu
+Prompt: A 16:9 modern flat vector infographic illustration representing AI writing and document processing. Floating digital documents, glowing text cursors, a smart pen, and a chat bubble icon seamlessly interacting with a robotic assistant. Teal, bright orange, dark grey palette. Flat corporate illustration, clean lines, no text. --ar 16:9
+
+---
+Slide 9: Nhóm Công cụ AI Sáng tạo Hình ảnh
+Prompt: A 16:9 modern flat vector infographic illustration representing AI image generation. A digital glowing canvas being painted by a robotic arm, a glowing camera lens, and geometric shapes morphing into colorful 3D objects. Teal, bright orange, dark grey palette on a light cyan background. Flat modern style, no text. --ar 16:9
+
+---
+Slide 10: Nhóm Công cụ AI Sản xuất Video
+Prompt: A 16:9 modern flat vector infographic illustration representing AI video production. A digital film clapperboard, floating film strips, a play button, and a robotic eye directing a scene. Dynamic, creative tech aesthetic. Teal, bright orange, dark grey palette. Clean flat vector art, no text. --ar 16:9
+
+---
+Slide 11: Nhóm Công cụ AI Tạo Giọng nói & Âm nhạc
+Prompt: A 16:9 modern flat vector infographic illustration representing AI voice and audio generation. Glowing digital soundwaves, a modern microphone, and musical notes emerging from an AI chip. Teal, bright orange, dark grey palette on a light cyan background. Clean vector design, modern corporate style, no text. --ar 16:9
+
+---
+Slide 12: Tổng kết & Lời khuyên áp dụng AI
+Prompt: A 16:9 modern flat vector infographic illustration representing success and continuous learning. A stylized figure standing at the peak of an ascending mountain of data, holding a glowing flag. A bright sun or lightbulb illuminating the path ahead. Teal, bright orange, dark grey palette. Clean flat vector art, no text. --ar 16:9
