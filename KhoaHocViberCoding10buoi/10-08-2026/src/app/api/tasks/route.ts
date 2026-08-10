@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       },
     });
     
-    eventEmitter.emit('task_changed');
+    eventEmitter.emit('task_changed', userId);
     
     return NextResponse.json(newTask, { status: 201 });
   } catch (error) {
@@ -96,7 +96,7 @@ export async function DELETE(request: Request) {
       },
     });
 
-    eventEmitter.emit('task_changed');
+    eventEmitter.emit('task_changed', userId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -126,7 +126,7 @@ export async function PUT(request: Request) {
       data: { completed },
     });
 
-    eventEmitter.emit('task_changed');
+    eventEmitter.emit('task_changed', userId);
 
     return NextResponse.json(updatedTask);
   } catch (error) {

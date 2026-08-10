@@ -1,9 +1,24 @@
 import { eventEmitter } from '@/lib/eventEmitter';
+import { cookies } from "next/headers";
+import { decrypt } from "@/lib/auth";
 
 // Next.js App Router route configuration for SSE
 export const dynamic = 'force-dynamic';
 
+async function getUserId() {
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get("session")?.value;
+  if (!cookie) return null;
+  const session = await decrypt(cookie);
+  return session?.userId as string | null;
+}
+
 export async function GET(req: Request) {
+  const currentUserId = await getUserId();
+  if (!currentUserId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   let responseStream = new TransformStream();
   const writer = responseStream.writable.getWriter();
   const encoder = new TextEncoder();
@@ -18,8 +33,10 @@ export async function GET(req: Request) {
     }
   };
 
-  const onTaskChanged = () => {
-    sendEvent({ type: 'TASK_CHANGED', timestamp: Date.now() });
+  const onTaskChanged = (userId: string) => {
+    if (userId === currentUserId) {
+      sendEvent({ type: 'TASK_CHANGED', timestamp: Date.now() });
+    }
   };
 
   eventEmitter.on('task_changed', onTaskChanged);
