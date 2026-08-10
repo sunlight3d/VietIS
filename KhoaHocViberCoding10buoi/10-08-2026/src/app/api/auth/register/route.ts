@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     cookieStore.set("session", session, {
       expires,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" && req.url.startsWith("https://"),
       sameSite: "lax",
     });
 
