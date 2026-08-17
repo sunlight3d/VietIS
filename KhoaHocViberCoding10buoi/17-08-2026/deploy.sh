@@ -61,6 +61,9 @@ chmod +x db_push.sh
 echo "Stopping containers..."
 docker compose down
 
+echo "Cleaning up old containers to avoid naming conflicts..."
+docker rm -f task_db task_web 2>/dev/null || true
+
 echo "Starting Postgres..."
 docker compose up -d postgres
 
