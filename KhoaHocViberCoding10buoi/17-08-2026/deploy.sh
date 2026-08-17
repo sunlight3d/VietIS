@@ -54,7 +54,7 @@ EOF
 echo "Updating db_push.sh..."
 cat << 'EOF' > db_push.sh
 #!/bin/bash
-docker run --rm -v /root/deploy-17-08-2026/prisma:/app/prisma -v /root/deploy-17-08-2026/prisma.config.ts:/app/prisma.config.ts -w /app --network deploy-17-08-2026_default node:22-alpine sh -c 'npm install prisma dotenv && npx prisma db push --accept-data-loss --url="postgresql://postgres:Abc123456789@postgres:5432/TaskDB?schema=public"'
+docker run --rm --dns 8.8.8.8 -v /root/deploy-17-08-2026/prisma:/app/prisma -v /root/deploy-17-08-2026/prisma.config.ts:/app/prisma.config.ts -w /app --network deploy-17-08-2026_default node:22-alpine sh -c 'npm install prisma dotenv && npx prisma db push --accept-data-loss --url="postgresql://postgres:Abc123456789@postgres:5432/TaskDB?schema=public"'
 EOF
 chmod +x db_push.sh
 
