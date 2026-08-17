@@ -103,7 +103,8 @@ export async function POST(req: NextRequest) {
       const systemMessage = ragContext ? { role: "system", content: ragContext } : null;
       const finalMessages = systemMessage ? [systemMessage, ...messages] : messages;
 
-      const ollamaRes = await fetch("http://localhost:11434/api/chat", {
+      const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+      const ollamaRes = await fetch(`${baseUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
