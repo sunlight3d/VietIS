@@ -59,13 +59,13 @@ EOF
 chmod +x db_push.sh
 
 echo "Stopping containers..."
-docker compose down
+touch .env # Ensure .env exists to avoid docker compose error
+docker compose down 2>/dev/null || true
 
 echo "Cleaning up old containers to avoid naming conflicts..."
 docker rm -f task_db task_web 2>/dev/null || true
 
 echo "Starting Postgres..."
-touch .env # Ensure .env exists to avoid docker compose error
 docker compose up -d postgres
 
 echo "Waiting for Postgres to be ready..."
