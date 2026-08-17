@@ -8,14 +8,9 @@ Write-Host " BAT DAU DEPLOY LEN VPS $HostIP " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 $sshArgs = @"
-    echo '1. Xoa ma nguon cu tren VPS...';
-    rm -rf /root/VietIS_new;
-
-    echo '2. Tien hanh Clone code moi nhat tu GitHub...';
-    git clone --progress https://github.com/sunlight3d/VietIS.git /root/VietIS_new;
-
-    echo '3. Bat dau qua trinh build va khoi chay Web & Database...';
-    cd /root/VietIS_new/KhoaHocViberCoding10buoi/17-08-2026;
+    cd /root;
+    echo 'Dang tai script deploy.sh moi nhat...';
+    curl -s -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/sunlight3d/VietIS/master/KhoaHocViberCoding10buoi/17-08-2026/deploy.sh -o deploy.sh;
     chmod +x deploy.sh;
     ./deploy.sh
 "@

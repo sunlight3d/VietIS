@@ -5,7 +5,7 @@ echo "Cleaning up old VietIS_new..."
 rm -rf /root/VietIS_new
 
 echo "Cloning latest code from GitHub..."
-git clone https://github.com/sunlight3d/VietIS.git /root/VietIS_new
+git clone --progress https://github.com/sunlight3d/VietIS.git /root/VietIS_new
 
 echo "Copying files to deploy directory..."
 cp -a /root/VietIS_new/KhoaHocViberCoding10buoi/17-08-2026/. /root/deploy-17-08-2026/
