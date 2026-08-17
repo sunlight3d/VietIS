@@ -39,8 +39,8 @@ services:
       - "3002:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:Abc123456789@postgres:5432/TaskDB?schema=public
-      - GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY_HERE
-      - JWT_SECRET=vps_super_secret_key_123456
+    env_file:
+      - .env
     depends_on:
       - postgres
     restart: unless-stopped
@@ -65,6 +65,7 @@ echo "Cleaning up old containers to avoid naming conflicts..."
 docker rm -f task_db task_web 2>/dev/null || true
 
 echo "Starting Postgres..."
+touch .env # Ensure .env exists to avoid docker compose error
 docker compose up -d postgres
 
 echo "Waiting for Postgres to be ready..."
