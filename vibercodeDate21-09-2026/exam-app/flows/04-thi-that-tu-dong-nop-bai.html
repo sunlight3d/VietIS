@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow 04: Chế độ Thi Thật & Tự Động Nộp Bài khi Hết Giờ | Exam-App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#6366f1', 600: '#4f46e5' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    function getThemePreference() {
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        return 'dark';
+      }
+      return 'light';
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    }
+
+    applyTheme(getThemePreference());
+
+    function toggleTheme() {
+      const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.theme = next;
+      applyTheme(next);
+      try {
+        mermaid.initialize({ startOnLoad: true, theme: next === 'dark' ? 'dark' : 'neutral' });
+        window.location.reload();
+      } catch (e) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'neutral';
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: currentTheme,
+        flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+      });
+    });
+  </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-white/75 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800/80 transition-colors duration-300">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <a href="index.html" class="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-bold text-xs md:text-sm group transition">
+          <span class="p-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 mr-1.5 group-hover:-translate-x-0.5 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          </span>
+          Tất cả Flows
+        </a>
+        <span class="text-slate-300 dark:text-slate-700">|</span>
+        <span class="font-extrabold bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 bg-clip-text text-transparent text-sm md:text-base">Exam-App</span>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div class="hidden sm:flex items-center space-x-1.5">
+          <a href="03-thi-thu-ai-chatbot.html" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition flex items-center space-x-1"><span>← Flow trước</span></a>
+          <a href="05-cau-hinh-de-thi.html" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 text-white shadow-md text-xs font-semibold hover:opacity-90 transition flex items-center space-x-1"><span>Flow tiếp →</span></a>
+        </div>
+
+        <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm transition active:scale-95 flex items-center space-x-1.5 text-xs font-semibold" title="Bật/Tắt chế độ Tối/Sáng">
+          <span class="dark:hidden flex items-center">
+            <svg class="w-4 h-4 text-amber-500 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+            Sáng
+          </span>
+          <span class="hidden dark:flex items-center">
+            <svg class="w-4 h-4 text-indigo-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            Tối
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Hero Card -->
+    <div class="relative overflow-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition mb-8">
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-gradient-to-br from-rose-600 via-pink-600 to-orange-500 opacity-10 dark:opacity-20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 text-white text-xs font-black uppercase tracking-wider shadow-md">
+            FLOW 04
+          </span>
+          <span class="px-3 py-1 rounded-xl border text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+            Trung bình
+          </span>
+        </div>
+        <div class="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <span>Tác nhân:</span>
+          <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
+            Học viên & Hệ thống
+          </span>
+        </div>
+      </div>
+
+      <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">
+        Chế độ Thi Thật & Tự Động Nộp Bài khi Hết Giờ
+      </h1>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base">
+        Tổ chức thi chính quy nghiêm ngặt. Đảm bảo tính bảo mật tối đa (không gửi đáp án về client), đếm lùi thời gian thực, tự động lưu tạm tiến độ bài làm và tự động khóa màn hình thu bài khi hết giờ (00:00).
+      </p>
+    </div>
+
+    <!-- Live Flowchart Diagram Card -->
+    <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-sm mb-8">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center space-x-2">
+          <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          </span>
+          <h2 class="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+            Sơ Đồ Luồng Hoạt Động (Flowchart)
+          </h2>
+        </div>
+        <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-mono">
+          Interactive SVG
+        </span>
+      </div>
+      <div class="mermaid flex justify-center overflow-x-auto py-3">
+flowchart TD
+    Start([Học viên chọn Môn thi]) --> ClickReal[Bấm 'BẮT ĐẦU THI THẬT']
+    ClickReal --> ServerFetch[Hệ thống nạp đề - Giấu toàn bộ đáp án đúng]
+    ServerFetch --> StartTimer[Khởi động Đồng hồ đếm lùi theo cấu hình Admin]
+    
+    StartTimer --> ExamLoop[Học viên làm bài & chọn đáp án]
+    ExamLoop --> AutoSave[Hệ thống tự động lưu tạm tiến độ vào Local/Server Cache]
+    AutoSave --> ExamLoop
+    
+    ExamLoop --> EndTrigger{Điều kiện Kết thúc Bài thi}
+    
+    EndTrigger -->|Học viên xong sớm| ClickSubmit[Học viên bấm nút 'NỘP BÀI']
+    ClickSubmit --> ConfirmModal[Hiện Popup: 'Bạn chắc chắn muốn nộp bài?']
+    ConfirmModal -->|Chưa nộp| ExamLoop
+    ConfirmModal -->|Đồng ý| SendServer[Gửi kết quả bài làm lên Máy chủ]
+    
+    EndTrigger -->|Đồng hồ về 00:00| TimeOutEvent[HẾT GIỜ LÀM BÀI]
+    TimeOutEvent --> FreezeUI[Hệ thống ĐÓNG BĂNG toàn bộ thao tác]
+    FreezeUI --> AutoSubmit[Tự động thu bài và gửi bài về Máy chủ]
+    AutoSubmit --> SendServer
+    
+    SendServer --> GradeExam[Máy chủ thực hiện Chấm điểm tự động]
+    GradeExam --> CalcRank[Xếp loại học lực chuẩn: Xuất sắc / Giỏi / Khá / TB / Yếu]
+    CalcRank --> ShowResult[Hiển thị Bảng kết quả, Đáp án chuẩn & Lời giải]
+      </div>
+    </div>
+
+    <!-- Step-by-Step Execution Cards -->
+    <div class="mb-10">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+          <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 mr-2"></span>
+          Diễn Giải Các Bước Trực Quan Cho Người Dùng
+        </h2>
+        <span class="text-xs text-slate-400">Bước 1 đến 5</span>
+      </div>
+
+      <div class="space-y-4">
+        
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-rose-400 dark:hover:border-rose-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-cyan-400 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-blue-500/25 transform group-hover:scale-110 transition duration-200">
+                1
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                Bấm nút 'Bắt đầu Thi Thật'
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Học viên
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            Học viên xác nhận sẵn sàng làm bài. Hệ thống chuyển sang giao diện phòng thi toàn màn hình, thiết lập các biện pháp chống gian lận.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Hộp thoại thông báo: 'Thời gian làm bài và số câu hỏi theo quy định. Bài thi sẽ tự động nộp khi hết giờ!'.</span>
+            </div>
+          </div>
+        </div>
+        
+            <div class="flex justify-center my-3 text-slate-300 dark:text-slate-600">
+              <div class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <svg class="w-5 h-5 text-rose-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+            </div>
+            
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-rose-400 dark:hover:border-rose-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-emerald-500/25 transform group-hover:scale-110 transition duration-200">
+                2
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                Nạp câu hỏi bảo mật & Bật đồng hồ đếm lùi
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Hệ thống
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            Máy chủ gửi câu hỏi về máy học viên. Toàn bộ đáp án đúng bị ẩn hoàn toàn (không lưu trong HTML/JS để chống F12 gian lận). Đồng hồ đếm lùi bắt đầu chạy liên tục.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Header phòng thi: Đồng hồ đếm ngược to rõ đổi màu vàng khi còn 5 phút và nhấp nháy đỏ khi còn 1 phút.</span>
+            </div>
+          </div>
+        </div>
+        
+            <div class="flex justify-center my-3 text-slate-300 dark:text-slate-600">
+              <div class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <svg class="w-5 h-5 text-rose-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+            </div>
+            
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-rose-400 dark:hover:border-rose-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-purple-500/25 transform group-hover:scale-110 transition duration-200">
+                3
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                Làm bài và Tự động lưu tiến độ liên tục
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Học viên & Hệ thống
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            Học viên tích chọn đáp án (hỗ trợ câu 1 hoặc nhiều đáp án). Mỗi lần chọn, hệ thống tự động lưu tạm (Auto-save) lên bộ nhớ đệm chống mất bài nếu rớt mạng.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Danh sách ma trận câu hỏi bên cạnh: câu đã làm đổi màu xanh, câu chưa làm màu xám.</span>
+            </div>
+          </div>
+        </div>
+        
+            <div class="flex justify-center my-3 text-slate-300 dark:text-slate-600">
+              <div class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <svg class="w-5 h-5 text-rose-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+            </div>
+            
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-rose-400 dark:hover:border-rose-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-amber-500/25 transform group-hover:scale-110 transition duration-200">
+                4
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                Nộp bài chủ động hoặc Tự động nộp khi hết giờ
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Học viên / Hệ thống
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            • Nếu làm xong sớm: Bấm nút 'Nộp bài' và xác nhận.\n• Nếu hết giờ (00:00): Hệ thống lập tức khóa màn hình, vô hiệu hóa click và tự động gửi toàn bộ bài làm về máy chủ.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Thông báo: 'Đã hết thời gian làm bài! Hệ thống đang tự động nộp bài của bạn...'.</span>
+            </div>
+          </div>
+        </div>
+        
+            <div class="flex justify-center my-3 text-slate-300 dark:text-slate-600">
+              <div class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <svg class="w-5 h-5 text-rose-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+            </div>
+            
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-rose-400 dark:hover:border-rose-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-red-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-rose-500/25 transform group-hover:scale-110 transition duration-200">
+                5
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                Chấm điểm tự động & Hiển thị kết quả chi tiết
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Hệ thống
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            Máy chủ đối chiếu đáp án, tính tổng điểm trên thang điểm 10, xếp loại học lực chuẩn, công bố điểm số kèm đáp án chuẩn và lời giải thích chi tiết.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Trang tổng kết: Điểm số to rõ (ví dụ: '8.5 / 10'), Xếp loại 'GIỎI', bảng chi tiết từng câu kèm đáp án đúng màu xanh và lời giải chi tiết.</span>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Business Rules Card -->
+    <div class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/10 border border-amber-500/20 dark:border-amber-500/30 rounded-3xl p-6 md:p-8 mb-8 backdrop-blur-sm">
+      <div class="flex items-center space-x-2.5 mb-3 text-amber-700 dark:text-amber-400 font-bold text-base">
+        <span class="text-xl">📌</span>
+        <h3>Quy Tắc Nghiệp Vụ Quan Trọng Cần Ghi Nhớ</h3>
+      </div>
+      <div class="space-y-2.5">
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bảo mật tuyệt đối: Ở chế độ Thi Thật, đáp án đúng không được gửi về trình duyệt trước khi nộp bài.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Tự động thu bài là bắt buộc: Khi đồng hồ về 00:00, không cho phép chọn thêm đáp án.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cơ chế Auto-save đảm bảo học sinh mất mạng vẫn có thể tải lại trang và tiếp tục làm bài trong khoảng thời gian còn lại.</span></div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="flex items-center justify-between py-6 border-t border-slate-200/80 dark:border-slate-800/80">
+      <div>
+        <a href="03-thi-thu-ai-chatbot.html" class="inline-flex items-center px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-indigo-500 text-xs font-bold shadow-sm transition">← Quay lại Flow trước</a>
+      </div>
+      <a href="index.html" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+        Danh sách tất cả 10 flows ↑
+      </a>
+      <div>
+        <a href="05-cau-hinh-de-thi.html" class="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 text-white text-xs font-bold shadow-md hover:shadow-lg transition">Xem Flow tiếp theo →</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh Sách 10 Quy Trình Nghiệp Vụ (Flows) | Exam-App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#6366f1', 600: '#4f46e5' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+  <script>
+    function getThemePreference() {
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        return 'dark';
+      }
+      return 'light';
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    }
+
+    applyTheme(getThemePreference());
+
+    function toggleTheme() {
+      const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.theme = next;
+      applyTheme(next);
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
+
+  <!-- Top Hero Header -->
+  <header class="relative overflow-hidden bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 text-white py-14 px-4 shadow-xl">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto relative z-10">
+      <div class="flex items-center justify-between mb-4">
+        <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-wider">
+          <span>✨ Giao Diện Trực Quan Cho Mọi Người</span>
+          <span>•</span>
+          <span class="text-cyan-200">Exam-App v1.2</span>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button onclick="toggleTheme()" class="px-3.5 py-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/25 text-white shadow-sm transition active:scale-95 flex items-center space-x-1.5 text-xs font-bold">
+          <span class="dark:hidden flex items-center">
+            <svg class="w-4 h-4 text-amber-300 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+            Chế độ Sáng
+          </span>
+          <span class="hidden dark:flex items-center">
+            <svg class="w-4 h-4 text-cyan-200 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            Chế độ Tối
+          </span>
+        </button>
+      </div>
+
+      <h1 class="text-3xl md:text-5xl font-black mb-3 tracking-tight">
+        Hệ Thống 10 Quy Trình Nghiệp Vụ (User Flows)
+      </h1>
+      <p class="text-indigo-100 text-sm md:text-base max-w-2xl leading-relaxed">
+        Bao quát toàn diện từ Phân lớp học sinh, Cấu hình đề thi, Tổ chức thi, Giáo viên quản lý lớp, Đóng góp & Kiểm duyệt câu hỏi đến Bảng xếp hạng Top & Dashboard Admin.
+      </p>
+    </div>
+  </header>
+
+  <!-- Flow Grid Container -->
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          Danh Sách 10 Flows Nghiệp Vụ Chuẩn
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Được sắp xếp khoa học từ Đơn giản đến Phức tạp</p>
+      </div>
+      <span class="px-3 py-1 rounded-xl bg-slate-200/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold">
+        10 Luồng Nghiệp Vụ
+      </span>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+    <a href="01-dang-ky-dang-nhap.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-blue-500/60 dark:hover:border-blue-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 01
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+            Đơn giản
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition leading-snug">
+          Đăng ký & Đăng nhập Hệ thống (Email & Google OAuth)
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Quy trình xác thực người dùng bắt buộc trước khi tham gia bất kỳ hoạt động nào trên ứng dụng. Hỗ trợ đăng ký tài khoản (chọn lớp học) hoặc đăng nhập nhanh 1-chạm qua Google OAuth 2.0, sau đó điều hướng chính xác vào phân hệ chức năng theo vai trò.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Học viên, Giáo viên, Admin</strong>
+        </span>
+        <span class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="02-xem-lich-su-xoa-mem.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-emerald-500/60 dark:hover:border-emerald-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 02
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+            Đơn giản
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition leading-snug">
+          Xem Lịch sử Thi, Bảng Xếp Loại & Xóa Mềm Bài Thi
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Học viên tự theo dõi kết quả các bài thi đã làm kèm xếp loại học lực theo thang điểm chuẩn 10, nhận diện nhanh bằng mã màu Xanh (Đạt >= 5.0đ) / Đỏ (Chưa đạt < 5.0đ), xem chi tiết câu sai và thực hiện xóa mềm (Soft Delete) để ẩn bài thi khỏi danh sách cá nhân.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Học viên (Student)</strong>
+        </span>
+        <span class="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="03-thi-thu-ai-chatbot.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-purple-500/60 dark:hover:border-purple-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 03
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+            Trung bình
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition leading-snug">
+          Chế độ Thi Thử & Tương tác Trợ lý Chatbot AI
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Cung cấp không gian tự học và ôn luyện không áp lực thời gian. Hệ thống phản hồi đáp án đúng/sai ngay lập tức khi học viên chọn, kèm theo lời giải chi tiết và tính năng tương tác với Trợ lý AI Chatbot để giải thích cặn kẽ bản chất học thuật của câu hỏi.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Học viên (Student)</strong>
+        </span>
+        <span class="inline-flex items-center text-purple-600 dark:text-purple-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="04-thi-that-tu-dong-nop-bai.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-rose-500/60 dark:hover:border-rose-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-rose-600 via-pink-600 to-orange-500 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 04
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+            Trung bình
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition leading-snug">
+          Chế độ Thi Thật & Tự Động Nộp Bài khi Hết Giờ
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Tổ chức thi chính quy nghiêm ngặt. Đảm bảo tính bảo mật tối đa (không gửi đáp án về client), đếm lùi thời gian thực, tự động lưu tạm tiến độ bài làm và tự động khóa màn hình thu bài khi hết giờ (00:00).
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Học viên & Hệ thống</strong>
+        </span>
+        <span class="inline-flex items-center text-rose-600 dark:text-rose-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="05-cau-hinh-de-thi.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-blue-500/60 dark:hover:border-blue-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 05
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+            Trung bình
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition leading-snug">
+          Admin Cấu Hình Đề Thi & Tham Số Kỳ Thi
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Cho phép Admin chủ động tùy biến các tham số kỳ thi cho từng môn học: số lượng câu hỏi rút ngẫu nhiên, thời lượng làm bài thi, điểm chuẩn đạt và trạng thái đóng/mở thi. Mọi thay đổi có hiệu lực ngay lập tức cho các lượt thi tiếp theo.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Quản trị viên (Admin)</strong>
+        </span>
+        <span class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="06-quan-ly-lop-hoc-phan-lop.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-teal-500/60 dark:hover:border-teal-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-teal-600 via-emerald-600 to-green-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-green-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 06
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+            Khá
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition leading-snug">
+          Admin Quản Lý Lớp Học, Phân Công Giáo Viên & Chuyển Lớp
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Quản lý cơ cấu tổ chức lớp học: Tạo lớp học mới, phân công giáo viên bộ môn phụ trách lớp theo từng môn học (Hóa/Sinh/Anh), quản lý danh sách học sinh và thực hiện chuyển lớp khi có sự điều chuyển mà vẫn bảo lưu toàn vẹn lịch sử bài thi.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Quản trị viên (Admin)</strong>
+        </span>
+        <span class="inline-flex items-center text-teal-600 dark:text-teal-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="07-giao-vien-quan-ly-lop-xuat-bao-cao.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-purple-500/60 dark:hover:border-purple-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 07
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+            Khá
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition leading-snug">
+          Giáo Viên Theo Dõi Điểm Lớp, Phân Tích Câu Sai & Xuất Báo Cáo
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Quy trình làm việc độc lập của giáo viên: theo dõi tiến độ và bảng điểm của học sinh các lớp mình giảng dạy, xem phân tích các câu hỏi học sinh làm sai nhiều nhất để kịp thời bổ sung kiến thức và tự chủ xuất báo cáo (Excel/PDF).
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Giáo viên bộ môn (Teacher)</strong>
+        </span>
+        <span class="inline-flex items-center text-purple-600 dark:text-purple-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="08-dong-gop-va-phe-duyet-cau-hoi.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-purple-500/60 dark:hover:border-purple-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-purple-600 via-pink-600 to-rose-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 08
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+            Khá
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition leading-snug">
+          Quy Trình Giáo Viên Đóng Góp & Admin Phê Duyệt Câu Hỏi
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Quy trình kiểm duyệt câu hỏi 2 cấp hoàn chỉnh: Giáo viên bộ môn soạn câu hỏi mới gửi lên kho đề ở trạng thái 'Chờ duyệt' (Pending). Admin kiểm tra tính chính xác học thuật, cú pháp LaTeX, sau đó bấm Phê duyệt (Approve) hoặc Từ chối (Reject) kèm lý do góp ý để giáo viên sửa đổi.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Giáo viên & Quản trị viên (Admin)</strong>
+        </span>
+        <span class="inline-flex items-center text-purple-600 dark:text-purple-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="09-quan-tri-cau-hoi-import-excel.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-indigo-500/60 dark:hover:border-indigo-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-indigo-600 via-violet-600 to-pink-500 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-500 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 09
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">
+            Phức tạp
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition leading-snug">
+          Quản Trị Ngân Hàng Câu Hỏi & Nhập Hàng Loạt Từ Excel
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Quản lý toàn diện ngân hàng câu hỏi 3 môn thi (Hóa, Sinh, Tiếng Anh). Hỗ trợ nhập thủ công, nhập hàng loạt qua file Excel có kiểm tra lỗi cú pháp/LaTeX, cung cấp file template mẫu chuẩn và xóa câu hỏi linh hoạt (đơn lẻ hoặc hàng loạt).
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Quản trị viên (Admin)</strong>
+        </span>
+        <span class="inline-flex items-center text-indigo-600 dark:text-indigo-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    <a href="10-bang-xep-hang-dashboard-bao-cao.html" class="group relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-amber-500/60 dark:hover:border-amber-400/60 transition-all duration-300 flex flex-col justify-between">
+      <div class="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 opacity-0 group-hover:opacity-15 rounded-full blur-2xl transition duration-500 pointer-events-none"></div>
+
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-red-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
+            FLOW 10
+          </span>
+          <span class="px-2.5 py-0.5 rounded-lg border text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
+            Rất phức tạp
+          </span>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mb-2.5 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition leading-snug">
+          Bảng Xếp Hạng Top Điểm, Dashboard Đánh Giá Giáo Viên & Báo Cáo
+        </h3>
+
+        <p class="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3 mb-5">
+          Khai thác dữ liệu phân tích sau kỳ thi ở cấp độ toàn trường. Cung cấp bảng xếp hạng thí sinh linh hoạt (Top 10/20/50 hoặc gõ số tùy biến), bộ lọc đa tiêu chí (thời gian làm bài nhanh/chậm, điểm số cao/thấp), dashboard so sánh các lớp theo môn học để đánh giá giáo viên và xuất báo cáo tổng hợp (Excel/PDF).
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">
+          Vai trò: <strong class="text-slate-700 dark:text-slate-200">Quản trị viên (Admin) / Ban giám hiệu</strong>
+        </span>
+        <span class="inline-flex items-center text-amber-600 dark:text-amber-400 font-bold group-hover:translate-x-1 transition duration-200">
+          Chi tiết →
+        </span>
+      </div>
+    </a>
+    
+    </div>
+  </main>
+
+  <footer class="text-center py-10 text-xs text-slate-400 dark:text-slate-600 border-t border-slate-200/80 dark:border-slate-800/80 mt-12">
+    Exam-App • Hệ thống Thi Trắc Nghiệm Trực Tuyến Đa Môn (Hóa - Sinh - Tiếng Anh)
+  </footer>
+</body>
+</html>

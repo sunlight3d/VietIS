@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-orange: #F26B38;
+  --color-brand-orange-hover: #D95423;
+  --color-brand-orange-light: #FFEDE5;
+  --color-brand-orange-subtle: rgba(242, 107, 56, 0.12);
+
+  --color-brand-teal: #0B8374;
+  --color-brand-teal-hover: #08665A;
+  --color-brand-teal-light: #E6F5F2;
+  --color-brand-teal-dark: #064E45;
+  --color-brand-teal-subtle: rgba(11, 131, 116, 0.12);
+
+  --color-brand-muted: #CBE5DF;
+  --color-brand-muted-text: #8FAEA7;
+  --color-brand-dark-bg: #071513;
+  --color-brand-dark-surface: #0E2421;
+  --color-brand-dark-card: #13322E;
+  --color-brand-dark-border: #1C4640;
+}
+
+:root {
+  --background: #F7FAF9;
+  --foreground: #0F2825;
+  --card-bg: #FFFFFF;
+  --card-border: #E0ECE9;
+  --text-primary: #0F2825;
+  --text-muted: #486660;
+  --brand-orange: #F26B38;
+  --brand-teal: #0B8374;
+  --brand-muted: #CBE5DF;
+}
+
+.dark {
+  --background: #071513;
+  --foreground: #F0F7F5;
+  --card-bg: #0D2522;
+  --card-border: #18423C;
+  --text-primary: #F0F7F5;
+  --text-muted: #CBE5DF;
+  --brand-orange: #F26B38;
+  --brand-teal: #0B8374;
+  --brand-muted: #CBE5DF;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #0B837480;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0B8374;
+}
+
+/* Custom animated gradient glow */
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.28;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 7s ease-in-out infinite;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, rgba(203, 229, 223, 0) 0%, rgba(203, 229, 223, 0.25) 50%, rgba(203, 229, 223, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
