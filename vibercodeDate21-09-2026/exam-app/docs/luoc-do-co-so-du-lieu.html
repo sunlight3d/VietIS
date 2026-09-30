@@ -523,59 +523,139 @@
     <div class="mermaid-box">
       <pre class="mermaid" id="erdDiagram">
 erDiagram
-    LopHoc ||--o{ NguoiDung : "Chứa nhiều học sinh"
-    LopHoc ||--o{ PhanCongGiaoVien : "Được phân công"
-    NguoiDung ||--o{ PhanCongGiaoVien : "Giáo viên phụ trách"
-    NguoiDung ||--o{ NganHangCauHoi : "Giáo viên gửi câu hỏi"
-    NganHangCauHoi ||--o{ DapAnLuaChon : "Có các đáp án A/B/C/D"
-    CauHinhDeThi ||--o{ BaiLamThi : "Sinh ra bài làm"
-    NguoiDung ||--o{ BaiLamThi : "Thí sinh làm bài thi"
-    LopHoc ||--o{ BaiLamThi : "Báo cáo theo lớp"
-    BaiLamThi ||--o{ ChiTietTraLoi : "Lưu từng câu đã chọn"
-    NganHangCauHoi ||--o{ ChiTietTraLoi : "Đối chiếu câu hỏi"
-    BaiLamThi ||--o{ NhatKyChatAI : "Lưu đối thoại với AI"
+    users ||--o{ exam_attempts : "takes"
+    classes ||--o{ users : "enrolls"
+    classes ||--o{ teacher_classes : "assigned to"
+    users ||--o{ teacher_classes : "teaches"
+    users ||--o{ exam_configs : "creates"
+    users ||--o{ questions : "contributes"
+    questions ||--o{ question_options : "has"
+    classes ||--o{ exam_attempts : "groups"
+    exam_configs ||--o{ exam_attempts : "defines"
+    exam_attempts ||--o{ exam_attempt_answers : "contains"
+    questions ||--o{ exam_attempt_answers : "evaluates"
+    exam_attempts ||--o{ ai_chat_logs : "records"
+    users ||--o{ question_import_logs : "uploads"
 
-    LopHoc {
-        string MaLop "10A1, 11B2, 12A1"
-        string TenLop "Lớp 10A1 Chuyên Tự Nhiên"
-        string Khoi "Khối 10, 11, 12"
-        string NienKhoa "2026-2027"
+    users {
+        uuid id PK "Primary Key"
+        varchar username UK "Unique username"
+        varchar email UK "User login email"
+        varchar hash_password "Hashed password (bcrypt/argon2)"
+        varchar full_name "Full display name"
+        user_role role "student | teacher | admin"
+        uuid class_id FK "References classes(id)"
+        text avatar_url "Profile photo URL"
+        boolean is_active "Account status"
+        timestamptz created_at "Creation timestamp"
     }
 
-    NguoiDung {
-        string Email "Email đăng nhập"
-        string HoTen "Họ và tên học viên / giáo viên"
-        string VaiTro "student (Học sinh) / teacher (GV) / admin"
-        string LopTruocThuoc "Bắt buộc chọn khi học sinh đăng ký"
+    classes {
+        uuid id PK "Primary Key"
+        varchar code UK "Class code: 10A1, 11B2, 12A1"
+        varchar name "Class display name"
+        varchar grade "Grade: 10, 11, 12"
+        varchar school_year "School year: 2026-2027"
+        boolean is_active "Active status"
+        timestamptz created_at "Creation timestamp"
     }
 
-    CauHinhDeThi {
-        string MonThi "Hóa học / Sinh học / Tiếng Anh"
-        int ThoiGianThi "45 phút (Đồng hồ đếm lùi)"
-        int SoLuongCau "20 câu ngẫu nhiên"
-        float DiemDat "5.0 điểm (Xanh = Đạt, Đỏ = Trượt)"
+    teacher_classes {
+        uuid id PK "Primary Key"
+        uuid teacher_id FK "References users(id)"
+        uuid class_id FK "References classes(id)"
+        subject_type subject "chemistry | biology | english"
+        timestamptz created_at "Assigned timestamp"
     }
 
-    NganHangCauHoi {
-        string MonHoc "chemistry, biology, english"
-        string NoiDung "Hỗ trợ công thức LaTeX & tiếng Việt"
-        string GiaiThich "Giải thích vì sao đúng"
-        string TrangThai "pending (Chờ duyệt) / approved (Đã duyệt)"
+    exam_configs {
+        uuid id PK "Primary Key"
+        varchar title "Exam title"
+        subject_type subject "chemistry | biology | english"
+        int duration_minutes "Exam duration (default 45)"
+        int total_questions "Questions per exam (default 20)"
+        numeric pass_score "Passing threshold (default 5.0)"
+        boolean shuffle_questions "Randomize questions"
+        boolean shuffle_options "Randomize options"
+        boolean is_active "Active status"
+        uuid created_by FK "References users(id)"
+        timestamptz created_at "Creation timestamp"
     }
 
-    DapAnLuaChon {
-        string KyHieu "A, B, C, D, E"
-        string NoiDungDapAn "Nội dung đáp án"
-        boolean LaDapAnDung "Hỗ trợ nhiều đáp án đúng"
+    questions {
+        uuid id PK "Primary Key"
+        subject_type subject "chemistry | biology | english"
+        text content "LaTeX formula & Vietnamese text"
+        text image_url "Optional diagram image"
+        text explanation "Detailed explanation (LaTeX)"
+        varchar difficulty "easy | medium | hard"
+        question_status status "pending | approved | rejected"
+        text rejection_reason "Admin review feedback"
+        uuid contributed_by FK "References users(id)"
+        uuid reviewed_by FK "References users(id)"
+        boolean is_active "Active status"
+        timestamptz created_at "Creation timestamp"
     }
 
-    BaiLamThi {
-        string CheDo "practice (Thi thử) / real (Thi thật)"
-        float DiemSo "Thang điểm 10 (0.00 - 10.00)"
-        boolean KetQua "Đạt (Xanh) hoặc Chưa đạt (Đỏ)"
-        string XepLoai "Xuất sắc, Giỏi, Khá, TB, Yếu"
-        boolean TuDongNop "True nếu hết giờ tự nộp bài"
-        boolean DaXoaMem "Xóa mềm (chỉ học sinh ẩn bài mình)"
+    question_options {
+        uuid id PK "Primary Key"
+        uuid question_id FK "References questions(id)"
+        varchar option_key "Option key: A, B, C, D, E"
+        text content "Option text & LaTeX formula"
+        boolean is_correct "Supports multiple correct answers"
+        int sort_order "Display order"
+    }
+
+    exam_attempts {
+        uuid id PK "Primary Key"
+        uuid user_id FK "References users(id)"
+        uuid class_id FK "References classes(id)"
+        uuid exam_config_id FK "References exam_configs(id)"
+        subject_type subject "chemistry | biology | english"
+        exam_mode mode "practice | real"
+        exam_status status "in_progress | completed | timed_out"
+        timestamptz started_at "Start timestamp"
+        timestamptz submitted_at "Submission timestamp"
+        int time_spent_seconds "Duration spent"
+        boolean auto_submitted "Auto-submitted when time expires"
+        int total_questions "Total questions (default 20)"
+        int correct_answers_count "Correct answers count"
+        numeric score "Score on 10-point scale (0.00-10.00)"
+        boolean is_passed "Pass (Green) / Fail (Red)"
+        academic_rank academic_rank "xuat_sac | gioi | kha | trung_binh | yeu"
+        boolean is_deleted "Soft delete flag"
+        timestamptz deleted_at "Soft delete timestamp"
+    }
+
+    exam_attempt_answers {
+        uuid id PK "Primary Key"
+        uuid attempt_id FK "References exam_attempts(id)"
+        uuid question_id FK "References questions(id)"
+        uuid_array selected_option_ids "Multi-choice selected option IDs"
+        boolean is_correct "All correct options matched"
+        numeric points_awarded "Awarded score"
+        timestamptz answered_at "Answer timestamp"
+    }
+
+    ai_chat_logs {
+        uuid id PK "Primary Key"
+        uuid attempt_id FK "References exam_attempts(id)"
+        uuid user_id FK "References users(id)"
+        uuid question_id FK "References questions(id)"
+        text student_prompt "Student question to AI"
+        text ai_response "Pedagogical explanation from AI"
+        timestamptz created_at "Creation timestamp"
+    }
+
+    question_import_logs {
+        uuid id PK "Primary Key"
+        uuid imported_by FK "References users(id)"
+        varchar filename "Uploaded Excel filename"
+        int total_rows "Total rows in file"
+        int success_count "Imported question count"
+        int error_count "Failed row count"
+        jsonb error_details "Error descriptions"
+        timestamptz created_at "Creation timestamp"
     }
       </pre>
     </div>
@@ -640,22 +720,22 @@ erDiagram
         </table>
       </div>
 
-      <!-- 2. profiles -->
+      <!-- 2. users -->
       <div class="entity-card" data-category="user">
         <div class="entity-header">
-          <div class="entity-name">👤 Hồ Sơ Người Dùng</div>
-          <span class="table-tech-name">profiles</span>
+          <div class="entity-name">👤 Tài Khoản Người Dùng</div>
+          <span class="table-tech-name">users(username, hash_password)</span>
         </div>
-        <p class="entity-desc">Lưu thông tin cá nhân của Học sinh, Giáo viên và Quản trị viên. Tự động đồng bộ ngay khi đăng ký tài khoản hoặc đăng nhập Google.</p>
+        <p class="entity-desc">Lưu trữ tài khoản và thông tin xác thực của Học sinh, Giáo viên và Quản trị viên theo chuẩn convention <code>users(username, hash_password)</code>. Mật khẩu được mã hóa an toàn (bcrypt/argon2).</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Học sinh:</b> Chỉ xem và sửa thông tin của mình.<br>• <b>Giáo viên:</b> Xem hồ sơ học sinh lớp mình phụ trách.<br>• <b>Admin:</b> Toàn quyền quản trị phân quyền.</div>
+          <div class="perms-title">🔐 Phân quyền & Thuộc tính:</div>
+          <div>• <b>Thuộc tính:</b> <code>id</code>, <code>username</code>, <code>email</code>, <code>hash_password</code>, <code>full_name</code>, <code>role</code>, <code>class_id</code>.<br>• <b>Học sinh:</b> Chỉ xem và sửa thông tin của mình.<br>• <b>Giáo viên:</b> Xem học sinh lớp mình phụ trách.<br>• <b>Admin:</b> Toàn quyền quản trị tài khoản.</div>
         </div>
         <table class="sample-table">
-          <thead><tr><th>Họ Và Tên</th><th>Email</th><th>Vai Trò</th><th>Lớp</th></tr></thead>
+          <thead><tr><th>username</th><th>email</th><th>hash_password</th><th>full_name</th><th>role</th><th>class</th></tr></thead>
           <tbody>
-            <tr><td>Nguyễn Văn An</td><td>an.nv@exam.edu.vn</td><td>student</td><td>10A1</td></tr>
-            <tr><td>Cô Trần Mai</td><td>mai.tran@exam.edu.vn</td><td>teacher</td><td>(Phụ trách)</td></tr>
+            <tr><td><b>an_nguyen</b></td><td>an.nv@exam.edu.vn</td><td><code>$2a$12$e8F...</code></td><td>Nguyễn Văn An</td><td>student</td><td>10A1</td></tr>
+            <tr><td><b>mai_tran</b></td><td>mai.tran@exam.edu.vn</td><td><code>$2a$12$k9L...</code></td><td>Cô Trần Mai</td><td>teacher</td><td>(Phụ trách)</td></tr>
           </tbody>
         </table>
       </div>

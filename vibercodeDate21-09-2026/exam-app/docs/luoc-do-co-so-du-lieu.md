@@ -33,126 +33,139 @@ Cơ sở dữ liệu của **Exam App** được chuẩn hóa bậc 3 (3NF), g�
 
 ```mermaid
 erDiagram
-    AUTH_USERS ||--|| PROFILES : "1 - 1 (Đồng bộ qua Trigger)"
-    CLASSES ||--o{ PROFILES : "1 - N (Học sinh thuộc 1 lớp)"
-    CLASSES ||--o{ TEACHER_CLASSES : "1 - N (Phân công lớp)"
-    PROFILES ||--o{ TEACHER_CLASSES : "1 - N (Giáo viên giảng dạy)"
-    PROFILES ||--o{ EXAM_CONFIGS : "1 - N (Admin tạo đề)"
-    PROFILES ||--o{ QUESTIONS : "1 - N (Giáo viên đóng góp)"
-    QUESTIONS ||--o{ QUESTION_OPTIONS : "1 - N (Chứa đáp án A, B, C, D, E)"
-    PROFILES ||--o{ EXAM_ATTEMPTS : "1 - N (Học sinh làm bài)"
-    CLASSES ||--o{ EXAM_ATTEMPTS : "1 - N (Lớp của học sinh lúc thi)"
-    EXAM_CONFIGS ||--o{ EXAM_ATTEMPTS : "1 - N (Áp dụng cấu hình đề)"
-    EXAM_ATTEMPTS ||--o{ EXAM_ATTEMPT_ANSWERS : "1 - N (Chi tiết từng câu làm)"
-    QUESTIONS ||--o{ EXAM_ATTEMPT_ANSWERS : "1 - N (Câu hỏi được làm)"
-    EXAM_ATTEMPTS ||--o{ AI_CHAT_LOGS : "1 - N (Hỏi đáp AI trong bài thi)"
-    PROFILES ||--o{ QUESTION_IMPORT_LOGS : "1 - N (Admin/GV import Excel)"
+    users ||--o{ exam_attempts : "takes"
+    classes ||--o{ users : "enrolls"
+    classes ||--o{ teacher_classes : "assigned to"
+    users ||--o{ teacher_classes : "teaches"
+    users ||--o{ exam_configs : "creates"
+    users ||--o{ questions : "contributes"
+    questions ||--o{ question_options : "has"
+    classes ||--o{ exam_attempts : "groups"
+    exam_configs ||--o{ exam_attempts : "defines"
+    exam_attempts ||--o{ exam_attempt_answers : "contains"
+    questions ||--o{ exam_attempt_answers : "evaluates"
+    exam_attempts ||--o{ ai_chat_logs : "records"
+    users ||--o{ question_import_logs : "uploads"
 
-    CLASSES {
-        uuid id PK "Mã định danh duy nhất"
-        varchar code UK "Mã lớp: 10A1, 11B2, 12A1"
-        varchar name "Tên hiển thị của lớp"
-        varchar grade "Khối: 10, 11, 12"
-        varchar school_year "Niên khóa: 2026-2027"
-        boolean is_active "Trạng thái hoạt động"
+    users {
+        uuid id PK "Primary Key"
+        varchar username UK "Unique username"
+        varchar email UK "User login email"
+        varchar hash_password "Hashed password (bcrypt/argon2)"
+        varchar full_name "Full display name"
+        user_role role "student | teacher | admin"
+        uuid class_id FK "References classes(id)"
+        text avatar_url "Profile photo URL"
+        boolean is_active "Account status"
+        timestamptz created_at "Creation timestamp"
     }
 
-    PROFILES {
-        uuid id PK "Khóa chính = auth.users.id"
-        varchar email "Email đăng nhập"
-        varchar full_name "Họ và tên người dùng"
-        user_role role "Phân quyền: student | teacher | admin"
-        uuid class_id FK "Lớp trực thuộc (Học sinh bắt buộc có lớp)"
-        text avatar_url "Ảnh đại diện"
-        boolean is_active "Đang hoạt động"
+    classes {
+        uuid id PK "Primary Key"
+        varchar code UK "Class code: 10A1, 11B2, 12A1"
+        varchar name "Class display name"
+        varchar grade "Grade: 10, 11, 12"
+        varchar school_year "School year: 2026-2027"
+        boolean is_active "Active status"
+        timestamptz created_at "Creation timestamp"
     }
 
-    TEACHER_CLASSES {
-        uuid id PK "Khóa chính"
-        uuid teacher_id FK "Mã giáo viên"
-        uuid class_id FK "Mã lớp phân công"
-        subject_type subject "Môn phụ trách: chemistry | biology | english"
+    teacher_classes {
+        uuid id PK "Primary Key"
+        uuid teacher_id FK "References users(id)"
+        uuid class_id FK "References classes(id)"
+        subject_type subject "chemistry | biology | english"
+        timestamptz created_at "Assigned timestamp"
     }
 
-    EXAM_CONFIGS {
-        uuid id PK "Mã cấu hình đề"
-        varchar title "Tên đề thi"
-        subject_type subject "Môn thi: chemistry | biology | english"
-        int duration_minutes "Thời gian thi (phút, mặc định 45)"
-        int total_questions "Số lượng câu hỏi (mặc định 20)"
-        numeric pass_score "Điểm đạt chuẩn (mặc định 5.00)"
-        boolean shuffle_questions "Xáo trộn thứ tự câu hỏi"
-        boolean shuffle_options "Xáo trộn thứ tự đáp án"
-        boolean is_active "Đang kích hoạt"
+    exam_configs {
+        uuid id PK "Primary Key"
+        varchar title "Exam title"
+        subject_type subject "chemistry | biology | english"
+        int duration_minutes "Exam duration (default 45)"
+        int total_questions "Questions per exam (default 20)"
+        numeric pass_score "Passing threshold (default 5.0)"
+        boolean shuffle_questions "Randomize questions"
+        boolean shuffle_options "Randomize options"
+        boolean is_active "Active status"
+        uuid created_by FK "References users(id)"
+        timestamptz created_at "Creation timestamp"
     }
 
-    QUESTIONS {
-        uuid id PK "Mã câu hỏi"
-        subject_type subject "Môn học"
-        text content "Nội dung câu hỏi (hỗ trợ LaTeX & Unicode)"
-        text image_url "Hình ảnh minh họa đính kèm"
-        text explanation "Lời giải thích chi tiết (hỗ trợ LaTeX)"
-        varchar difficulty "Độ khó: easy | medium | hard"
-        question_status status "Trạng thái: pending | approved | rejected"
-        text rejection_reason "Lý do từ chối (nếu có)"
-        uuid contributed_by FK "Giáo viên đóng góp"
-        uuid reviewed_by FK "Admin phê duyệt"
+    questions {
+        uuid id PK "Primary Key"
+        subject_type subject "chemistry | biology | english"
+        text content "LaTeX formula & Vietnamese text"
+        text image_url "Optional diagram image"
+        text explanation "Detailed explanation (LaTeX)"
+        varchar difficulty "easy | medium | hard"
+        question_status status "pending | approved | rejected"
+        text rejection_reason "Admin review feedback"
+        uuid contributed_by FK "References users(id)"
+        uuid reviewed_by FK "References users(id)"
+        boolean is_active "Active status"
+        timestamptz created_at "Creation timestamp"
     }
 
-    QUESTION_OPTIONS {
-        uuid id PK "Mã đáp án"
-        uuid question_id FK "Thuộc câu hỏi nào"
-        varchar option_key "Ký hiệu: A, B, C, D, E"
-        text content "Nội dung đáp án (hỗ trợ LaTeX)"
-        boolean is_correct "Đáp án đúng (Hỗ trợ nhiều đáp án đúng)"
-        int sort_order "Thứ tự sắp xếp"
+    question_options {
+        uuid id PK "Primary Key"
+        uuid question_id FK "References questions(id)"
+        varchar option_key "Option key: A, B, C, D, E"
+        text content "Option text & LaTeX formula"
+        boolean is_correct "Supports multiple correct answers"
+        int sort_order "Display order"
     }
 
-    EXAM_ATTEMPTS {
-        uuid id PK "Mã lượt thi"
-        uuid user_id FK "Thí sinh thực hiện"
-        uuid class_id FK "Lớp của thí sinh"
-        uuid exam_config_id FK "Đề thi áp dụng"
-        subject_type subject "Môn thi"
-        exam_mode mode "Chế độ: practice (thi thử) | real (thi thật)"
-        exam_status status "Trạng thái: in_progress | completed | timed_out"
-        timestamptz started_at "Thời điểm bắt đầu"
-        timestamptz submitted_at "Thời điểm nộp bài"
-        int time_spent_seconds "Tổng thời gian làm bài (giây)"
-        boolean auto_submitted "Tự động nộp bài khi hết giờ"
-        numeric score "Điểm số theo thang 10 (0.00 - 10.00)"
-        boolean is_passed "Đạt / Không đạt (Xanh lá / Đỏ)"
-        academic_rank academic_rank "Xếp loại: Xuất sắc, Giỏi, Khá, TB, Yếu"
-        boolean is_deleted "CỜ XÓA MỀM (Soft Delete)"
-        timestamptz deleted_at "Thời điểm xóa mềm"
+    exam_attempts {
+        uuid id PK "Primary Key"
+        uuid user_id FK "References users(id)"
+        uuid class_id FK "References classes(id)"
+        uuid exam_config_id FK "References exam_configs(id)"
+        subject_type subject "chemistry | biology | english"
+        exam_mode mode "practice | real"
+        exam_status status "in_progress | completed | timed_out"
+        timestamptz started_at "Start timestamp"
+        timestamptz submitted_at "Submission timestamp"
+        int time_spent_seconds "Duration spent"
+        boolean auto_submitted "Auto-submitted when time expires"
+        int total_questions "Total questions (default 20)"
+        int correct_answers_count "Correct answers count"
+        numeric score "Score on 10-point scale (0.00-10.00)"
+        boolean is_passed "Pass (Green) / Fail (Red)"
+        academic_rank academic_rank "xuat_sac | gioi | kha | trung_binh | yeu"
+        boolean is_deleted "Soft delete flag"
+        timestamptz deleted_at "Soft delete timestamp"
     }
 
-    EXAM_ATTEMPT_ANSWERS {
-        uuid id PK "Mã câu trả lời"
-        uuid attempt_id FK "Thuộc lượt thi nào"
-        uuid question_id FK "Câu hỏi nào"
-        uuid_array selected_option_ids "Mảng ID các đáp án đã chọn"
-        boolean is_correct "Đúng hoàn toàn"
-        numeric points_awarded "Điểm số nhận được"
+    exam_attempt_answers {
+        uuid id PK "Primary Key"
+        uuid attempt_id FK "References exam_attempts(id)"
+        uuid question_id FK "References questions(id)"
+        uuid_array selected_option_ids "Multi-choice selected option IDs"
+        boolean is_correct "All correct options matched"
+        numeric points_awarded "Awarded score"
+        timestamptz answered_at "Answer timestamp"
     }
 
-    AI_CHAT_LOGS {
-        uuid id PK "Mã hội thoại"
-        uuid attempt_id FK "Lượt thi thi thử"
-        uuid user_id FK "Học sinh hỏi"
-        uuid question_id FK "Câu hỏi đang thắc mắc"
-        text student_prompt "Câu hỏi gửi cho AI"
-        text ai_response "Câu trả lời sư phạm của AI"
+    ai_chat_logs {
+        uuid id PK "Primary Key"
+        uuid attempt_id FK "References exam_attempts(id)"
+        uuid user_id FK "References users(id)"
+        uuid question_id FK "References questions(id)"
+        text student_prompt "Student question to AI"
+        text ai_response "Pedagogical explanation from AI"
+        timestamptz created_at "Creation timestamp"
     }
 
-    QUESTION_IMPORT_LOGS {
-        uuid id PK "Mã lượt import"
-        uuid imported_by FK "Người thực hiện import"
-        varchar filename "Tên file Excel mẫu"
-        int total_rows "Tổng số dòng"
-        int success_count "Số câu import thành công"
-        int error_count "Số câu lỗi"
-        jsonb error_details "Chi tiết các dòng bị lỗi"
+    question_import_logs {
+        uuid id PK "Primary Key"
+        uuid imported_by FK "References users(id)"
+        varchar filename "Uploaded Excel filename"
+        int total_rows "Total rows in file"
+        int success_count "Imported question count"
+        int error_count "Failed row count"
+        jsonb error_details "Error descriptions"
+        timestamptz created_at "Creation timestamp"
     }
 ```
 
@@ -207,15 +220,17 @@ erDiagram
 
 ---
 
-### 3.3. Bảng `profiles` (Hồ sơ người dùng)
-- **Mục đích:** Lưu trữ thông tin chi tiết người dùng, liên kết 1-1 với tài khoản bảo mật của Supabase Auth (`auth.users`).
-- **Cơ chế tự động:** Được kích hoạt ngay khi người dùng đăng ký qua Form hoặc Login Google thông qua Trigger PostgreSQL `on_auth_user_created`.
+### 3.3. Bảng `users` (Tài khoản người dùng: `users(username, hash_password)`)
+- **Mục đích:** Lưu trữ thông tin tài khoản và xác thực người dùng theo đúng convention chuẩn: `users(username, hash_password)`. Mật khẩu được mã hóa an toàn (bcrypt / argon2).
+- **Cơ chế tích hợp Supabase:** Tự động đồng bộ với `auth.users` qua Trigger PostgreSQL `on_auth_user_created` khi đăng ký tài khoản hoặc đăng nhập Google OAuth.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
 | :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, FK `auth.users(id)` ON DELETE CASCADE | Khóa ngoại khớp chính xác với ID tài khoản Auth |
-| `email` | `VARCHAR(255)` | NOT NULL | Email đăng nhập của người dùng |
-| `full_name` | `VARCHAR(255)` | NOT NULL | Họ và tên hiển thị |
+| `id` | `UUID` | PK, `gen_random_uuid()` (hoặc FK `auth.users(id)`) | Mã định danh duy nhất của tài khoản |
+| `username` | `VARCHAR(100)` | UNIQUE, NULLABLE | Tên đăng nhập người dùng (VD: `an_nguyen`, `mai_tran`) |
+| `email` | `VARCHAR(255)` | UNIQUE, NOT NULL | Địa chỉ email đăng nhập |
+| `hash_password` | `VARCHAR(255)` | NULLABLE | Chuỗi mật khẩu đã băm bảo mật (Bcrypt/Argon2) |
+| `full_name` | `VARCHAR(255)` | NOT NULL | Họ và tên hiển thị đầy đủ |
 | `role` | `user_role` | NOT NULL, DEFAULT `'student'` | Quyền hạn: Thí sinh (`student`), Giáo viên (`teacher`), Quản trị (`admin`) |
 | `class_id` | `UUID` | FK `classes(id)` ON DELETE SET NULL | Lớp học trực thuộc (Học sinh bắt buộc chọn lớp khi đăng ký) |
 | `avatar_url` | `TEXT` | NULLABLE | Đường dẫn ảnh đại diện (hoặc avatar Google OAuth) |

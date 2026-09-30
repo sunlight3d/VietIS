@@ -1,5 +1,6 @@
 -- ============================================================================
 -- EXAM APP - SUPABASE DATABASE SCHEMA (01_schema.sql)
+-- Chuẩn hóa danh pháp Tiếng Anh theo convention: users(username, hash_password)
 -- Căn cứ theo 10 Flows nghiệp vụ (Hóa, Sinh, Tiếng Anh)
 -- Hỗ trợ: Role-based access (Student, Teacher, Admin), LaTeX Formulas,
 -- Multi-choice answers, Soft delete, Auto-submit, 10-point scale grading & RLS
@@ -50,11 +51,13 @@ CREATE TABLE IF NOT EXISTS public.classes (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3.2. BẢNG HỒ SƠ NGƯỜI DÙNG (PROFILES) - Liên kết auth.users (Flow 01)
-CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
+-- 3.2. BẢNG NGƯỜI DÙNG (USERS) - Convention chuẩn: users(username, hash_password) (Flow 01)
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- Khớp với auth.users.id nếu dùng Supabase Auth
+    username VARCHAR(100) UNIQUE, -- Tên đăng nhập
+    email VARCHAR(255) UNIQUE NOT NULL, -- Email đăng nhập
+    hash_password VARCHAR(255), -- Mật khẩu đã băm (Bcrypt / Argon2)
+    full_name VARCHAR(255) NOT NULL, -- Họ và tên hiển thị
     role user_role NOT NULL DEFAULT 'student',
     class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL, -- Học sinh bắt buộc có lớp
     avatar_url TEXT,
@@ -64,10 +67,14 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- View profiles tương thích ngược với Supabase Client cũ
+CREATE OR REPLACE VIEW public.profiles AS 
+SELECT * FROM public.users;
+
 -- 3.3. BẢNG PHÂN CÔNG GIÁO VIÊN PHỤ TRÁCH LỚP (TEACHER_CLASSES) - Flow 06 & 07
 CREATE TABLE IF NOT EXISTS public.teacher_classes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    teacher_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    teacher_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
     subject subject_type NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -85,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.exam_configs (
     shuffle_questions BOOLEAN NOT NULL DEFAULT true,
     shuffle_options BOOLEAN NOT NULL DEFAULT true,
     is_active BOOLEAN NOT NULL DEFAULT true,
-    created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -96,12 +103,12 @@ CREATE TABLE IF NOT EXISTS public.questions (
     subject subject_type NOT NULL,
     content TEXT NOT NULL, -- Hỗ trợ công thức Toán, Lý, Hóa (LaTeX) & tiếng Việt
     image_url TEXT,
-    explanation TEXT, -- Lời giải thích đáp án chi tiết (hỗ trợ LaTeX)
+    explanation TEXT, -- Lời giải thích chi tiết (hỗ trợ LaTeX)
     difficulty VARCHAR(20) NOT NULL DEFAULT 'medium' CHECK (difficulty IN ('easy', 'medium', 'hard')),
     status question_status NOT NULL DEFAULT 'approved', -- 'pending' (chờ duyệt), 'approved', 'rejected'
     rejection_reason TEXT,
-    contributed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL, -- Giáo viên đề xuất
-    reviewed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL, -- Admin phê duyệt
+    contributed_by UUID REFERENCES public.users(id) ON DELETE SET NULL, -- Giáo viên đề xuất
+    reviewed_by UUID REFERENCES public.users(id) ON DELETE SET NULL, -- Admin phê duyệt
     reviewed_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -123,7 +130,7 @@ CREATE TABLE IF NOT EXISTS public.question_options (
 -- 3.7. BẢNG LƯỢT THI / BÀI LÀM (EXAM_ATTEMPTS) - Flow 02, 03, 04, 10
 CREATE TABLE IF NOT EXISTS public.exam_attempts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     class_id UUID REFERENCES public.classes(id) ON DELETE SET NULL,
     exam_config_id UUID REFERENCES public.exam_configs(id) ON DELETE SET NULL,
     subject subject_type NOT NULL,
@@ -160,7 +167,7 @@ CREATE TABLE IF NOT EXISTS public.exam_attempt_answers (
 CREATE TABLE IF NOT EXISTS public.ai_chat_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     attempt_id UUID REFERENCES public.exam_attempts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     question_id UUID REFERENCES public.questions(id) ON DELETE SET NULL,
     student_prompt TEXT NOT NULL,
     ai_response TEXT NOT NULL,
@@ -170,7 +177,7 @@ CREATE TABLE IF NOT EXISTS public.ai_chat_logs (
 -- 3.10. BẢNG NHẬT KÝ IMPORT CÂU HỎI TỪ EXCEL (QUESTION_IMPORT_LOGS) - Flow 09
 CREATE TABLE IF NOT EXISTS public.question_import_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    imported_by UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    imported_by UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     filename VARCHAR(255) NOT NULL,
     total_rows INT NOT NULL DEFAULT 0,
     success_count INT NOT NULL DEFAULT 0,
@@ -182,8 +189,10 @@ CREATE TABLE IF NOT EXISTS public.question_import_logs (
 -- ============================================================================
 -- 4. TẠO INDEXES TỐI ƯU HÓA HIỆU NĂNG TRUY VẤN
 -- ============================================================================
-CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
-CREATE INDEX IF NOT EXISTS idx_profiles_class_id ON public.profiles(class_id);
+CREATE INDEX IF NOT EXISTS idx_users_username ON public.users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_users_class_id ON public.users(class_id);
 CREATE INDEX IF NOT EXISTS idx_questions_subject_status ON public.questions(subject, status) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_question_options_qid ON public.question_options(question_id);
 CREATE INDEX IF NOT EXISTS idx_exam_attempts_user_softdel ON public.exam_attempts(user_id, is_deleted);
@@ -208,8 +217,8 @@ CREATE OR REPLACE TRIGGER trg_classes_updated_at
     BEFORE UPDATE ON public.classes
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
-CREATE OR REPLACE TRIGGER trg_profiles_updated_at
-    BEFORE UPDATE ON public.profiles
+CREATE OR REPLACE TRIGGER trg_users_updated_at
+    BEFORE UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
 CREATE OR REPLACE TRIGGER trg_exam_configs_updated_at
@@ -224,13 +233,14 @@ CREATE OR REPLACE TRIGGER trg_exam_attempts_updated_at
     BEFORE UPDATE ON public.exam_attempts
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- 5.2. Trigger tự động tạo hồ sơ profile khi người dùng đăng ký qua Auth (Email / Google)
+-- 5.2. Trigger tự động tạo hồ sơ user khi người dùng đăng ký qua Auth (Email / Google)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
     v_role public.user_role := 'student';
     v_class_id UUID := NULL;
     v_full_name TEXT := '';
+    v_username TEXT := NULL;
 BEGIN
     -- Trích xuất role từ user_metadata nếu có
     IF NEW.raw_user_meta_data->>'role' IS NOT NULL THEN
@@ -250,6 +260,12 @@ BEGIN
         END;
     END IF;
 
+    -- Tên đăng nhập username
+    v_username := COALESCE(
+        NULLIF(NEW.raw_user_meta_data->>'username', ''),
+        split_part(NEW.email, '@', 1)
+    );
+
     -- Họ và tên
     v_full_name := COALESCE(
         NULLIF(NEW.raw_user_meta_data->>'full_name', ''),
@@ -257,9 +273,10 @@ BEGIN
         split_part(NEW.email, '@', 1)
     );
 
-    INSERT INTO public.profiles (id, email, full_name, role, class_id, avatar_url)
+    INSERT INTO public.users (id, username, email, full_name, role, class_id, avatar_url)
     VALUES (
         NEW.id,
+        v_username,
         NEW.email,
         v_full_name,
         v_role,
@@ -420,13 +437,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================================
 CREATE OR REPLACE FUNCTION public.get_user_role()
 RETURNS public.user_role AS $$
-    SELECT role FROM public.profiles WHERE id = auth.uid();
+    SELECT role FROM public.users WHERE id = auth.uid();
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
     SELECT EXISTS (
-        SELECT 1 FROM public.profiles 
+        SELECT 1 FROM public.users 
         WHERE id = auth.uid() AND role = 'admin' AND is_active = true
     );
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
@@ -434,7 +451,7 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION public.is_teacher()
 RETURNS BOOLEAN AS $$
     SELECT EXISTS (
-        SELECT 1 FROM public.profiles 
+        SELECT 1 FROM public.users 
         WHERE id = auth.uid() AND role = 'teacher' AND is_active = true
     );
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
@@ -451,7 +468,7 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER;
 -- 7. THIẾT LẬP BẢO MẬT HÀNG (ROW LEVEL SECURITY - RLS)
 -- ============================================================================
 ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.teacher_classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.exam_configs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
@@ -468,8 +485,8 @@ CREATE POLICY "classes_select_all" ON public.classes
 CREATE POLICY "classes_admin_all" ON public.classes 
     FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
--- 7.2. Chính sách cho bảng profiles
-CREATE POLICY "profiles_select_own" ON public.profiles 
+-- 7.2. Chính sách cho bảng users
+CREATE POLICY "users_select_own" ON public.users 
     FOR SELECT TO authenticated 
     USING (
         id = auth.uid() 
@@ -477,12 +494,12 @@ CREATE POLICY "profiles_select_own" ON public.profiles
         OR (public.is_teacher() AND class_id IN (SELECT class_id FROM public.teacher_classes WHERE teacher_id = auth.uid()))
     );
 
-CREATE POLICY "profiles_update_own" ON public.profiles 
+CREATE POLICY "users_update_own" ON public.users 
     FOR UPDATE TO authenticated 
     USING (id = auth.uid() OR public.is_admin())
     WITH CHECK (
         public.is_admin() 
-        OR (id = auth.uid() AND role = (SELECT role FROM public.profiles WHERE id = auth.uid())) -- Không tự nâng quyền
+        OR (id = auth.uid() AND role = (SELECT role FROM public.users WHERE id = auth.uid())) -- Không tự nâng quyền
     );
 
 -- 7.3. Chính sách cho bảng teacher_classes
@@ -614,8 +631,8 @@ CREATE POLICY "import_logs_admin_teacher" ON public.question_import_logs
 CREATE OR REPLACE VIEW public.view_leaderboard AS
 SELECT 
     ea.id AS attempt_id,
-    p.full_name AS student_name,
-    p.email AS student_email,
+    u.full_name AS student_name,
+    u.email AS student_email,
     c.code AS class_code,
     ea.subject,
     ea.score,
@@ -624,7 +641,7 @@ SELECT
     ea.submitted_at,
     DENSE_RANK() OVER (PARTITION BY ea.subject ORDER BY ea.score DESC, ea.time_spent_seconds ASC) AS rank_position
 FROM public.exam_attempts ea
-JOIN public.profiles p ON ea.user_id = p.id
+JOIN public.users u ON ea.user_id = u.id
 LEFT JOIN public.classes c ON ea.class_id = c.id
 WHERE ea.is_deleted = false 
   AND ea.status = 'completed'
@@ -673,8 +690,8 @@ BEGIN
     RETURN QUERY
     SELECT 
         ea.id,
-        p.full_name,
-        p.email,
+        u.full_name,
+        u.email,
         c.code,
         ea.subject,
         ea.score,
@@ -682,7 +699,7 @@ BEGIN
         ea.academic_rank,
         ea.submitted_at
     FROM public.exam_attempts ea
-    JOIN public.profiles p ON ea.user_id = p.id
+    JOIN public.users u ON ea.user_id = u.id
     LEFT JOIN public.classes c ON ea.class_id = c.id
     WHERE ea.is_deleted = false 
       AND ea.status = 'completed'

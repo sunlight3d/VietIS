@@ -207,11 +207,13 @@ erDiagram
 
 ---
 
-### 3.3. Bảng `profiles` (Hồ sơ người dùng - Flow 01)
-Được tự động kích hoạt bởi Trigger `on_auth_user_created` khi có user mới đăng ký tại `auth.users`:
+### 3.3. Bảng `users` (Hồ sơ người dùng - Flow 01)
+Được tự động kích hoạt bởi Trigger `on_auth_user_created` khi có user mới đăng ký tại `auth.users` (hoặc quản trị viên thêm trực tiếp):
 | Cột | Kiểu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `id` | `UUID` | PK, FK `auth.users(id)` ON DELETE CASCADE | Khóa chính khớp 1:1 với tài khoản Auth |
+| `username` | `VARCHAR(100)` | UNIQUE, Nullable | Tên tài khoản định danh (nếu đăng nhập bằng username/password) |
+| `hash_password` | `VARCHAR(255)` | Nullable | Mật khẩu băm (bcrypt/argon2 nếu quản lý auth tùy biến ngoài GoTrue) |
 | `email` | `VARCHAR(255)` | NOT NULL | Email đăng nhập |
 | `full_name` | `VARCHAR(255)` | NOT NULL | Họ và tên người dùng |
 | `role` | `user_role` | DEFAULT `'student'` | Phân quyền: Thí sinh, Giáo viên hoặc Admin |
@@ -219,6 +221,8 @@ erDiagram
 | `avatar_url` | `TEXT` | Nullable | Ảnh đại diện |
 | `phone` | `VARCHAR(50)` | Nullable | Số điện thoại liên hệ |
 | `is_active` | `BOOLEAN` | DEFAULT `true` | Trạng thái tài khoản |
+
+> **Lưu ý tương thích:** Hệ thống đồng thời cung cấp view `public.profiles` trỏ trực tiếp sang `public.users` để giữ tính tương thích ngược với các template Supabase mặc định.
 
 ---
 
@@ -254,7 +258,7 @@ Lưu lại lịch sử đối thoại khi thí sinh thi thử và hỏi Chatbot 
 | Bảng | Thí sinh (Student) | Giáo viên bộ môn (Teacher) | Quản trị viên (Admin) |
 | :--- | :--- | :--- | :--- |
 | `classes` | Chỉ xem danh sách lớp đang hoạt động để chọn khi đăng ký. | Xem danh sách lớp. | Toàn quyền CRUD (Tạo, sửa, xóa, phân lớp). |
-| `profiles` | Xem và sửa thông tin cá nhân của chính mình. | Xem hồ sơ học sinh thuộc các lớp mình phụ trách. | Toàn quyền xem và cập nhật phân quyền mọi user. |
+| `users` | Xem và sửa thông tin cá nhân của chính mình. | Xem hồ sơ học sinh thuộc các lớp mình phụ trách. | Toàn quyền xem và cập nhật phân quyền mọi user. |
 | `teacher_classes` | Không có quyền truy cập. | Xem phân công giảng dạy của mình. | Toàn quyền phân công giáo viên vào lớp. |
 | `exam_configs` | Xem các đề thi đang mở. | Xem cấu hình đề thi. | Toàn quyền cấu hình (số câu, thời gian, điểm đạt). |
 | `questions` | Chỉ đọc các câu hỏi đã duyệt (`approved`) trong bài thi. | Xem câu hỏi đã duyệt + các câu do mình đóng góp (`pending`). Đóng góp câu mới. | Toàn quyền CRUD, phê duyệt / từ chối câu hỏi pending. |
