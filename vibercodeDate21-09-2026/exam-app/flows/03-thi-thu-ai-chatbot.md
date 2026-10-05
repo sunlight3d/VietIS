@@ -2,7 +2,7 @@
 
 **Độ phức tạp:** Trung bình  
 **Tác nhân chính (Actors):** Học viên (Student)  
-**Mục tiêu (Purpose):** Cung cấp không gian tự học và ôn luyện không áp lực thời gian. Hệ thống phản hồi đáp án đúng/sai ngay lập tức khi học viên chọn, kèm theo lời giải chi tiết và tính năng tương tác với Trợ lý AI Chatbot để giải thích cặn kẽ bản chất học thuật của câu hỏi.  
+**Mục tiêu (Purpose):** Cung cấp không gian tự học và ôn luyện không áp lực thời gian. Hệ thống phản hồi đáp án chuẩn xác (với câu hỏi nhiều đáp án: phản hồi sau khi bấm "Kiểm tra đáp án" để chống lộ đáp án trước), kèm theo lời giải chi tiết và tính năng tương tác với Trợ lý AI Chatbot để giải thích cặn kẽ bản chất học thuật của câu hỏi.  
 
 ---
 
@@ -14,9 +14,16 @@ flowchart TD
     ChooseMode --> FetchPractice[Hệ thống nạp 20 câu hỏi ngẫu nhiên kèm đáp án & lời giải]
     FetchPractice --> RenderQ[Hiển thị câu hỏi + Công thức LaTeX + Các phương án]
     
-    RenderQ --> StudentSelect[Học viên tích chọn 1 hoặc nhiều đáp án]
-    StudentSelect --> InstantFeedback{Hệ thống Phản hồi Tức thì}
+    RenderQ --> CheckQType{Loại câu hỏi?}
     
+    CheckQType -->|Đơn đáp án - Radio| SelectSingle[Học viên chọn 1 đáp án]
+    SelectSingle --> InstantFeedback
+    
+    CheckQType -->|Nhiều đáp án - Checkbox| SelectMulti[Học viên tích chọn các phương án]
+    SelectMulti --> ClickVerify[Học viên bấm nút 'Kiểm tra đáp án']
+    ClickVerify --> InstantFeedback
+    
+    InstantFeedback{Hệ thống Đánh giá & Phản hồi}
     InstantFeedback --> HighlightGreen[Đáp án Đúng: PHÁT SÁNG XANH LÁ]
     InstantFeedback --> HighlightRed[Đáp án Chọn Sai: HIỆN ICON DẤU X ĐỎ]
     HighlightGreen --> ShowExplain[Hiện ngay Lời giải thích chi tiết phía dưới]
@@ -49,25 +56,27 @@ flowchart TD
 * **Mô tả chi tiết:** Hệ thống hiển thị câu hỏi với đầy đủ công thức hóa học, chỉ số trên/dưới, ký hiệu di truyền hoặc phiên âm tiếng Anh thông qua trình kết xuất LaTeX.
 * **Giao diện trực quan (UI View):** Khung câu hỏi đẹp mắt: công thức $Fe + 2HCl \rightarrow FeCl_2 + H_2\uparrow$ hiển thị chuẩn xác.
 
-### Bước 3: Tích chọn phương án trả lời
+### Bước 3: Lựa chọn phương án trả lời & Cơ chế Kiểm tra chống lộ đáp án
 * **Tác nhân thực hiện:** Học viên (Thao tác)
-* **Mô tả chi tiết:** Học viên tích chọn 1 đáp án (Radio) hoặc nhiều đáp án (Checkbox) tùy theo yêu cầu của câu hỏi.
-* **Giao diện trực quan (UI View):** Các ô lựa chọn A, B, C, D với hiệu ứng hover mượt mà.
+* **Mô tả chi tiết:**
+  - **Với câu hỏi 1 đáp án (Radio):** Học viên chọn một đáp án, hệ thống lập tức hiển thị kết quả đúng/sai.
+  - **Với câu hỏi nhiều đáp án (Checkbox):** Học viên tích chọn các phương án theo suy đoán. Hệ thống **chưa hiển thị kết quả ngay** (để chống lộ đáp án của các ô còn lại). Học viên hoàn tất lựa chọn rồi bấm nút **"Kiểm tra đáp án"** để xem đánh giá toàn diện.
+* **Giao diện trực quan (UI View):** Ô lựa chọn có hover mượt mà; câu nhiều đáp án hiển thị nút màu xanh mòng két "Kiểm tra đáp án".
 
-### Bước 4: Phản hồi tức thì & Hiển thị giải thích
+### Bước 4: Phản hồi trực quan & Hiển thị giải thích
 * **Tác nhân thực hiện:** Hệ thống (Phản hồi trực quan)
-* **Mô tả chi tiết:** Ngay khi tích chọn: đáp án đúng phát sáng xanh lá; nếu chọn sai, phương án sai hiển thị dấu [X] đỏ. Khung giải thích chi tiết lập tức mở ra phía dưới.
+* **Mô tả chi tiết:** Khi kiểm tra: các phương án đúng phát sáng màu xanh lá; các phương án thí sinh chọn sai hiển thị icon [X] đỏ. Khung giải thích chi tiết mở ra ngay phía dưới.
 * **Giao diện trực quan (UI View):** Phương án đúng: viền xanh lá, nền xanh nhạt rực sáng. Phương án sai: viền đỏ + icon [X] đỏ.
 
 ### Bước 5: Hỏi đáp chuyên sâu với Trợ lý Chatbot AI
 * **Tác nhân thực hiện:** Học viên & AI Chatbot (Tương tác AI)
-* **Mô tả chi tiết:** Nếu chưa hiểu bản chất, học viên bấm 'Hỏi Trợ lý AI'. Một cửa sổ chat pop-up mở ra, học viên nhập thắc mắc mở, AI giải đáp cặn kẽ.
-* **Giao diện trực quan (UI View):** Cửa sổ chat pop-up bên phải màn hình. AI diễn giải chi tiết bản chất lý thuyết kèm ví dụ.
+* **Mô tả chi tiết:** Nếu chưa hiểu bản chất lời giải, học viên bấm 'Hỏi Trợ lý AI'. Một cửa sổ chat pop-up mở ra, học viên nhập thắc mắc mở, AI giải đáp cặn kẽ bản chất học thuật.
+* **Giao diện trực quan (UI View):** Cửa sổ chat pop-up bên phải màn hình. AI diễn giải chi tiết kèm ví dụ thực tế.
 
 ---
 
 ## 3. Quy tắc Nghiệp vụ Cần Ghi nhớ (Business Rules)
 
-* Không áp lực thời gian: Chế độ Thi Thử không đếm ngược tự nộp bài.
-* Đáp án đúng và lời giải thích luôn hiển thị ngay lập tức để học sinh ghi nhớ kiến thức.
-* AI Chatbot được cung cấp ngữ cảnh đề bài để trả lời bám sát kiến thức môn học.
+* **Không áp lực thời gian:** Chế độ Thi Thử không đếm ngược tự nộp bài.
+* **Chống lộ đáp án câu nhiều lựa chọn:** Tuyệt đối không phản hồi màu sắc từng ô khi học sinh chưa bấm "Kiểm tra đáp án" đối với câu multi-choice.
+* **Tự động gợi ý AI:** Lời giải thích luôn đi kèm nút kích hoạt Chatbot AI được nạp sẵn ngữ cảnh câu hỏi hiện tại.

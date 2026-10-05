@@ -1,27 +1,23 @@
 <!DOCTYPE html>
-<html lang="vi" class="dark">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sơ Đồ Cơ Sở Dữ Liệu Trực Quan - Exam App (Dành Cho Non-Technical)</title>
-  <!-- Google Fonts: Inter -->
+  <title>Lược Đồ Cơ Sở Dữ Liệu Toàn Diện - Exam App (Bản Trực Quan v2.0)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Mermaid JS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <style>
     :root {
       --color-orange: #F26B38;
       --color-teal: #0B8374;
-      --color-teal-dark: #075a50;
       --color-mint: #CBE5DF;
-      --color-bg-dark: #0f172a;
+      --color-dark: #0f172a;
       --color-card-dark: #1e293b;
       --color-border-dark: #334155;
       --color-text-dark: #f8fafc;
       --color-muted-dark: #94a3b8;
-
       --color-bg-light: #f8fafc;
       --color-card-light: #ffffff;
       --color-border-light: #e2e8f0;
@@ -37,12 +33,12 @@
 
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      transition: background-color 0.3s ease, color 0.3s ease;
       line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     body.dark {
-      background-color: var(--color-bg-dark);
+      background-color: var(--color-dark);
       color: var(--color-text-dark);
     }
 
@@ -51,9 +47,8 @@
       color: var(--color-text-light);
     }
 
-    /* Container */
     .container {
-      max-width: 1280px;
+      max-width: 1320px;
       margin: 0 auto;
       padding: 2rem 1.5rem;
     }
@@ -116,32 +111,37 @@
       cursor: pointer;
       border: none;
       transition: all 0.2s ease;
+      text-decoration: none;
     }
 
     .btn-theme {
-      background: var(--color-card-dark);
+      background: rgba(11, 131, 116, 0.2);
       color: var(--color-mint);
-      border: 1px solid var(--color-border-dark);
+      border: 1px solid var(--color-teal);
     }
 
     body.light .btn-theme {
-      background: var(--color-card-light);
+      background: rgba(11, 131, 116, 0.1);
       color: var(--color-teal);
-      border-color: var(--color-border-light);
     }
 
-    .btn-theme:hover {
+    .btn-primary {
+      background: var(--color-orange);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #ea580c;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     /* Hero Banner */
     .hero-banner {
-      background: linear-gradient(135deg, rgba(11, 131, 116, 0.2), rgba(242, 107, 56, 0.15));
-      border: 1px solid rgba(11, 131, 116, 0.4);
-      border-radius: 1rem;
-      padding: 2rem;
-      margin-bottom: 2.5rem;
+      background: linear-gradient(135deg, rgba(11, 131, 116, 0.25), rgba(242, 107, 56, 0.2));
+      border: 1px solid rgba(242, 107, 56, 0.3);
+      border-radius: 1.2rem;
+      padding: 2.2rem 2rem;
+      margin-bottom: 3rem;
       position: relative;
       overflow: hidden;
     }
@@ -149,80 +149,135 @@
     .hero-banner h1 {
       font-size: 2rem;
       font-weight: 800;
-      margin-bottom: 0.75rem;
-      color: var(--color-text-dark);
-    }
-
-    body.light .hero-banner h1 {
-      color: var(--color-text-light);
+      margin-bottom: 0.8rem;
+      color: var(--color-orange);
     }
 
     .hero-banner p {
       font-size: 1.05rem;
-      color: var(--color-mint);
       max-width: 900px;
+      color: var(--color-mint);
     }
 
     body.light .hero-banner p {
-      color: var(--color-teal-dark);
+      color: #334155;
     }
 
-    /* Section Cards */
+    /* Section Titles */
     .section-title {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 1.2rem;
+      margin: 2.5rem 0 1.2rem;
       display: flex;
       align-items: center;
       gap: 0.6rem;
       color: var(--color-orange);
     }
 
-    /* Explanation Grid for Non-technical */
+    /* Security Fixes Showcase Grid */
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 3rem;
+    }
+
+    .sec-card {
+      background: var(--color-card-dark);
+      border: 1px solid var(--color-border-dark);
+      border-radius: 0.85rem;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      border-left: 4px solid var(--color-orange);
+    }
+
+    body.light .sec-card {
+      background: var(--color-card-light);
+      border-color: var(--color-border-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .sec-card.teal {
+      border-left-color: var(--color-teal);
+    }
+
+    .sec-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      background: rgba(242, 107, 56, 0.15);
+      color: var(--color-orange);
+      width: fit-content;
+    }
+
+    .sec-card.teal .sec-badge {
+      background: rgba(11, 131, 116, 0.15);
+      color: var(--color-teal);
+    }
+
+    .sec-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+    }
+
+    .sec-desc {
+      font-size: 0.88rem;
+      color: var(--color-muted-dark);
+      line-height: 1.5;
+    }
+
+    body.light .sec-desc {
+      color: var(--color-muted-light);
+    }
+
+    /* Concept Cards */
     .concept-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.2rem;
       margin-bottom: 3rem;
     }
 
     .concept-card {
       background: var(--color-card-dark);
       border: 1px solid var(--color-border-dark);
-      border-radius: 0.85rem;
-      padding: 1.5rem;
-      transition: all 0.3s ease;
+      border-radius: 0.9rem;
+      padding: 1.4rem;
+      transition: transform 0.2s ease, border-color 0.2s ease;
     }
 
     body.light .concept-card {
       background: var(--color-card-light);
       border-color: var(--color-border-light);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
 
     .concept-card:hover {
+      transform: translateY(-3px);
       border-color: var(--color-teal);
-      transform: translateY(-4px);
     }
 
     .concept-icon {
       font-size: 2rem;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
     }
 
     .concept-card h3 {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: var(--color-mint);
-    }
-
-    body.light .concept-card h3 {
-      color: var(--color-teal);
+      margin-bottom: 0.4rem;
+      color: var(--color-orange);
     }
 
     .concept-card p {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       color: var(--color-muted-dark);
     }
 
@@ -238,32 +293,30 @@
       padding: 1.5rem;
       margin-bottom: 3rem;
       overflow-x: auto;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
     }
 
     body.light .mermaid-box {
-      background: #ffffff;
+      background: var(--color-card-light);
       border-color: var(--color-border-light);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
     }
 
     /* Tabs Filter */
     .tabs-filter {
       display: flex;
+      gap: 0.5rem;
       flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .tab-btn {
-      padding: 0.55rem 1.1rem;
-      border-radius: 0.5rem;
-      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
       font-weight: 600;
-      cursor: pointer;
       border: 1px solid var(--color-border-dark);
       background: var(--color-card-dark);
       color: var(--color-muted-dark);
+      cursor: pointer;
       transition: all 0.2s ease;
     }
 
@@ -293,7 +346,7 @@
       border-radius: 1rem;
       padding: 1.5rem;
       display: flex;
-      flex-col: column;
+      flex-direction: column;
       gap: 1rem;
       transition: all 0.25s ease;
     }
@@ -355,7 +408,6 @@
       color: var(--color-text-light);
     }
 
-    /* Role permissions pill */
     .perms-box {
       background: rgba(0,0,0,0.25);
       border-radius: 0.5rem;
@@ -369,27 +421,21 @@
 
     .perms-title {
       font-weight: 700;
-      margin-bottom: 0.3rem;
-      color: var(--color-mint);
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    body.light .perms-title {
       color: var(--color-teal);
+      margin-bottom: 0.3rem;
     }
 
     .sample-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 0.6rem;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .sample-table th, .sample-table td {
       border: 1px solid var(--color-border-dark);
-      padding: 0.4rem 0.6rem;
+      padding: 0.4rem 0.5rem;
       text-align: left;
     }
 
@@ -398,13 +444,9 @@
     }
 
     .sample-table th {
-      background: rgba(11, 131, 116, 0.25);
-      color: var(--color-mint);
-    }
-
-    body.light .sample-table th {
-      background: rgba(11, 131, 116, 0.15);
-      color: var(--color-teal-dark);
+      background: rgba(242, 107, 56, 0.1);
+      color: var(--color-orange);
+      font-weight: 600;
     }
 
     /* Ranking Scale Box */
@@ -417,33 +459,34 @@
     }
 
     body.light .ranking-box {
-      background: white;
+      background: var(--color-card-light);
       border-color: var(--color-border-light);
     }
 
     .scale-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 1rem;
       margin-top: 1rem;
     }
 
     .scale-card {
+      border-radius: 0.8rem;
       padding: 1rem;
-      border-radius: 0.75rem;
-      border-left: 5px solid;
+      text-align: center;
+      border: 1px solid transparent;
     }
 
-    .scale-xuat-sac { background: rgba(34, 197, 94, 0.15); border-left-color: #22c55e; }
-    .scale-gioi { background: rgba(59, 130, 246, 0.15); border-left-color: #3b82f6; }
-    .scale-kha { background: rgba(245, 158, 11, 0.15); border-left-color: #f59e0b; }
-    .scale-trung-binh { background: rgba(249, 115, 22, 0.15); border-left-color: #f97316; }
-    .scale-yeu { background: rgba(239, 68, 68, 0.15); border-left-color: #ef4444; }
+    .scale-xuat-sac { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); }
+    .scale-gioi { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); }
+    .scale-kha { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); }
+    .scale-trung-binh { background: rgba(249, 115, 22, 0.15); border-color: rgba(249, 115, 22, 0.4); }
+    .scale-yeu { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); }
 
     /* Footer */
     .footer {
       text-align: center;
-      padding-top: 2rem;
+      padding: 2.5rem 0;
       border-top: 1px solid var(--color-border-dark);
       color: var(--color-muted-dark);
       font-size: 0.85rem;
@@ -457,15 +500,18 @@
 </head>
 <body class="dark">
   <div class="container">
-    
-    <!-- Top Header -->
+
+    <!-- Header Navigation -->
     <header class="header">
       <div class="brand-title">
-        <span class="brand-badge">Trực Quan Hóa ERD</span>
-        <span class="brand-name">Hệ Thống Thi Trắc Nghiệm (Exam App)</span>
+        <span class="brand-badge">Supabase Docker DB v2.0</span>
+        <span class="brand-name">Hệ Thống Thi Trắc Nghiệm Exam App</span>
       </div>
       <div class="header-actions">
-        <button class="btn btn-theme" onclick="toggleTheme()" id="themeBtn">
+        <a href="../flows/index.html" class="btn btn-primary">
+          🧭 Xem Danh Sách 10 Flow
+        </a>
+        <button class="btn btn-theme" id="themeBtn" onclick="toggleTheme()">
           ☀️ Chuyển Giao Diện Sáng
         </button>
         <button class="btn btn-theme" onclick="window.print()">
@@ -476,11 +522,56 @@
 
     <!-- Hero Banner -->
     <div class="hero-banner">
-      <h1>Sơ Đồ Cơ Sở Dữ Liệu Dành Cho Người Không Chuyên (Non-Technical)</h1>
+      <h1>Lược Đồ Cơ Sở Dữ Liệu Dành Cho Người Không Chuyên (Non-Technical v2.0)</h1>
       <p>
-        Tài liệu này giải thích toàn bộ cách hệ thống lưu trữ và kết nối dữ liệu của <b>3 môn học (Hóa học, Sinh học, Tiếng Anh)</b>, 
-        giúp Ban Giám hiệu, Giáo viên và Quản lý nắm bắt ngay quy trình vận hành mà không cần biết lập trình hay câu lệnh SQL phức tạp.
+        Tài liệu này giải thích trực quan cách hệ thống lưu trữ, bảo mật và kết nối dữ liệu của <b>3 môn học (Hóa học, Sinh học, Tiếng Anh)</b>, 
+        giúp Quản trị viên (Admin), Giáo viên và Quản lý nắm bắt ngay quy trình vận hành và toàn bộ 8 giải pháp bảo mật nâng cao mà không cần biết viết câu lệnh SQL.
       </p>
+    </div>
+
+    <!-- 0. KHẮC PHỤC 8 VẤN ĐỀ BẢO MẬT & TOÀN VẸN DỮ LIỆU -->
+    <h2 class="section-title">🛡️ 0. Bản Vá 8 Lỗ Hổng Bảo Mật & Quy Tắc Toàn Vẹn Dữ Liệu</h2>
+    <div class="security-grid">
+      <div class="sec-card">
+        <span class="sec-badge">Bảo Mật Phân Quyền</span>
+        <h4 class="sec-title">1. Chống Tự Nâng Quyền Khi Đăng Ký</h4>
+        <p class="sec-desc">Trigger Auth cưỡng chế 100% tài khoản mới là <code>student</code>. Bất kể học sinh gửi payload gì lên, không bao giờ được phép tự gán quyền <code>admin</code> hay <code>teacher</code>.</p>
+      </div>
+      <div class="sec-card teal">
+        <span class="sec-badge">Chống Gian Lận Thi</span>
+        <h4 class="sec-title">2. Chống F12 / API Đọc Trộm Đáp Án</h4>
+        <p class="sec-desc">Học sinh không được SELECT bảng <code>question_options</code> có cột <code>is_correct</code>. Đề thi lấy qua hàm RPC bảo mật chỉ chứa nội dung câu hỏi và các lựa chọn không đáp án.</p>
+      </div>
+      <div class="sec-card">
+        <span class="sec-badge">Chống Can Thiệp Điểm</span>
+        <h4 class="sec-title">3. Khóa Chặt Điểm Số (Chống Tự Sửa Điểm 10)</h4>
+        <p class="sec-desc">Trigger chặn học sinh chèn hoặc cập nhật điểm trực tiếp qua API. Điểm số chỉ được ghi nhận duy nhất bởi Stored Procedure <code>fn_submit_exam_attempt</code> có xác thực máy chủ.</p>
+      </div>
+      <div class="sec-card teal">
+        <span class="sec-badge">Bảo Mật Người Dùng</span>
+        <h4 class="sec-title">4. Giấu Mật Khẩu (hash_password) & RLS View</h4>
+        <p class="sec-desc">View <code>profiles</code> bật cờ <code>security_invoker = true</code> và loại trừ hoàn toàn cột <code>hash_password</code>, ngăn chặn việc đọc trộm thông tin đăng nhập của người khác.</p>
+      </div>
+      <div class="sec-card">
+        <span class="sec-badge">Toàn Vẹn Báo Cáo</span>
+        <h4 class="sec-title">5. Bảo Toàn Bài Thi Hết Giờ (timed_out)</h4>
+        <p class="sec-desc">Bảng xếp hạng (Leaderboard) và Thống kê lớp học tính cả các bài tự nộp khi hết giờ (<code>status = 'timed_out'</code>), không bỏ sót kết quả của thí sinh.</p>
+      </div>
+      <div class="sec-card teal">
+        <span class="sec-badge">Quyền Giáo Viên</span>
+        <h4 class="sec-title">6. Xóa Mềm Không Ảnh Hưởng Điểm Của Lớp</h4>
+        <p class="sec-desc">Học sinh bấm xóa bài thi điểm kém chỉ ẩn ở danh sách cá nhân (<code>is_student_deleted</code>). Giáo viên và Admin vẫn xem trọn vẹn điểm thật để xuất sổ điểm chính xác.</p>
+      </div>
+      <div class="sec-card">
+        <span class="sec-badge">Lịch Sử Khách Quan</span>
+        <h4 class="sec-title">7. Bảo Toàn Lịch Sử Khi Xóa Câu Hỏi</h4>
+        <p class="sec-desc">Áp dụng <code>ON DELETE RESTRICT</code> và Snapshot nội dung câu hỏi trong bài làm. Xóa câu hỏi trong ngân hàng không làm mất câu trả lời của các bài thi đã làm trong quá khứ.</p>
+      </div>
+      <div class="sec-card teal">
+        <span class="sec-badge">Thuật Toán Điểm</span>
+        <h4 class="sec-title">8. Chấm Chuẩn Theo Tổng Số Câu Đề Thi</h4>
+        <p class="sec-desc">Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Học sinh bỏ trống câu hỏi sẽ bị tính 0 điểm câu đó, triệt tiêu lỗi bỏ trống câu mà vẫn được 10 điểm.</p>
+      </div>
     </div>
 
     <!-- 1. Dành cho người không chuyên: Khái niệm cốt lõi -->
@@ -488,38 +579,38 @@
     <div class="concept-grid">
       <div class="concept-card">
         <div class="concept-icon">🗂️</div>
-        <h3>Bảng Dữ Liệu (Table) Là Gì?</h3>
-        <p>Giống như từng trang tính riêng biệt trong 1 file Excel (ví dụ: Trang "Danh sách Học sinh", Trang "Ngân hàng Câu hỏi", Trang "Lịch sử Điểm thi").</p>
+        <h3>Bảng Dữ Liệu (Table)</h3>
+        <p>Giống như từng trang tính trong Excel (Trang "Học sinh", Trang "Câu hỏi", Trang "Lượt thi", Trang "Thông báo").</p>
       </div>
       <div class="concept-card">
         <div class="concept-icon">🔗</div>
         <h3>Mối Quan Hệ (Relationship)</h3>
-        <p>Các bảng được liên kết với nhau bằng mã số duy nhất: <b>1 Lớp học</b> chứa <b>Nhiều Học sinh</b>; <b>1 Đề thi</b> có <b>20 Câu hỏi ngẫu nhiên</b>.</p>
+        <p>Các bảng được liên kết chặt chẽ: <b>1 Lớp</b> có <b>Nhiều Học sinh</b>; <b>1 Giáo viên</b> phụ trách <b>Đúng môn học tại Lớp</b>.</p>
       </div>
       <div class="concept-card">
-        <div class="concept-icon">🗑️</div>
-        <h3>Xóa Mềm (Soft Delete) Là Gì?</h3>
-        <p>Học sinh bấm "Xóa" bài thi cũ thì bài thi sẽ được ẩn đi để màn hình gọn gàng, nhưng dữ liệu vẫn được lưu lại để nhà trường phục vụ đối soát, thống kê.</p>
+        <div class="concept-icon">📸</div>
+        <h3>Snapshot Cấu Hình Đề</h3>
+        <p>Lưu lại thời lượng, điểm đạt, tiêu đề kỳ thi tại thời điểm thí sinh nộp bài để không bị ảnh hưởng nếu cấu hình sau này thay đổi.</p>
       </div>
       <div class="concept-card">
-        <div class="concept-icon">🤖</div>
-        <h3>Chatbot AI Trong Thi Thử</h3>
-        <p>Khi thi thử, nếu làm sai hoặc thắc mắc, học sinh có thể chat trực tiếp với AI để hỏi "Vì sao câu này chọn đáp án B?", toàn bộ được lưu lại để giáo viên theo dõi.</p>
+        <div class="concept-icon">🔔</div>
+        <h3>Bảng Thông Báo (Notifications)</h3>
+        <p>Hệ thống tự động báo cho Giáo viên khi Admin duyệt hoặc từ chối câu hỏi, và báo khi học sinh vừa nộp bài thi.</p>
       </div>
       <div class="concept-card">
         <div class="concept-icon">🧪</div>
         <h3>Công Thức Hóa Học & Toán (LaTeX)</h3>
-        <p>Hệ thống hỗ trợ hiển thị đẹp mắt các công thức phức tạp như $\ce{Fe + 2HCl -> FeCl2 + H2}$, phân số, căn bậc hai mà không bị vỡ chữ.</p>
+        <p>Hỗ trợ công thức $\ce{Fe + 2HCl -> FeCl2 + H2}$, phân số, căn bậc hai sắc nét trên cả điện thoại và máy tính.</p>
       </div>
       <div class="concept-card">
         <div class="concept-icon">☑️</div>
-        <h3>Hỗ Trợ Chọn Nhiều Đáp Án Đúng</h3>
-        <p>Khác với đề thi chỉ có 1 đáp án, hệ thống cho phép câu hỏi có 2 hoặc 3 đáp án đúng (dạng checkbox ô vuông). Thí sinh phải chọn đủ mới được điểm.</p>
+        <h3>Phân Loại Câu 1 Hoặc Nhiều Đáp Án</h3>
+        <p>Cột <code>question_type</code> quy định rõ câu trắc nghiệm 1 đáp án (radio) hay nhiều đáp án đúng (checkbox multi-select).</p>
       </div>
     </div>
 
     <!-- 2. Sơ đồ thực thể liên kết (Mermaid) -->
-    <h2 class="section-title">🗺️ 2. Bản Đồ Kết Nối Toàn Hệ Thống (Sơ Đồ Thực Thể ERD)</h2>
+    <h2 class="section-title">🗺️ 2. Bản Đồ Kết Nối Toàn Hệ Thống (Sơ Đồ Thực Thể ERD v2.0)</h2>
     <div class="mermaid-box">
       <pre class="mermaid" id="erdDiagram">
 erDiagram
@@ -533,168 +624,102 @@ erDiagram
     classes ||--o{ exam_attempts : "groups"
     exam_configs ||--o{ exam_attempts : "defines"
     exam_attempts ||--o{ exam_attempt_answers : "contains"
-    questions ||--o{ exam_attempt_answers : "evaluates"
+    questions ||--o{ exam_attempt_answers : "evaluates (RESTRICT)"
     exam_attempts ||--o{ ai_chat_logs : "records"
     users ||--o{ question_import_logs : "uploads"
+    users ||--o{ notifications : "receives"
 
     users {
-        uuid id PK "Primary Key"
-        varchar username UK "Unique username"
-        varchar email UK "User login email"
-        varchar hash_password "Hashed password (bcrypt/argon2)"
-        varchar full_name "Full display name"
+        uuid id PK "Khóa chính"
+        varchar username UK "Tên đăng nhập"
+        varchar email UK "Email đăng nhập"
+        varchar hash_password "Mật khẩu mã hóa"
+        varchar full_name "Họ và tên"
         user_role role "student | teacher | admin"
-        uuid class_id FK "References classes(id)"
-        text avatar_url "Profile photo URL"
-        boolean is_active "Account status"
-        timestamptz created_at "Creation timestamp"
+        uuid class_id FK "Lớp trực thuộc"
     }
 
     classes {
-        uuid id PK "Primary Key"
-        varchar code UK "Class code: 10A1, 11B2, 12A1"
-        varchar name "Class display name"
-        varchar grade "Grade: 10, 11, 12"
-        varchar school_year "School year: 2026-2027"
-        boolean is_active "Active status"
-        timestamptz created_at "Creation timestamp"
+        uuid id PK "Khóa chính"
+        varchar code UK "Mã lớp: 10A1, 11B2"
+        varchar name "Tên hiển thị lớp"
+        varchar grade "Khối 10, 11, 12"
     }
 
     teacher_classes {
-        uuid id PK "Primary Key"
-        uuid teacher_id FK "References users(id)"
-        uuid class_id FK "References classes(id)"
+        uuid id PK "Khóa chính"
+        uuid teacher_id FK "Giáo viên"
+        uuid class_id FK "Lớp phụ trách"
         subject_type subject "chemistry | biology | english"
-        timestamptz created_at "Assigned timestamp"
     }
 
     exam_configs {
-        uuid id PK "Primary Key"
-        varchar title "Exam title"
-        subject_type subject "chemistry | biology | english"
-        int duration_minutes "Exam duration (default 45)"
-        int total_questions "Questions per exam (default 20)"
-        numeric pass_score "Passing threshold (default 5.0)"
-        boolean shuffle_questions "Randomize questions"
-        boolean shuffle_options "Randomize options"
-        boolean is_active "Active status"
-        uuid created_by FK "References users(id)"
-        timestamptz created_at "Creation timestamp"
+        uuid id PK "Khóa chính"
+        varchar title "Tên kỳ thi"
+        varchar exam_type "15_min | mid_term | final_term"
+        subject_type subject "Môn thi"
+        int duration_minutes "Thời gian làm bài"
+        int total_questions "Số câu hỏi đề thi"
+        numeric pass_score "Điểm đạt chuẩn"
     }
 
     questions {
-        uuid id PK "Primary Key"
-        subject_type subject "chemistry | biology | english"
-        text content "LaTeX formula & Vietnamese text"
-        text image_url "Optional diagram image"
-        text explanation "Detailed explanation (LaTeX)"
-        varchar difficulty "easy | medium | hard"
+        uuid id PK "Khóa chính"
+        subject_type subject "Môn học"
+        question_type question_type "single_choice | multiple_choice"
+        text content "Nội dung câu hỏi (LaTeX)"
         question_status status "pending | approved | rejected"
-        text rejection_reason "Admin review feedback"
-        uuid contributed_by FK "References users(id)"
-        uuid reviewed_by FK "References users(id)"
-        boolean is_active "Active status"
-        timestamptz created_at "Creation timestamp"
+        text rejection_reason "Lý do từ chối"
+        boolean is_deleted "Cờ xóa mềm"
     }
 
     question_options {
-        uuid id PK "Primary Key"
-        uuid question_id FK "References questions(id)"
-        varchar option_key "Option key: A, B, C, D, E"
-        text content "Option text & LaTeX formula"
-        boolean is_correct "Supports multiple correct answers"
-        int sort_order "Display order"
+        uuid id PK "Khóa chính"
+        uuid question_id FK "Thuộc câu hỏi"
+        varchar option_key "A, B, C, D, E"
+        text content "Nội dung đáp án"
+        boolean is_correct "Ẩn với học sinh (Anti-F12)"
     }
 
     exam_attempts {
-        uuid id PK "Primary Key"
-        uuid user_id FK "References users(id)"
-        uuid class_id FK "References classes(id)"
-        uuid exam_config_id FK "References exam_configs(id)"
-        subject_type subject "chemistry | biology | english"
-        exam_mode mode "practice | real"
+        uuid id PK "Khóa chính"
+        uuid user_id FK "Thí sinh làm bài"
+        varchar exam_title "Tên bài thi snapshot"
+        numeric score "Điểm số (0 - 10)"
+        boolean is_passed "Chỉ báo Đạt/Không đạt"
         exam_status status "in_progress | completed | timed_out"
-        timestamptz started_at "Start timestamp"
-        timestamptz submitted_at "Submission timestamp"
-        int time_spent_seconds "Duration spent"
-        boolean auto_submitted "Auto-submitted when time expires"
-        int total_questions "Total questions (default 20)"
-        int correct_answers_count "Correct answers count"
-        numeric score "Score on 10-point scale (0.00-10.00)"
-        boolean is_passed "Pass (Green) / Fail (Red)"
-        academic_rank academic_rank "xuat_sac | gioi | kha | trung_binh | yeu"
-        boolean is_deleted "Soft delete flag"
-        timestamptz deleted_at "Soft delete timestamp"
+        boolean is_student_deleted "Ẩn phía học sinh"
+        jsonb config_snapshot "Snapshot cấu hình đề"
     }
 
     exam_attempt_answers {
-        uuid id PK "Primary Key"
-        uuid attempt_id FK "References exam_attempts(id)"
-        uuid question_id FK "References questions(id)"
-        uuid_array selected_option_ids "Multi-choice selected option IDs"
-        boolean is_correct "All correct options matched"
-        numeric points_awarded "Awarded score"
-        timestamptz answered_at "Answer timestamp"
+        uuid id PK "Khóa chính"
+        uuid attempt_id FK "Thuộc lượt thi"
+        uuid question_id FK "Câu hỏi (ON DELETE RESTRICT)"
+        uuid[] selected_option_ids "Các đáp án đã chọn"
+        boolean is_correct "Kết quả chấm câu"
     }
 
-    ai_chat_logs {
-        uuid id PK "Primary Key"
-        uuid attempt_id FK "References exam_attempts(id)"
-        uuid user_id FK "References users(id)"
-        uuid question_id FK "References questions(id)"
-        text student_prompt "Student question to AI"
-        text ai_response "Pedagogical explanation from AI"
-        timestamptz created_at "Creation timestamp"
-    }
-
-    question_import_logs {
-        uuid id PK "Primary Key"
-        uuid imported_by FK "References users(id)"
-        varchar filename "Uploaded Excel filename"
-        int total_rows "Total rows in file"
-        int success_count "Imported question count"
-        int error_count "Failed row count"
-        jsonb error_details "Error descriptions"
-        timestamptz created_at "Creation timestamp"
+    notifications {
+        uuid id PK "Khóa chính"
+        uuid user_id FK "Người nhận thông báo"
+        varchar title "Tiêu đề thông báo"
+        notification_type type "question_approved | exam_submitted"
+        boolean is_read "Trạng thái đã đọc"
     }
       </pre>
     </div>
 
-    <!-- 3. Luồng vận hành thực tế -->
-    <h2 class="section-title">🔄 3. Hành Trình Người Dùng Đi Qua Cơ Sở Dữ Liệu</h2>
-    <div class="concept-grid">
-      <div class="concept-card" style="border-top: 4px solid var(--color-teal);">
-        <div class="concept-icon">1️⃣</div>
-        <h3>Bước 1: Đăng Ký Tài Khoản</h3>
-        <p>Học sinh nhập Email, Mật khẩu và <b>bắt buộc chọn Lớp</b> (10A1, 11B2...). Hệ thống tự động tạo hồ sơ trong bảng <code>profiles</code> liên kết với <code>classes</code>.</p>
-      </div>
-      <div class="concept-card" style="border-top: 4px solid var(--color-orange);">
-        <div class="concept-icon">2️⃣</div>
-        <h3>Bước 2: Xây Dựng Ngân Hàng Đề</h3>
-        <p>Giáo viên gửi câu hỏi mới (chờ duyệt trong <code>questions</code>) hoặc Admin nạp hàng loạt từ file Excel. Admin duyệt đề thi sẵn sàng cho 3 môn Hóa, Sinh, Anh.</p>
-      </div>
-      <div class="concept-card" style="border-top: 4px solid #3b82f6;">
-        <div class="concept-icon">3️⃣</div>
-        <h3>Bước 3: Thí Sinh Làm Bài & Chấm Điểm</h3>
-        <p>Mỗi lần bấm "Thi", hệ thống bốc ngẫu nhiên 20 câu. Đồng hồ đếm lùi kích hoạt. Hết giờ tự nộp bài. Hệ thống chấm điểm thang 10 và gắn mác Đạt (Xanh) / Chưa đạt (Đỏ).</p>
-      </div>
-      <div class="concept-card" style="border-top: 4px solid #a855f7;">
-        <div class="concept-icon">4️⃣</div>
-        <h3>Bước 4: Báo Cáo & Xếp Hạng</h3>
-        <p>Giáo viên mở danh sách lớp để xuất điểm ra Excel/PDF. Ban Giám hiệu xem bảng xếp hạng Top 10/20/50 và biểu đồ so sánh chất lượng giữa các lớp.</p>
-      </div>
-    </div>
-
-    <!-- 4. Chi tiết từng bảng dữ liệu (Interactive Cards) -->
-    <h2 class="section-title">📦 4. Bách Khoa Toàn Thư Về 10 Bảng Dữ Liệu Trong Hệ Thống</h2>
+    <!-- 3. Chi tiết 11 bảng dữ liệu (Interactive Cards) -->
+    <h2 class="section-title">📦 3. Bách Khoa Toàn Thư Về 11 Bảng Dữ Liệu Trong Hệ Thống</h2>
 
     <!-- Tabs Filter -->
     <div class="tabs-filter">
-      <button class="tab-btn active" onclick="filterEntities('all', this)">Tất Cả (10 Bảng)</button>
+      <button class="tab-btn active" onclick="filterEntities('all', this)">Tất Cả (11 Bảng)</button>
       <button class="tab-btn" onclick="filterEntities('user', this)">👥 Người Dùng & Lớp Học (3)</button>
       <button class="tab-btn" onclick="filterEntities('bank', this)">📚 Ngân Hàng Câu Hỏi (3)</button>
       <button class="tab-btn" onclick="filterEntities('exam', this)">📝 Đề Thi & Bài Làm (3)</button>
-      <button class="tab-btn" onclick="filterEntities('ai', this)">🤖 Trợ Lý Chatbot AI (1)</button>
+      <button class="tab-btn" onclick="filterEntities('aux', this)">🔔 Thông Báo & AI (2)</button>
     </div>
 
     <!-- Grid -->
@@ -706,38 +731,24 @@ erDiagram
           <div class="entity-name">🏫 Lớp Học</div>
           <span class="table-tech-name">classes</span>
         </div>
-        <p class="entity-desc">Lưu trữ danh sách các lớp học trong trường (Ví dụ: 10A1, 11B2, 12A1). Học sinh khi đăng ký tài khoản bắt buộc phải chọn lớp trực thuộc.</p>
+        <p class="entity-desc">Lưu danh sách các lớp học (10A1, 11B2, 12A1). Học sinh khi đăng ký tài khoản bắt buộc chọn lớp trực thuộc.</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Học sinh:</b> Xem danh sách lớp để chọn khi đăng ký.<br>• <b>Admin:</b> Toàn quyền thêm, sửa, phân lớp.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Học sinh:</b> Xem danh sách lớp để chọn khi đăng ký.<br>• <b>Admin:</b> Toàn quyền tạo lớp, import danh sách học sinh vào lớp.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Mã Lớp</th><th>Tên Lớp</th><th>Khối</th><th>Năm Học</th></tr></thead>
-          <tbody>
-            <tr><td><b>10A1</b></td><td>Lớp 10A1 Chuyên Tự Nhiên</td><td>10</td><td>2026-2027</td></tr>
-            <tr><td><b>11B2</b></td><td>Lớp 11B2 Ban Nâng Cao</td><td>11</td><td>2026-2027</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 2. users -->
       <div class="entity-card" data-category="user">
         <div class="entity-header">
-          <div class="entity-name">👤 Tài Khoản Người Dùng</div>
+          <div class="entity-name">👤 Người Dùng</div>
           <span class="table-tech-name">users(username, hash_password)</span>
         </div>
-        <p class="entity-desc">Lưu trữ tài khoản và thông tin xác thực của Học sinh, Giáo viên và Quản trị viên theo chuẩn convention <code>users(username, hash_password)</code>. Mật khẩu được mã hóa an toàn (bcrypt/argon2).</p>
+        <p class="entity-desc">Lưu tài khoản Học sinh, Giáo viên và Quản trị viên. Đăng ký mới luôn mặc định là student để chống tự nâng quyền. Mật khẩu mã hóa tách biệt khỏi các View thông thường.</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền & Thuộc tính:</div>
-          <div>• <b>Thuộc tính:</b> <code>id</code>, <code>username</code>, <code>email</code>, <code>hash_password</code>, <code>full_name</code>, <code>role</code>, <code>class_id</code>.<br>• <b>Học sinh:</b> Chỉ xem và sửa thông tin của mình.<br>• <b>Giáo viên:</b> Xem học sinh lớp mình phụ trách.<br>• <b>Admin:</b> Toàn quyền quản trị tài khoản.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Học sinh:</b> Xem và sửa thông tin cá nhân mình.<br>• <b>Giáo viên:</b> Xem danh sách học sinh các lớp mình phụ trách.<br>• <b>Admin:</b> Toàn quyền quản trị tài khoản và phân quyền.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>username</th><th>email</th><th>hash_password</th><th>full_name</th><th>role</th><th>class</th></tr></thead>
-          <tbody>
-            <tr><td><b>an_nguyen</b></td><td>an.nv@exam.edu.vn</td><td><code>$2a$12$e8F...</code></td><td>Nguyễn Văn An</td><td>student</td><td>10A1</td></tr>
-            <tr><td><b>mai_tran</b></td><td>mai.tran@exam.edu.vn</td><td><code>$2a$12$k9L...</code></td><td>Cô Trần Mai</td><td>teacher</td><td>(Phụ trách)</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 3. teacher_classes -->
@@ -746,18 +757,11 @@ erDiagram
           <div class="entity-name">👩‍🏫 Phân Công Giáo Viên</div>
           <span class="table-tech-name">teacher_classes</span>
         </div>
-        <p class="entity-desc">Xác định giáo viên nào phụ trách môn học nào tại lớp học nào, giúp giáo viên theo dõi và xuất báo cáo kết quả đúng lớp của mình.</p>
+        <p class="entity-desc">Xác định chính xác giáo viên phụ trách môn học nào tại lớp học nào, bảo đảm giáo viên dạy Hóa chỉ xem và chấm điểm môn Hóa của lớp mình.</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Giáo viên:</b> Xem lớp mình phụ trách.<br>• <b>Admin:</b> Toàn quyền phân công giáo viên vào lớp.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Giáo viên:</b> Xem danh sách lớp và môn mình phụ trách.<br>• <b>Admin:</b> Toàn quyền phân công giảng dạy.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Giáo Viên</th><th>Lớp Phụ Trách</th><th>Môn Dạy</th></tr></thead>
-          <tbody>
-            <tr><td>Cô Trần Mai</td><td>10A1</td><td>chemistry (Hóa học)</td></tr>
-            <tr><td>Thầy Lê Hoàng</td><td>11B2</td><td>biology (Sinh học)</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 4. exam_configs -->
@@ -766,19 +770,11 @@ erDiagram
           <div class="entity-name">⚙️ Cấu Hình Đề Thi</div>
           <span class="table-tech-name">exam_configs</span>
         </div>
-        <p class="entity-desc">Cho phép Admin tùy biến số lượng câu hỏi (mặc định 20 câu), thời gian thi (45 phút), điểm đạt (5.0) cho từng môn thi.</p>
+        <p class="entity-desc">Cấu hình chi tiết theo từng bài thi và môn học: loại kỳ thi (15 phút, 1 tiết, giữa kỳ), thời lượng làm bài, số câu hỏi (mặc định 20 câu), điểm đạt chuẩn (5.0 điểm).</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Học sinh:</b> Xem đề thi đang mở để vào thi.<br>• <b>Admin:</b> Toàn quyền chỉnh sửa cấu hình đề.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Học sinh / GV:</b> Xem các đề thi đang mở.<br>• <b>Admin:</b> Toàn quyền cấu hình và lên lịch thi.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Môn Thi</th><th>Số Câu</th><th>Thời Gian</th><th>Điểm Đạt</th></tr></thead>
-          <tbody>
-            <tr><td>Hóa học</td><td>20 câu</td><td>45 phút</td><td>5.0 / 10</td></tr>
-            <tr><td>Sinh học</td><td>20 câu</td><td>45 phút</td><td>5.0 / 10</td></tr>
-            <tr><td>Tiếng Anh</td><td>20 câu</td><td>45 phút</td><td>5.0 / 10</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 5. questions -->
@@ -787,58 +783,37 @@ erDiagram
           <div class="entity-name">❓ Ngân Hàng Câu Hỏi</div>
           <span class="table-tech-name">questions</span>
         </div>
-        <p class="entity-desc">Chứa đề bài câu hỏi 3 môn. Hỗ trợ hiển thị công thức LaTeX (Toán, Hóa, Sinh) và lời giải thích vì sao đáp án đúng.</p>
+        <p class="entity-desc">Lưu trữ câu hỏi kèm công thức LaTeX. Bổ sung cột <code>question_type</code> (1 hay nhiều đáp án), cờ xóa mềm <code>is_deleted</code> và cho phép giáo viên sửa lại câu hỏi bị từ chối để nộp lại.</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Giáo viên:</b> Đóng góp câu hỏi (chờ duyệt).<br>• <b>Admin:</b> Phê duyệt / Từ chối / Toàn quyền sửa xóa.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Học sinh:</b> Xem câu đã duyệt qua đề thi.<br>• <b>Giáo viên:</b> Đóng góp câu hỏi đúng môn dạy, sửa câu rejected.<br>• <b>Admin:</b> Phê duyệt, từ chối và quản trị ngân hàng đề.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Môn</th><th>Nội Dung (Hỗ trợ LaTeX)</th><th>Trạng Thái</th></tr></thead>
-          <tbody>
-            <tr><td>Hóa</td><td>Phản ứng: $\ce{Fe + 2HCl -> FeCl2 + H2}$...</td><td>approved</td></tr>
-            <tr><td>Sinh</td><td>Quá trình quang hợp biểu diễn qua...</td><td>approved</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 6. question_options -->
       <div class="entity-card" data-category="bank">
         <div class="entity-header">
-          <div class="entity-name">🔤 Đáp Án Lựa Chọn (A, B, C, D)</div>
-          <span class="table-tech-name">question_options</span>
+          <div class="entity-name">🔠 Đáp Án Lựa Chọn</div>
+          <span class="table-tech-name">question_options (Anti-F12)</span>
         </div>
-        <p class="entity-desc">Chứa các lựa chọn của câu hỏi. Đặc biệt: <b>Hỗ trợ câu hỏi có nhiều đáp án đúng</b> (ví dụ chọn đồng thời cả A, B, D mới đạt điểm).</p>
+        <p class="entity-desc">Lưu các đáp án A, B, C, D, E. Cột <code>is_correct</code> được khóa chặt với học sinh để chống xem trước đáp án bằng F12 / API trong khi làm bài.</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• Đi kèm quyền của câu hỏi tương ứng.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Học sinh:</b> Không thể SELECT trực tiếp; chỉ nhận lựa chọn đã giấu đáp án qua RPC.<br>• <b>Admin / GV:</b> Toàn quyền quản lý đáp án.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Ký Hiệu</th><th>Nội Dung Đáp Án</th><th>Đúng / Sai</th></tr></thead>
-          <tbody>
-            <tr><td>A</td><td>Chất khử (chất cho electron)</td><td>✅ Đúng</td></tr>
-            <tr><td>B</td><td>Chất oxi hóa</td><td>❌ Sai</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 7. exam_attempts -->
       <div class="entity-card" data-category="exam">
         <div class="entity-header">
-          <div class="entity-name">📜 Lượt Thi & Bảng Điểm (Xóa Mềm)</div>
+          <div class="entity-name">📊 Lượt Thi & Bài Làm</div>
           <span class="table-tech-name">exam_attempts</span>
         </div>
-        <p class="entity-desc">Lưu kết quả bài thi. Tích hợp <b>Xóa mềm</b>: Học sinh chỉ xem và chỉ xóa được bài của mình, không xóa được bài bạn khác.</p>
+        <p class="entity-desc">Lưu lượt thi, điểm số (thang 10), chỉ báo Đạt/Không đạt. Điểm số bị khóa bảo mật. Học sinh bấm xóa chỉ ẩn giao diện cá nhân (<code>is_student_deleted</code>), giáo viên luôn xem trọn vẹn điểm thật.</p>
         <div class="perms-box">
-          <div class="perms-title">🔐 Phân quyền bảo mật tuyệt đối:</div>
-          <div>• <b>Học sinh:</b> CHỈ XEM VÀ XÓA MỀM BÀI CỦA MÌNH.<br>• <b>Giáo viên:</b> Xem kết quả của lớp mình phụ trách.<br>• <b>Admin:</b> Xem toàn bộ để lập báo cáo, xếp hạng.</div>
+          <div class="perms-title">🔐 Phân quyền & RLS:</div>
+          <div>• <b>Học sinh:</b> Xem bài chưa ẩn của mình.<br>• <b>Giáo viên:</b> Xem toàn bộ kết quả học sinh lớp mình dạy.<br>• <b>Admin:</b> Toàn quyền quản trị và lập báo cáo.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Thí Sinh</th><th>Môn</th><th>Điểm</th><th>Xếp Loại</th><th>Trạng Thái</th></tr></thead>
-          <tbody>
-            <tr><td>Nguyễn Văn An</td><td>Hóa</td><td>9.5 / 10</td><td>Xuất sắc</td><td>🟢 Đạt (Xanh)</td></tr>
-            <tr><td>Lê Thị Bình</td><td>Sinh</td><td>4.5 / 10</td><td>Yếu</td><td>🔴 Trượt (Đỏ)</td></tr>
-          </tbody>
-        </table>
       </div>
 
       <!-- 8. exam_attempt_answers -->
@@ -847,65 +822,59 @@ erDiagram
           <div class="entity-name">✍️ Chi Tiết Câu Trả Lời</div>
           <span class="table-tech-name">exam_attempt_answers</span>
         </div>
-        <p class="entity-desc">Ghi nhận chính xác thí sinh đã tích chọn đáp án nào trong từng câu hỏi, giúp hệ thống chấm điểm và hiển thị lại khi xem lại đề thi.</p>
+        <p class="entity-desc">Ghi nhận các đáp án thí sinh đã chọn. Ràng buộc <code>ON DELETE RESTRICT</code> kèm snapshot nội dung bảo đảm bài thi cũ không bao giờ bị mất khi câu hỏi bị xóa khỏi ngân hàng.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• Đi kèm lượt thi của thí sinh.</div>
+          <div>• Đi kèm lượt thi, được bảo vệ tính toàn vẹn lịch sử.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Lượt Thi</th><th>Câu Hỏi</th><th>Đáp Án Đã Chọn</th><th>Kết Quả</th></tr></thead>
-          <tbody>
-            <tr><td>Attempt #1</td><td>Câu 1</td><td>Chọn [A]</td><td>✅ Đúng (1đ)</td></tr>
-            <tr><td>Attempt #1</td><td>Câu 2</td><td>Chọn [A, B, D, E]</td><td>✅ Đúng (1đ)</td></tr>
-          </tbody>
-        </table>
       </div>
 
-      <!-- 9. ai_chat_logs -->
-      <div class="entity-card" data-category="ai">
+      <!-- 9. notifications -->
+      <div class="entity-card" data-category="aux">
         <div class="entity-header">
-          <div class="entity-name">🤖 Nhật Ký Hỏi Đáp AI (Thi Thử)</div>
+          <div class="entity-name">🔔 Thông Báo Hệ Thống</div>
+          <span class="table-tech-name">notifications</span>
+        </div>
+        <p class="entity-desc">Tự động gửi thông báo cho Giáo viên khi câu hỏi đóng góp được Admin duyệt hoặc bị từ chối (kèm lý do), và thông báo khi học sinh vừa nộp bài thi mới.</p>
+        <div class="perms-box">
+          <div class="perms-title">🔐 Phân quyền:</div>
+          <div>• Mỗi người dùng chỉ nhận và đánh dấu đã đọc thông báo của chính mình.</div>
+        </div>
+      </div>
+
+      <!-- 10. ai_chat_logs -->
+      <div class="entity-card" data-category="aux">
+        <div class="entity-header">
+          <div class="entity-name">🤖 Nhật Ký Chatbot AI</div>
           <span class="table-tech-name">ai_chat_logs</span>
         </div>
-        <p class="entity-desc">Lưu toàn bộ lịch sử khi thí sinh thi thử và hỏi Chatbot AI: "Vì sao câu này đáp án A lại đúng?", giúp đánh giá mức độ tương tác học tập.</p>
+        <p class="entity-desc">Lưu lịch sử thí sinh hỏi Chatbot AI giải thích nguyên nhân đáp án đúng/sai ở chế độ thi thử, phục vụ phân tích sư phạm của giáo viên.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Học sinh:</b> Xem lịch sử chat của chính mình.<br>• <b>Admin / GV:</b> Xem để theo dõi câu hỏi học sinh hay vướng mắc.</div>
+          <div>• Học sinh xem lịch sử mình hỏi; Giáo viên xem câu hỏi của học sinh lớp mình.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Câu Hỏi Học Sinh</th><th>Lời Giải Thích Của AI</th></tr></thead>
-          <tbody>
-            <tr><td>"Vì sao Fe là chất khử?"</td><td>"Vì số oxi hóa của Fe tăng từ 0 lên +2..."</td></tr>
-          </tbody>
-        </table>
       </div>
 
-      <!-- 10. question_import_logs -->
+      <!-- 11. question_import_logs -->
       <div class="entity-card" data-category="bank">
         <div class="entity-header">
-          <div class="entity-name">📥 Nhật Ký Nạp Đề Từ Excel</div>
+          <div class="entity-name">📥 Nhật Ký Nạp Excel</div>
           <span class="table-tech-name">question_import_logs</span>
         </div>
-        <p class="entity-desc">Lưu lịch sử những lần Admin hoặc Giáo viên tải lên file Excel ngân hàng câu hỏi, ghi nhận số câu thành công và chi tiết các dòng bị lỗi để sửa.</p>
+        <p class="entity-desc">Lưu vết các đợt nạp câu hỏi hàng loạt từ file Excel, ghi nhận tổng số dòng, số câu thành công và chi tiết lỗi sai định dạng.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• <b>Admin:</b> Toàn quyền theo dõi tất cả đợt import.<br>• <b>Giáo viên:</b> Xem đợt import của mình.</div>
+          <div>• Admin xem mọi đợt nạp; Giáo viên xem đợt nạp của bản thân.</div>
         </div>
-        <table class="sample-table">
-          <thead><tr><th>Tên File</th><th>Tổng Số Dòng</th><th>Thành Công</th><th>Lỗi</th></tr></thead>
-          <tbody>
-            <tr><td>Mau_Import_Hoa_10.xlsx</td><td>50 dòng</td><td>48 câu</td><td>2 câu</td></tr>
-          </tbody>
-        </table>
       </div>
 
     </div>
 
-    <!-- 5. Thang Điểm & Xếp Loại Chuẩn -->
-    <h2 class="section-title">🏆 5. Quy Chuẩn Xếp Loại Học Lực Thang Điểm 10</h2>
+    <!-- 4. Thang Điểm & Xếp Loại Chuẩn -->
+    <h2 class="section-title">🏆 4. Quy Chuẩn Xếp Loại Học Lực Thang Điểm 10</h2>
     <div class="ranking-box">
       <p style="font-size: 0.95rem; color: var(--color-mint);">
-        Hệ thống tự động chấm điểm theo công thức: <b>Điểm = (Số câu đúng / Tổng số câu) × 10</b>. Sau đó tự động xếp loại và hiển thị giao diện trực quan:
+        Hệ thống tự động chấm điểm theo công thức: <b>Điểm = (Số câu đúng / Tổng số câu đề thi) × 10</b>. Sau đó tự động xếp loại và hiển thị giao diện trực quan:
       </p>
       <div class="scale-grid">
         <div class="scale-card scale-xuat-sac">
@@ -938,25 +907,21 @@ erDiagram
 
     <!-- Footer -->
     <footer class="footer">
-      <p>Exam App Database Schema v1.0 • Chuẩn hóa theo Supabase Self-Hosted Docker Architecture</p>
-      <p style="margin-top: 0.3rem;">Dành cho nhân sự chuyên môn, giáo viên và đội ngũ phát triển sản phẩm</p>
+      <p>Exam App Database Schema v2.0 • Chuẩn hóa theo Supabase Self-Hosted Docker Architecture</p>
+      <p style="margin-top: 0.3rem;">Bảo mật phân quyền đa tầng • Chống gian lận F12 • Toàn vẹn dữ liệu lịch sử</p>
     </footer>
 
   </div>
 
   <script>
-    // Initialize Mermaid
     mermaid.initialize({
       startOnLoad: true,
       theme: 'dark',
       securityLevel: 'loose',
       fontFamily: 'Plus Jakarta Sans',
-      er: {
-        useMaxWidth: true
-      }
+      er: { useMaxWidth: true }
     });
 
-    // Theme Toggle
     function toggleTheme() {
       const body = document.body;
       const btn = document.getElementById('themeBtn');
@@ -975,7 +940,6 @@ erDiagram
       }
     }
 
-    // Filter Entities by category
     function filterEntities(cat, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -990,7 +954,6 @@ erDiagram
       });
     }
 
-    // Load saved theme
     window.addEventListener('DOMContentLoaded', () => {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'light') {

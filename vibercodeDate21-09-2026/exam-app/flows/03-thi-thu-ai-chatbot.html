@@ -155,9 +155,15 @@ flowchart TD
     ChooseMode --> FetchPractice[Hệ thống nạp 20 câu hỏi ngẫu nhiên kèm đáp án & lời giải]
     FetchPractice --> RenderQ[Hiển thị câu hỏi + Công thức LaTeX + Các phương án]
     
-    RenderQ --> StudentSelect[Học viên tích chọn 1 hoặc nhiều đáp án]
-    StudentSelect --> InstantFeedback{Hệ thống Phản hồi Tức thì}
+    RenderQ --> CheckQType{Loại câu hỏi?}
+    CheckQType -->|Đơn đáp án - Radio| SelectSingle[Học viên chọn 1 đáp án]
+    SelectSingle --> InstantFeedback
     
+    CheckQType -->|Nhiều đáp án - Checkbox| SelectMulti[Học viên tích chọn các phương án]
+    SelectMulti --> ClickVerify[Học viên bấm nút 'Kiểm tra đáp án']
+    ClickVerify --> InstantFeedback
+    
+    InstantFeedback{Hệ thống Đánh giá & Phản hồi}
     InstantFeedback --> HighlightGreen[Đáp án Đúng: PHÁT SÁNG XANH LÁ]
     InstantFeedback --> HighlightRed[Đáp án Chọn Sai: HIỆN ICON DẤU X ĐỎ]
     HighlightGreen --> ShowExplain[Hiện ngay Lời giải thích chi tiết phía dưới]
@@ -280,7 +286,7 @@ flowchart TD
                 3
               </span>
               <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
-                Tích chọn phương án trả lời
+                Tích chọn & Kiểm tra đáp án (Chống lộ đáp án)
               </h3>
             </div>
             <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
@@ -289,7 +295,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Học viên tích chọn 1 đáp án (Radio) hoặc nhiều đáp án (Checkbox) tùy theo yêu cầu của câu hỏi.
+            Với câu hỏi 1 đáp án (Radio), hệ thống phản hồi ngay sau khi chọn. Với câu hỏi nhiều đáp án (Checkbox), học viên tích chọn các phương án theo suy đoán, sau đó bấm nút <b>"Kiểm tra đáp án"</b> để tránh việc phản hồi sớm làm lộ kết quả các ô còn lại.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -304,7 +310,7 @@ flowchart TD
             </div>
             <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
               <span class="text-base">🖥️</span>
-              <span class="leading-relaxed">Các ô lựa chọn A, B, C, D với hiệu ứng hover mượt mà.</span>
+              <span class="leading-relaxed">Các ô lựa chọn kèm nút bấm nổi bật màu xanh mòng két: <b>[✓ Kiểm tra đáp án]</b> khi gặp câu hỏi chọn nhiều đáp án.</span>
             </div>
           </div>
         </div>
@@ -322,7 +328,7 @@ flowchart TD
                 4
               </span>
               <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
-                Phản hồi tức thì & Hiển thị giải thích
+                Phản hồi trực quan & Hiển thị giải thích
               </h3>
             </div>
             <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
@@ -331,7 +337,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Ngay khi tích chọn: đáp án đúng phát sáng xanh lá; nếu chọn sai, phương án sai hiển thị dấu [X] đỏ. Khung giải thích chi tiết lập tức mở ra phía dưới.
+            Khi kiểm tra: toàn bộ các đáp án đúng phát sáng xanh lá; các đáp án học viên chọn sai hiển thị dấu [X] đỏ. Khung giải thích chi tiết lập tức mở ra phía dưới kèm nút kích hoạt AI.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -346,7 +352,7 @@ flowchart TD
             </div>
             <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
               <span class="text-base">🖥️</span>
-              <span class="leading-relaxed">Phương án đúng: viền xanh lá, nền xanh nhạt rực sáng. Phương án sai: viền đỏ + icon [X] đỏ.</span>
+              <span class="leading-relaxed">Phương án đúng: viền xanh lá, nền xanh nhạt rực sáng. Phương án sai: viền đỏ + icon [X] đỏ. Khung giải thích hiện ra ngay bên dưới.</span>
             </div>
           </div>
         </div>

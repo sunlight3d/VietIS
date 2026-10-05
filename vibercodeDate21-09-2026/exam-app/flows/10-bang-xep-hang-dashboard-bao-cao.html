@@ -121,7 +121,7 @@
         <div class="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
           <span>Tác nhân:</span>
           <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700">
-            Quản trị viên (Admin) / Ban giám hiệu
+            Quản trị viên (Admin)
           </span>
         </div>
       </div>
@@ -174,7 +174,7 @@ flowchart TD
     AnalyticsHub -->|Xuất Báo Cáo Tổng Hợp| MasterExport[Tạo Bảng Tổng Hợp Kết Quả Toàn Trường / Khối Lớp]
     MasterExport --> SelectExportType{Chọn định dạng xuất}
     SelectExportType -->|Excel| ExportAllExcel[Xuất file Excel .xlsx đầy đủ dữ liệu thống kê]
-    SelectExportType -->|PDF| ExportAllPDF[Xuất file PDF .pdf báo cáo trang trọng trình Ban giám hiệu]
+    SelectExportType -->|PDF| ExportAllPDF[Xuất file PDF .pdf báo cáo tổng hợp kết quả kỳ thi]
       </div>
     </div>
 
@@ -327,12 +327,12 @@ flowchart TD
               </h3>
             </div>
             <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
-              Admin & Ban Giám Hiệu
+              Admin
             </span>
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Dashboard hiển thị biểu đồ trực quan so sánh điểm trung bình giữa các lớp theo từng môn học. Ban giám hiệu căn cứ vào đây để đánh giá hiệu quả giảng dạy của giáo viên phụ trách.
+            Dashboard hiển thị biểu đồ trực quan so sánh điểm trung bình giữa các lớp theo từng môn học. Admin căn cứ vào đây để đánh giá hiệu quả giảng dạy của giáo viên phụ trách từng bộ môn.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -374,7 +374,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Admin tổng hợp kết quả của một lớp, nhiều lớp hoặc toàn bộ trường. Bấm nút 'Xuất Excel' để nhận bảng tính chi tiết hoặc 'Xuất PDF' để in ấn nộp Ban giám hiệu.
+            Admin tổng hợp kết quả của một lớp, nhiều lớp hoặc toàn bộ trường. Bấm nút 'Xuất Excel' để nhận bảng tính chi tiết hoặc 'Xuất PDF' để lưu trữ và báo cáo chuyên môn.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -389,7 +389,7 @@ flowchart TD
             </div>
             <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
               <span class="text-base">🖥️</span>
-              <span class="leading-relaxed">Nút bấm 'Tải Báo cáo Tổng Hợp Excel' và 'Xuất Báo Cáo PDF Trình Ký'. File xuất có đầy đủ chữ ký, biểu đồ và phân tích.</span>
+              <span class="leading-relaxed">Nút bấm 'Tải Báo cáo Tổng Hợp Excel' và 'Xuất Báo Cáo PDF'. File xuất có đầy đủ chữ ký, biểu đồ và phân tích.</span>
             </div>
           </div>
         </div>
@@ -404,7 +404,7 @@ flowchart TD
         <h3>Quy Tắc Nghiệp Vụ Quan Trọng Cần Ghi Nhớ</h3>
       </div>
       <div class="space-y-2.5">
-        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bảo mật cấp cao: Chỉ tài khoản Quản trị viên (Admin) và Ban giám hiệu mới có quyền truy cập Dashboard đánh giá giáo viên.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Ô Textbox nhập số lượng Top phải có cơ chế kiểm tra (Validate): Chỉ cho phép nhập số nguyên dương hợp lệ.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Báo cáo xuất ra phải chuẩn hóa theo quy cách văn bản sư phạm, có đầy đủ ngày giờ lập và tên người xuất báo cáo.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bảo mật cấp cao: Chỉ tài khoản Quản trị viên (Admin) mới có quyền truy cập Dashboard đánh giá giáo viên toàn trường.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Ô Textbox nhập số lượng Top phải có cơ chế kiểm tra (Validate): Chỉ cho phép nhập số nguyên dương hợp lệ.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Báo cáo xuất ra phải chuẩn hóa theo quy cách văn bản sư phạm, có đầy đủ ngày giờ lập và tên người xuất báo cáo.</span></div>
       </div>
     </div>
 

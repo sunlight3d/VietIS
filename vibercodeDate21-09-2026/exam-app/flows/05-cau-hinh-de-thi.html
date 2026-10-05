@@ -127,10 +127,10 @@
       </div>
 
       <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">
-        Admin Cấu Hình Đề Thi & Tham Số Kỳ Thi
+        Admin Cấu Hình Đề Thi Theo Từng Kỳ Thi & Môn Học
       </h1>
       <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base">
-        Cho phép Admin chủ động tùy biến các tham số kỳ thi cho từng môn học: số lượng câu hỏi rút ngẫu nhiên, thời lượng làm bài thi, điểm chuẩn đạt và trạng thái đóng/mở thi. Mọi thay đổi có hiệu lực ngay lập tức cho các lượt thi tiếp theo.
+        Cho phép Admin chủ động thiết lập và tùy biến cấu hình chi tiết cho từng <b>Kỳ thi / Bài kiểm tra cụ thể</b> (Kiểm tra 15 phút, 1 tiết 45 phút, Thi giữa kỳ, Cuối kỳ) gắn liền với từng môn học: tiêu đề kỳ thi, thời gian mở/đóng đề thi, số câu hỏi ngẫu nhiên, thời lượng làm bài, điểm chuẩn đạt và trạng thái kích hoạt.
       </p>
     </div>
 
@@ -151,27 +151,23 @@
       </div>
       <div class="mermaid flex justify-center overflow-x-auto py-3">
 flowchart TD
-    Start([Admin vào mục 'Cấu hình Đề thi & Kỳ thi']) --> SelectSubject[Chọn Môn thi: Hóa học / Sinh học / Tiếng Anh]
-    SelectSubject --> LoadCurrentConfig[Hệ thống nạp cấu hình hiện tại của môn]
+    Start([Admin vào mục 'Quản lý Kỳ thi & Cấu hình Đề']) --> ActionChoose{Chọn thao tác}
     
-    LoadCurrentConfig --> AdminEdit{Admin điều chỉnh tham số}
-    AdminEdit --> SetQCount[Chỉnh Số lượng câu hỏi ngẫu nhiên: VD 20 -> 40 câu]
-    AdminEdit --> SetDuration[Chỉnh Thời lượng làm bài: VD 30 phút -> 45 phút]
-    AdminEdit --> SetPassScore[Chỉnh Điểm Chuẩn Đạt: Mặc định 5.0 điểm]
-    AdminEdit --> SetStatus[Bật/Tắt Trạng thái: Đang mở thi / Tạm đóng thi]
+    ActionChoose -->|Tạo kỳ thi mới| CreateExam[Nhập Tiêu đề & Chọn Môn học: Hóa / Sinh / Anh]
+    ActionChoose -->|Chỉnh sửa kỳ thi sẵn có| SelectExam[Chọn Kỳ thi từ danh sách: VD Giữa kỳ 1 - Hóa 10]
     
-    SetQCount --> ValidateConfig{Kiểm tra tính hợp lệ}
-    SetDuration --> ValidateConfig
-    SetPassScore --> ValidateConfig
-    SetStatus --> ValidateConfig
+    CreateExam --> SetParams[Thiết lập Tham số: Loại kỳ thi, Khung giờ mở đề, Số câu, Thời lượng, Điểm đạt]
+    SelectExam --> SetParams
     
-    ValidateConfig -->|Số câu > Tổng câu trong kho| ShowWarn[Cảnh báo: Kho đề không đủ số lượng câu yêu cầu]
-    ShowWarn --> AdminEdit
+    SetParams --> ValidateConfig{Kiểm tra tính hợp lệ ngân hàng câu hỏi}
     
-    ValidateConfig -->|Hợp lệ| SaveConfig[Bấm 'Lưu Cấu Hình']
-    SaveConfig --> UpdateDB[(Cập nhật cấu hình vào Cơ sở dữ liệu)]
-    UpdateDB --> LiveEffect[Có hiệu lực NGAY LẬP TỨC cho các lượt thi mới]
-    LiveEffect --> ToastSuccess[Hiển thị thông báo: 'Đã cập nhật cấu hình kỳ thi thành công']
+    ValidateConfig -->|Số câu > Tổng câu hợp lệ trong kho| ShowWarn[Cảnh báo: Kho đề không đủ số lượng câu yêu cầu]
+    ShowWarn --> SetParams
+    
+    ValidateConfig -->|Hợp lệ| SaveConfig[Bấm 'Lưu & Phát hành Kỳ Thi']
+    SaveConfig --> UpdateDB[(Lưu vào bảng exam_configs kèm Snapshot tham số)]
+    UpdateDB --> LiveEffect[Kỳ thi sẵn sàng cho học sinh trong khung giờ mở đề]
+    LiveEffect --> ToastSuccess[Hiển thị thông báo: 'Đã lưu cấu hình kỳ thi thành công']
       </div>
     </div>
 

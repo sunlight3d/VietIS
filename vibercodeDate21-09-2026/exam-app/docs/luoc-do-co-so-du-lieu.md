@@ -1,29 +1,30 @@
 # LƯỢC ĐỒ CƠ SỞ DỮ LIỆU TOÀN DIỆN - EXAM APP (SUPABASE / POSTGRESQL)
 
 > **Tài liệu tham chiếu:** Phân tích từ 10 Flows nghiệp vụ (Hóa, Sinh, Tiếng Anh) & Hướng dẫn chuẩn [Supabase Self-Hosting with Docker](https://supabase.com/docs/guides/self-hosting/docker).  
-> **Phiên bản:** 1.0  
-> **Cập nhật:** 2026-09-30  
+> **Phiên bản:** 2.0 (Cập nhật vá toàn diện 8 lỗ hổng bảo mật & hoàn thiện tính năng nâng cao)  
+> **Cập nhật:** 2026-10-05  
 > **Mục tiêu:** Cung cấp tài liệu tra cứu hoàn chỉnh về cấu trúc bảng, mối quan hệ, quy tắc nghiệp vụ, bảo mật hàng (RLS) và hướng dẫn tích hợp cho cả nhân sự kỹ thuật (Developers) lẫn quản lý dự án (Product Owners / Stakeholders).
 
 ---
 
 ## 1. TỔNG QUAN HỆ THỐNG VÀ 4 PHÂN HỆ NGHIỆP VỤ CHÍNH
 
-Cơ sở dữ liệu của **Exam App** được chuẩn hóa bậc 3 (3NF), gồm **10 bảng thực thể**, **2 view phân tích**, **5 hàm xử lý nghiệp vụ tự động** và hệ thống bảo mật hàng (RLS) đa tầng, chia thành 4 phân hệ chính:
+Cơ sở dữ liệu của **Exam App** được chuẩn hóa bậc 3 (3NF), gồm **11 bảng thực thể**, **2 view phân tích bảo mật**, **7 hàm xử lý nghiệp vụ tự động** và hệ thống bảo mật hàng (RLS) đa tầng, chia thành 4 phân hệ chính:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                             EXAM APP DATABASE                               │
 ├───────────────────────┬───────────────────────┬─────────────────────────────┤
 │ 1. TÀI KHOẢN & LỚP    │ 2. CÂU HỎI THI        │ 3. ĐỀ THI & BÀI LÀM         │
-│ - profiles            │ - questions           │ - exam_configs              │
-│ - classes             │ - question_options    │ - exam_attempts (Xóa mềm)   │
+│ - users               │ - questions           │ - exam_configs              │
+│ - classes             │ - question_options    │ - exam_attempts             │
 │ - teacher_classes     │ - question_import_logs│ - exam_attempt_answers      │
 ├───────────────────────┴───────────────────────┴─────────────────────────────┤
-│ 4. TRỢ LÝ AI CHATBOT & BÁO CÁO TỔNG HỢP                                     │
+│ 4. THÔNG BÁO, AI CHATBOT & BÁO CÁO TỔNG HỢP                                 │
+│ - notifications (Thông báo duyệt đề thi & bài nộp cho Giáo viên)            │
 │ - ai_chat_logs (Lịch sử hỏi đáp AI vì sao đáp án đúng trong thi thử)        │
-│ - view_leaderboard (Bảng xếp hạng Top 10/20/50 điểm cao nhất)               │
-│ - view_class_performance (Thống kê điểm & tỷ lệ đạt theo Lớp để đánh giá GV)│
+│ - view_leaderboard (Bảng xếp hạng tính cả bài hoàn thành & hết giờ tự nộp)  │
+│ - view_class_performance (Thống kê điểm & tỷ lệ đạt theo Lớp & Môn học)    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -43,19 +44,21 @@ erDiagram
     classes ||--o{ exam_attempts : "groups"
     exam_configs ||--o{ exam_attempts : "defines"
     exam_attempts ||--o{ exam_attempt_answers : "contains"
-    questions ||--o{ exam_attempt_answers : "evaluates"
+    questions ||--o{ exam_attempt_answers : "evaluates (RESTRICT)"
     exam_attempts ||--o{ ai_chat_logs : "records"
     users ||--o{ question_import_logs : "uploads"
+    users ||--o{ notifications : "receives"
 
     users {
-        uuid id PK "Primary Key"
-        varchar username UK "Unique username"
+        uuid id PK "Primary Key (matches auth.users)"
+        varchar username UK "Unique identifier login"
         varchar email UK "User login email"
-        varchar hash_password "Hashed password (bcrypt/argon2)"
+        varchar hash_password "Hashed password (hidden from views)"
         varchar full_name "Full display name"
         user_role role "student | teacher | admin"
         uuid class_id FK "References classes(id)"
         text avatar_url "Profile photo URL"
+        varchar phone "Contact number"
         boolean is_active "Account status"
         timestamptz created_at "Creation timestamp"
     }
@@ -81,39 +84,43 @@ erDiagram
     exam_configs {
         uuid id PK "Primary Key"
         varchar title "Exam title"
+        varchar exam_type "15_min | 45_min | mid_term | final_term"
+        varchar academic_term "Term e.g. Học kỳ 1"
         subject_type subject "chemistry | biology | english"
         int duration_minutes "Exam duration (default 45)"
         int total_questions "Questions per exam (default 20)"
         numeric pass_score "Passing threshold (default 5.0)"
+        timestamptz start_time "Exam window start"
+        timestamptz end_time "Exam window end"
         boolean shuffle_questions "Randomize questions"
         boolean shuffle_options "Randomize options"
         boolean is_active "Active status"
         uuid created_by FK "References users(id)"
-        timestamptz created_at "Creation timestamp"
     }
 
     questions {
         uuid id PK "Primary Key"
         subject_type subject "chemistry | biology | english"
+        question_type question_type "single_choice | multiple_choice"
         text content "LaTeX formula & Vietnamese text"
         text image_url "Optional diagram image"
         text explanation "Detailed explanation (LaTeX)"
         varchar difficulty "easy | medium | hard"
         question_status status "pending | approved | rejected"
-        text rejection_reason "Admin review feedback"
+        text rejection_reason "Admin feedback when rejected"
         uuid contributed_by FK "References users(id)"
         uuid reviewed_by FK "References users(id)"
+        boolean is_deleted "Soft delete flag"
         boolean is_active "Active status"
-        timestamptz created_at "Creation timestamp"
     }
 
     question_options {
         uuid id PK "Primary Key"
         uuid question_id FK "References questions(id)"
-        varchar option_key "Option key: A, B, C, D, E"
-        text content "Option text & LaTeX formula"
-        boolean is_correct "Supports multiple correct answers"
-        int sort_order "Display order"
+        varchar option_key "A, B, C, D, E"
+        text content "Option content (LaTeX)"
+        boolean is_correct "Hidden from students (Anti-F12)"
+        int sort_order "Option display order"
     }
 
     exam_attempts {
@@ -121,30 +128,42 @@ erDiagram
         uuid user_id FK "References users(id)"
         uuid class_id FK "References classes(id)"
         uuid exam_config_id FK "References exam_configs(id)"
+        varchar exam_title "Exam title snapshot"
         subject_type subject "chemistry | biology | english"
         exam_mode mode "practice | real"
         exam_status status "in_progress | completed | timed_out"
-        timestamptz started_at "Start timestamp"
-        timestamptz submitted_at "Submission timestamp"
-        int time_spent_seconds "Duration spent"
-        boolean auto_submitted "Auto-submitted when time expires"
-        int total_questions "Total questions (default 20)"
-        int correct_answers_count "Correct answers count"
-        numeric score "Score on 10-point scale (0.00-10.00)"
-        boolean is_passed "Pass (Green) / Fail (Red)"
+        int duration_minutes "Duration snapshot"
+        numeric pass_score "Pass score snapshot"
+        int total_questions "Fixed exam question count"
+        int correct_answers_count "Number of correct answers"
+        numeric score "Final score (0 - 10)"
+        boolean is_passed "Pass indicator (Green/Red)"
         academic_rank academic_rank "xuat_sac | gioi | kha | trung_binh | yeu"
-        boolean is_deleted "Soft delete flag"
-        timestamptz deleted_at "Soft delete timestamp"
+        boolean auto_submitted "Submitted automatically upon timeout"
+        boolean is_student_deleted "Hidden in student view only"
+        jsonb config_snapshot "Full exam config snapshot"
     }
 
     exam_attempt_answers {
         uuid id PK "Primary Key"
         uuid attempt_id FK "References exam_attempts(id)"
-        uuid question_id FK "References questions(id)"
-        uuid_array selected_option_ids "Multi-choice selected option IDs"
-        boolean is_correct "All correct options matched"
-        numeric points_awarded "Awarded score"
-        timestamptz answered_at "Answer timestamp"
+        uuid question_id FK "References questions(id) (ON DELETE RESTRICT)"
+        uuid[] selected_option_ids "Multi-select option IDs"
+        boolean is_correct "Grading result"
+        numeric points_awarded "Points awarded"
+        text question_snapshot_content "Immutable question text"
+        jsonb options_snapshot "Immutable options list"
+    }
+
+    notifications {
+        uuid id PK "Primary Key"
+        uuid user_id FK "References users(id)"
+        varchar title "Notification title"
+        text content "Detailed message"
+        notification_type type "question_approved | question_rejected | exam_submitted"
+        boolean is_read "Read status"
+        uuid reference_id "Related entity ID"
+        timestamptz created_at "Created timestamp"
     }
 
     ai_chat_logs {
@@ -152,254 +171,106 @@ erDiagram
         uuid attempt_id FK "References exam_attempts(id)"
         uuid user_id FK "References users(id)"
         uuid question_id FK "References questions(id)"
-        text student_prompt "Student question to AI"
+        text student_prompt "Question to AI"
         text ai_response "Pedagogical explanation from AI"
-        timestamptz created_at "Creation timestamp"
     }
 
     question_import_logs {
         uuid id PK "Primary Key"
         uuid imported_by FK "References users(id)"
-        varchar filename "Uploaded Excel filename"
-        int total_rows "Total rows in file"
-        int success_count "Imported question count"
-        int error_count "Failed row count"
-        jsonb error_details "Error descriptions"
-        timestamptz created_at "Creation timestamp"
+        varchar filename "Excel file name"
+        int total_rows "Total rows"
+        int success_count "Imported count"
+        int error_count "Failed count"
     }
 ```
 
 ---
 
-## 3. TỪ ĐIỂN DỮ LIỆU CHI TIẾT (DATA DICTIONARY)
+## 3. CHI TIẾT 8 VẤN ĐỀ BẢO MẬT ĐÃ ĐƯỢC KHẮC PHỤC TRIỆT ĐỂ
 
-### 3.1. Các kiểu dữ liệu ENUM (Đặc thù nghiệp vụ)
-1. **`user_role`**:
-   - `'student'`: Thí sinh / Học sinh (chỉ thi, xem kết quả của mình, xóa mềm bài của mình).
-   - `'teacher'`: Giáo viên bộ môn (xem học sinh các lớp phụ trách, xuất bảng điểm Excel/PDF, đóng góp câu hỏi).
-   - `'admin'`: Quản trị viên hệ thống (toàn quyền cấu hình, phê duyệt câu hỏi, phân lớp, xem toàn bộ báo cáo).
-2. **`subject_type`**:
-   - `'chemistry'`: Môn Hóa học (hỗ trợ công thức phản ứng $\ce{...}$).
-   - `'biology'`: Môn Sinh học (hỗ trợ di truyền, quang hợp, ADN/ARN).
-   - `'english'`: Môn Tiếng Anh (ngữ pháp, từ đồng nghĩa, đọc hiểu).
-3. **`exam_mode`**:
-   - `'practice'`: Thi thử (hiện đáp án đúng sáng lên, đáp án sai có icon đỏ, kèm lời giải thích và Chatbot AI giải đáp).
-   - `'real'`: Thi thật (đồng hồ đếm lùi, hết giờ tự nộp bài, tính điểm thang 10 và xếp loại sau khi nộp).
-4. **`exam_status`**:
-   - `'in_progress'`: Đang làm bài thi.
-   - `'completed'`: Đã nộp bài thủ công bởi thí sinh.
-   - `'timed_out'`: Tự động nộp bài do hết thời gian làm bài quy định.
-   - `'cancelled'`: Đã hủy bỏ.
-5. **`question_status`**:
-   - `'pending'`: Câu hỏi mới do Giáo viên đóng góp, đang chờ Admin duyệt.
-   - `'approved'`: Đã được Admin phê duyệt đưa vào ngân hàng đề thi chính thức.
-   - `'rejected'`: Bị Admin từ chối kèm lý do phản hồi.
-6. **`academic_rank`**:
-   - `'xuat_sac'`: Xuất sắc (Điểm $\ge 9.0$).
-   - `'gioi'`: Giỏi ($8.0 \le \text{Điểm} < 9.0$).
-   - `'kha'`: Khá ($6.5 \le \text{Điểm} < 8.0$).
-   - `'trung_binh'`: Trung bình ($5.0 \le \text{Điểm} < 6.5$).
-   - `'yeu'`: Yếu (Điểm $< 5.0$).
+### 3.1. Chống tự nâng quyền khi đăng ký (Privilege Escalation Prevention)
+- **Vấn đề cũ:** Trigger đọc `NEW.raw_user_meta_data->>'role'`, người dùng có thể gửi `{ role: 'admin' }` qua API `signUp` để tự biến mình thành Admin.
+- **Giải pháp triệt để:** Trigger `handle_new_user()` **mặc định cưỡng chế role = 'student'** cho mọi tài khoản đăng ký qua Auth. Chỉ có Admin hiện tại mới có quyền cấp quyền `teacher` hoặc `admin` thông qua quản trị nội bộ.
+
+### 3.2. Chống lộ đáp án qua F12 / API (Anti-Cheat / Inspection Protection)
+- **Vấn đề cũ:** Học sinh gọi `SELECT * FROM question_options` là xem được toàn bộ cột `is_correct = true/false` và `questions.explanation` ngay trong khi đang làm bài.
+- **Giải pháp triệt để:**
+  - Chính sách RLS trên bảng `question_options` chỉ cho phép Giáo viên và Admin SELECT trực tiếp.
+  - Học sinh lấy đề thi qua hàm RPC bảo mật `fn_get_exam_questions(attempt_id)`. Hàm này trả về đề thi và các lựa chọn nhưng **bỏ hoàn toàn cột `is_correct` và `explanation`**.
+  - Sau khi nộp bài (`completed` hoặc `timed_out`), học sinh mới được gọi `fn_get_attempt_review(attempt_id)` để xem đáp án đúng và lời giải thích.
+
+### 3.3. Chống tự sửa điểm & tự chèn bài thi điểm 10 (Grade Tampering Prevention)
+- **Vấn đề cũ:** Học sinh có thể gửi lệnh `update({ score: 10, is_passed: true })` trực tiếp xuống bảng `exam_attempts`.
+- **Giải pháp triệt để:**
+  - Bổ sung Trigger `trg_protect_exam_attempt_grades`:
+    - Khi `INSERT`: Cưỡng chế `score = 0.00`, `is_passed = false`, `status = 'in_progress'`.
+    - Khi `UPDATE`: Chặn mọi thao tác sửa đổi điểm số, số câu đúng và trạng thái bài thi từ API client.
+    - Điểm số chỉ được cập nhật duy nhất qua Stored Procedure `fn_submit_exam_attempt()` (chạy với quyền `SECURITY DEFINER` và cờ phiên bảo mật `exam.is_submitting = 'true'`).
+
+### 3.4. Chống lộ hash_password & email qua View profiles
+- **Vấn đề cũ:** View `public.profiles` chạy dưới quyền owner (bỏ qua RLS) và `SELECT * FROM users` để lộ cả cột `hash_password`.
+- **Giải pháp triệt để:**
+  - View `public.profiles` được cấu hình `WITH (security_invoker = true)` để kế thừa 100% chính sách RLS từ bảng `users`.
+  - Cột `hash_password` bị **loại trừ hoàn toàn khỏi view `profiles`**.
+
+### 3.5. Bảo toàn bài tự nộp do hết giờ (timed_out) trong Báo cáo & Xếp hạng
+- **Vấn đề cũ:** View `view_leaderboard` và `view_class_performance` chỉ lọc `status = 'completed'`, khiến các bài làm bị hết giờ (`timed_out`) biến mất khỏi bảng điểm.
+- **Giải pháp triệt để:** Cập nhật điều kiện lọc: `WHERE ea.status IN ('completed', 'timed_out') AND ea.mode = 'real'`. Bài thi tự động nộp bài được ghi nhận đầy đủ điểm số và xếp hạng.
+
+### 3.6. Bảo toàn dữ liệu báo cáo khi học sinh xóa mềm
+- **Vấn đề cũ:** Học sinh bấm "Xóa bài thi" khiến bài thi bị ẩn ở cả bảng điểm của Giáo viên và Admin, làm sai lệch điểm trung bình và thống kê lớp.
+- **Giải pháp triệt để:**
+  - Sử dụng cột `is_student_deleted`: Khi học sinh xóa, cờ này đổi thành `true` để ẩn trên giao diện cá nhân của học sinh.
+  - Chính sách RLS của Giáo viên phụ trách lớp và Admin **không lọc cờ `is_student_deleted`**, bảo đảm giáo viên luôn nhìn thấy toàn bộ kết quả thi thật để đánh giá và xuất báo cáo.
+
+### 3.7. Bảo toàn lịch sử bài thi khi xóa câu hỏi
+- **Vấn đề cũ:** Khóa ngoại `exam_attempt_answers.question_id` để `ON DELETE CASCADE`. Khi Admin xóa câu hỏi, toàn bộ câu trả lời trong các bài thi cũ bị xóa theo!
+- **Giải pháp triệt để:**
+  - Đổi ràng buộc khóa ngoại sang `ON DELETE RESTRICT`. Không cho phép xóa cứng câu hỏi nếu đã có bài thi tham chiếu.
+  - Bổ sung cờ xóa mềm `questions.is_deleted = true`.
+  - Lưu snapshot nội dung câu hỏi `question_snapshot_content` và đáp án `options_snapshot` trong bảng `exam_attempt_answers`.
+
+### 3.8. Chấm điểm chuẩn xác theo tổng số câu đề thi
+- **Vấn đề cũ:** Hàm chấm điểm chia cho `SELECT COUNT(*) FROM exam_attempt_answers`. Nếu thí sinh chỉ làm 2 câu và bỏ trống 18 câu, hệ thống tính 2/2 = 10 điểm!
+- **Giải pháp triệt để:**
+  - Lấy `v_total_questions` cố định từ `exam_attempts.total_questions` (hoặc cấu hình đề thi).
+  - Điểm được tính chuẩn:
+    $$\text{Điểm} = \text{ROUND}\left( \frac{\text{Số câu đúng}}{\text{Tổng số câu đề thi}} \times 10, 2 \right)$$
+  - Các câu bỏ trống không có điểm và kéo giảm điểm số chính xác theo quy chế thi.
 
 ---
 
-### 3.2. Bảng `classes` (Quản lý Lớp học)
-- **Mục đích:** Lưu trữ danh mục lớp học, phục vụ việc phân lớp học sinh và phân công giáo viên giảng dạy.
-- **Ràng buộc:** `code` là duy nhất trên toàn hệ thống (VD: `10A1`, `11B2`, `12A1`).
+## 4. CÁC TÍNH NĂNG MỞ RỘNG BỔ SUNG
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
+1. **Giới hạn quyền Giáo viên theo môn học:**
+   - Bảng `teacher_classes(teacher_id, class_id, subject)` xác định chính xác môn và lớp phụ trách.
+   - Hàm `is_teacher_of_class_and_subject()` bảo đảm giáo viên dạy Hóa chỉ xem và chấm điểm môn Hóa của lớp mình phụ trách.
+   - Giáo viên chỉ có thể đóng góp câu hỏi cho môn học mình được phân công giảng dạy.
+2. **Bảng thông báo hệ thống (`notifications`):**
+   - Tự động gửi thông báo cho giáo viên khi Admin duyệt hoặc từ chối câu hỏi kèm lý do.
+   - Tự động thông báo cho giáo viên khi học sinh trong lớp hoàn thành bài thi thật.
+3. **Cột phân loại câu hỏi (`question_type`):**
+   - Phân biệt rõ `single_choice` (1 đáp án đúng - radio button) và `multiple_choice` (nhiều đáp án đúng - checkbox).
+4. **Snapshot cấu hình đề thi tại thời điểm thi:**
+   - Lưu trữ `exam_title`, `duration_minutes`, `pass_score`, `total_questions` và `config_snapshot (JSONB)` trực tiếp trên từng `exam_attempts`. Tránh việc cấu hình đề thi bị sửa đổi trong tương lai làm sai lệch lịch sử bài thi cũ.
+5. **Giáo viên chỉnh sửa và nộp lại câu hỏi bị từ chối:**
+   - Khi Admin từ chối câu hỏi (`status = 'rejected'`), giáo viên đọc lý do `rejection_reason`, chỉnh sửa lại nội dung.
+   - Trigger `trg_question_teacher_resubmit` tự động đưa trạng thái về `pending` và xóa lý do từ chối để Admin duyệt lại.
+
+---
+
+## 5. MA TRẬN PHÂN QUYỀN VÀ ROW LEVEL SECURITY (RLS)
+
+| Bảng | Thí sinh (Student) | Giáo viên bộ môn (Teacher) | Quản trị viên (Admin) |
 | :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` | Mã định danh duy nhất của lớp học |
-| `code` | `VARCHAR(50)` | UNIQUE, NOT NULL | Mã lớp hiển thị ngắn gọn (`10A1`, `11B2`...) |
-| `name` | `VARCHAR(100)` | NOT NULL | Tên đầy đủ (VD: `Lớp 10A1 Chuyên Tự Nhiên`) |
-| `grade` | `VARCHAR(20)` | NOT NULL | Khối lớp: `'10'`, `'11'`, `'12'`, `'other'` |
-| `school_year` | `VARCHAR(20)` | DEFAULT `'2026-2027'` | Niên khóa giảng dạy |
-| `is_active` | `BOOLEAN` | DEFAULT `true` | Đang mở nhận học sinh hay đã đóng |
-| `created_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Thời điểm tạo |
-| `updated_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Thời điểm cập nhật cuối cùng |
-
----
-
-### 3.3. Bảng `users` (Tài khoản người dùng: `users(username, hash_password)`)
-- **Mục đích:** Lưu trữ thông tin tài khoản và xác thực người dùng theo đúng convention chuẩn: `users(username, hash_password)`. Mật khẩu được mã hóa an toàn (bcrypt / argon2).
-- **Cơ chế tích hợp Supabase:** Tự động đồng bộ với `auth.users` qua Trigger PostgreSQL `on_auth_user_created` khi đăng ký tài khoản hoặc đăng nhập Google OAuth.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` (hoặc FK `auth.users(id)`) | Mã định danh duy nhất của tài khoản |
-| `username` | `VARCHAR(100)` | UNIQUE, NULLABLE | Tên đăng nhập người dùng (VD: `an_nguyen`, `mai_tran`) |
-| `email` | `VARCHAR(255)` | UNIQUE, NOT NULL | Địa chỉ email đăng nhập |
-| `hash_password` | `VARCHAR(255)` | NULLABLE | Chuỗi mật khẩu đã băm bảo mật (Bcrypt/Argon2) |
-| `full_name` | `VARCHAR(255)` | NOT NULL | Họ và tên hiển thị đầy đủ |
-| `role` | `user_role` | NOT NULL, DEFAULT `'student'` | Quyền hạn: Thí sinh (`student`), Giáo viên (`teacher`), Quản trị (`admin`) |
-| `class_id` | `UUID` | FK `classes(id)` ON DELETE SET NULL | Lớp học trực thuộc (Học sinh bắt buộc chọn lớp khi đăng ký) |
-| `avatar_url` | `TEXT` | NULLABLE | Đường dẫn ảnh đại diện (hoặc avatar Google OAuth) |
-| `phone` | `VARCHAR(50)` | NULLABLE | Số điện thoại liên hệ |
-| `is_active` | `BOOLEAN` | DEFAULT `true` | Trạng thái tài khoản |
-| `created_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Ngày tạo tài khoản |
-| `updated_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Ngày cập nhật gần nhất |
-
----
-
-### 3.4. Bảng `teacher_classes` (Phân công Giáo viên phụ trách lớp)
-- **Mục đích:** Quản lý xem giáo viên nào được quyền phụ trách môn nào tại lớp nào.
-- **Ràng buộc:** Cặp `(teacher_id, class_id, subject)` là duy nhất.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` | Khóa chính của phân công |
-| `teacher_id` | `UUID` | FK `profiles(id)` ON DELETE CASCADE | Giáo viên được phân công (role = `'teacher'`) |
-| `class_id` | `UUID` | FK `classes(id)` ON DELETE CASCADE | Lớp học được phân công |
-| `subject` | `subject_type` | NOT NULL | Môn học phụ trách (`chemistry`, `biology`, `english`) |
-| `created_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Ngày phân công |
-
----
-
-### 3.5. Bảng `exam_configs` (Cấu hình Đề thi)
-- **Mục đích:** Cho phép Admin tùy chỉnh linh hoạt các thông số bài thi cho từng môn học.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` | Khóa chính cấu hình đề |
-| `title` | `VARCHAR(255)` | NOT NULL | Tên đề thi (VD: `Đề thi trắc nghiệm Hóa 10 HK1`) |
-| `subject` | `subject_type` | NOT NULL | Môn thi (`chemistry`, `biology`, `english`) |
-| `duration_minutes` | `INT` | DEFAULT `45`, CHECK `> 0` | Thời gian làm bài tính bằng phút |
-| `total_questions` | `INT` | DEFAULT `20`, CHECK `> 0` | Số lượng câu hỏi ngẫu nhiên trong mỗi lần thi |
-| `pass_score` | `NUMERIC(4,2)` | DEFAULT `5.00`, CHECK `0-10` | Ngưỡng điểm đạt (đạt giao diện Xanh, trượt giao diện Đỏ) |
-| `shuffle_questions` | `BOOLEAN` | DEFAULT `true` | Đảo ngẫu nhiên câu hỏi mỗi lần thí sinh bấm "Thi" |
-| `shuffle_options` | `BOOLEAN` | DEFAULT `true` | Đảo ngẫu nhiên vị trí các đáp án A, B, C, D |
-| `is_active` | `BOOLEAN` | DEFAULT `true` | Kích hoạt cho phép thí sinh vào thi |
-| `created_by` | `UUID` | FK `profiles(id)` | Admin thiết lập |
-| `created_at`, `updated_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Thời gian tạo và cập nhật |
-
----
-
-### 3.6. Bảng `questions` & `question_options` (Ngân hàng Câu hỏi & Đáp án)
-- **Hỗ trợ công thức Toán, Lý, Hóa (LaTeX):** Nội dung câu hỏi và giải thích lưu chuỗi LaTeX chuẩn như `\ce{Fe + 2HCl -> FeCl2 + H2 ^}`, `$\frac{-b \pm \sqrt{\Delta}}{2a}$`.
-- **Hỗ trợ nhiều đáp án đúng (Checkbox):** Bảng `question_options` cho phép câu hỏi có 1 hoặc nhiều lựa chọn có `is_correct = true`. Thí sinh chỉ được tính điểm khi chọn đúng và đủ tất cả các đáp án đúng của câu hỏi đó.
-- **Quy trình duyệt câu hỏi:** Giáo viên đóng góp câu hỏi có `status = 'pending'`. Admin xem xét phê duyệt (`approved`) hoặc từ chối (`rejected`) kèm lý do `rejection_reason`.
-
-| Tên Cột | Bảng | Kiểu | Mô Tả |
-| :--- | :--- | :--- | :--- |
-| `content` | `questions` | `TEXT` | Đề bài câu hỏi (hỗ trợ tiếng Việt và LaTeX) |
-| `explanation` | `questions` | `TEXT` | Lời giải thích vì sao đáp án đúng (hỗ trợ LaTeX) |
-| `difficulty` | `questions` | `VARCHAR(20)` | Độ khó: `'easy'`, `'medium'`, `'hard'` |
-| `status` | `questions` | `question_status` | Trạng thái: `'pending'`, `'approved'`, `'rejected'` |
-| `contributed_by` | `questions` | `UUID` | Giáo viên gửi đề xuất câu hỏi |
-| `reviewed_by` | `questions` | `UUID` | Quản trị viên duyệt câu hỏi |
-| `option_key` | `question_options` | `VARCHAR(5)` | Ký hiệu đáp án: `'A'`, `'B'`, `'C'`, `'D'`, `'E'` |
-| `is_correct` | `question_options` | `BOOLEAN` | Đánh dấu là đáp án đúng (`true`/`false`) |
-
----
-
-### 3.7. Bảng `exam_attempts` & `exam_attempt_answers` (Lượt thi & Xóa mềm)
-- **Cơ chế Xóa mềm (Soft Delete):** Cột `is_deleted = true` và `deleted_at = now()`.
-  - Học sinh **chỉ xem lại và chỉ xóa mềm được bài thi của chính mình**.
-  - Tuyệt đối không xem và không xóa được bài thi của học sinh khác.
-  - Bài thi không bị xóa cứng khỏi ổ đĩa để đảm bảo Admin có thể kiểm toán, lập bảng tổng kết hoặc phục hồi khi cần.
-- **Chấm điểm thang 10 & Xếp loại tự động:**
-  - Điểm được tự động tính ngay khi nộp bài:
-    $$\text{score} = \text{ROUND}\left( \frac{\text{Số câu đúng}}{\text{Tổng số câu}} \times 10, 2 \right)$$
-  - Chỉ báo trực quan: `is_passed = (score >= pass_score)` (Điểm đạt $\rightarrow$ Giao diện Xanh; Điểm không đạt $\rightarrow$ Giao diện Đỏ).
-  - Tự động nộp bài khi hết giờ: `auto_submitted = true` và `status = 'timed_out'`.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` | Mã duy nhất của bài thi |
-| `user_id` | `UUID` | FK `profiles(id)` | Thí sinh làm bài thi |
-| `class_id` | `UUID` | FK `classes(id)` | Lớp học của thí sinh tại thời điểm thi |
-| `subject` | `subject_type` | NOT NULL | Môn thi (`chemistry`, `biology`, `english`) |
-| `mode` | `exam_mode` | NOT NULL | Chế độ: `'practice'` (Thi thử) hoặc `'real'` (Thi thật) |
-| `status` | `exam_status` | DEFAULT `'in_progress'` | Trạng thái: Đang thi, Đã nộp, Hết giờ tự nộp |
-| `started_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Thời điểm bắt đầu làm bài |
-| `submitted_at` | `TIMESTAMPTZ` | NULLABLE | Thời điểm nộp bài |
-| `time_spent_seconds` | `INT` | DEFAULT `0` | Thời gian hoàn thành tính bằng giây |
-| `auto_submitted` | `BOOLEAN` | DEFAULT `false` | True nếu hệ thống tự động thu bài khi hết giờ |
-| `total_questions` | `INT` | DEFAULT `20` | Tổng số câu hỏi của đề thi |
-| `correct_answers_count`| `INT` | DEFAULT `0` | Số lượng câu làm đúng |
-| `score` | `NUMERIC(4,2)` | DEFAULT `0.00` | Điểm số chuẩn theo thang điểm 10 (0.00 - 10.00) |
-| `is_passed` | `BOOLEAN` | DEFAULT `false` | Trạng thái Đạt (Xanh) hoặc Chưa đạt (Đỏ) |
-| `academic_rank` | `academic_rank` | NULLABLE | Xếp loại: Xuất sắc, Giỏi, Khá, Trung bình, Yếu |
-| `is_deleted` | `BOOLEAN` | DEFAULT `false` | **CỜ XÓA MỀM (Soft delete)** |
-| `deleted_at` | `TIMESTAMPTZ` | NULLABLE | Thời điểm xóa mềm |
-
----
-
-### 3.8. Bảng `ai_chat_logs` (Nhật ký Chatbot AI - Thi thử)
-- **Mục đích:** Lưu lại câu hỏi của học viên và câu trả lời giải thích của AI trong chế độ Thi thử.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` | Khóa chính cuộc hội thoại |
-| `attempt_id` | `UUID` | FK `exam_attempts(id)` | Bài thi thử tương ứng |
-| `user_id` | `UUID` | FK `profiles(id)` | Thí sinh đặt câu hỏi |
-| `question_id` | `UUID` | FK `questions(id)` | Câu hỏi thí sinh thắc mắc |
-| `student_prompt` | `TEXT` | NOT NULL | Nội dung thí sinh hỏi (VD: "Vì sao Fe lại là chất khử?") |
-| `ai_response` | `TEXT` | NOT NULL | Câu trả lời sư phạm của Chatbot AI |
-| `created_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Thời điểm trao đổi |
-
----
-
-### 3.9. Bảng `question_import_logs` (Nhật ký Import Excel)
-- **Mục đích:** Lưu lại nhật ký mỗi lần Admin hoặc Giáo viên nạp câu hỏi hàng loạt từ file Excel.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng Buộc | Ý Nghĩa Nghiệp Vụ |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | PK, `gen_random_uuid()` | Khóa chính bản ghi import |
-| `imported_by` | `UUID` | FK `profiles(id)` | Người thực hiện import |
-| `filename` | `VARCHAR(255)` | NOT NULL | Tên file Excel đã tải lên |
-| `total_rows` | `INT` | DEFAULT `0` | Tổng số dòng trong file |
-| `success_count` | `INT` | DEFAULT `0` | Số câu hỏi hợp lệ đã nạp thành công |
-| `error_count` | `INT` | DEFAULT `0` | Số câu bị lỗi định dạng |
-| `error_details` | `JSONB` | DEFAULT `'[]'` | Chi tiết danh sách dòng lỗi và nguyên nhân |
-| `created_at` | `TIMESTAMPTZ` | DEFAULT `now()` | Thời điểm import |
-
----
-
-## 4. MA TRẬN BẢO MẬT HÀNG (ROW LEVEL SECURITY - RLS)
-
-Cơ chế Row Level Security (RLS) của PostgreSQL được cấu hình trực tiếp tại tầng cơ sở dữ liệu, đảm bảo dù truy cập qua REST API, GraphQL hay SDK, người dùng chỉ đọc/ghi đúng phạm vi dữ liệu của mình:
-
-| Tên Bảng | Thí sinh (`student`) | Giáo viên bộ môn (`teacher`) | Quản trị viên (`admin`) |
-| :--- | :--- | :--- | :--- |
-| **`classes`** | Xem danh sách lớp active để chọn khi đăng ký. | Xem danh sách lớp. | Toàn quyền CRUD. |
-| **`profiles`** | Chỉ xem và sửa thông tin cá nhân của mình. | Xem hồ sơ học sinh thuộc các lớp mình phụ trách. | Toàn quyền quản trị hồ sơ và phân quyền tài khoản. |
-| **`teacher_classes`** | Không có quyền truy cập. | Xem các lớp mình được phân công. | Toàn quyền phân công giáo viên vào lớp. |
-| **`exam_configs`** | Xem cấu hình đề thi active để vào thi. | Xem cấu hình đề thi. | Toàn quyền cấu hình (số câu, thời gian, điểm đạt). |
-| **`questions`** | Chỉ đọc các câu hỏi đã duyệt (`approved`) trong lúc làm bài. | Xem câu đã duyệt + câu do mình đề xuất (`pending`). Đóng góp câu hỏi mới. | Toàn quyền CRUD và phê duyệt/từ chối câu hỏi. |
-| **`exam_attempts`** | **CHỈ XEM VÀ XÓA MỀM BÀI CỦA MÌNH (`user_id = auth.uid()`, `is_deleted = false`)**. Tuyệt đối không xem/xóa bài của bạn khác. | Xem bài làm của học sinh thuộc các lớp mình phụ trách để quản lý và xuất báo cáo. | Xem toàn bộ bài thi hệ thống (kể cả các bài đã xóa mềm) phục vụ kiểm toán, xếp hạng. |
-| **`exam_attempt_answers`** | Ghi nhận đáp án khi đang thi, xem lại câu trả lời bài của mình. | Xem đáp án của học sinh lớp mình phụ trách. | Toàn quyền xem và quản lý. |
-| **`ai_chat_logs`** | Tạo câu hỏi và xem lịch sử hỏi đáp AI bài thi của mình. | Xem lịch sử AI của học sinh lớp mình phụ trách. | Toàn quyền quản trị. |
-
----
-
-## 5. CÁC HÀM STORED PROCEDURES VÀ VIEWS HỖ TRỢ BÁO CÁO
-
-### 5.1. View Bảng xếp hạng (`view_leaderboard` - Flow 10)
-Tự động xếp hạng thí sinh theo từng môn dựa trên điểm số cao nhất và thời gian làm bài nhanh nhất:
-```sql
-SELECT rank_position, student_name, class_code, subject, score, time_spent_seconds, academic_rank
-FROM public.view_leaderboard
-WHERE subject = 'chemistry'
-LIMIT 20;
-```
-
-### 5.2. View Thống kê Lớp học (`view_class_performance` - Flow 07 & 10)
-Tổng hợp điểm trung bình, điểm cao nhất, điểm thấp nhất và tỷ lệ đạt (%) theo từng lớp và môn học để Ban Giám hiệu đánh giá hiệu quả giảng dạy của giáo viên:
-```sql
-SELECT class_code, subject, total_attempts, average_score, passed_count, pass_rate_percent
-FROM public.view_class_performance;
-```
-
-### 5.3. Hàm nộp bài & chấm điểm tự động (`fn_submit_exam_attempt`)
-- Tiếp nhận mã lượt thi (`p_attempt_id`) và cờ tự động nộp khi hết giờ (`p_auto_submitted`).
-- Đối chiếu toàn bộ câu trả lời trắc nghiệm (hỗ trợ nhiều đáp án đúng).
-- Tính điểm chính xác theo thang điểm 10 chuẩn.
-- Gán xếp loại học lực (`academic_rank`) và cờ đạt chuẩn (`is_passed`).
-- Chuyển trạng thái lượt thi sang `completed` hoặc `timed_out`.
-
-### 5.4. Hàm xóa mềm bài thi (`fn_soft_delete_attempt`)
-- Tiếp nhận `p_attempt_id`.
-- Kiểm tra tính hợp lệ: Thí sinh chỉ được xóa bài của mình (`user_id = auth.uid()`).
-- Cập nhật `is_deleted = true`, `deleted_at = now()`.
-- Tuyệt đối không xóa dữ liệu vật lý khỏi ổ đĩa.
+| `classes` | Chỉ xem danh sách lớp đang hoạt động để chọn khi đăng ký. | Xem danh sách lớp. | Toàn quyền CRUD (Tạo, sửa, xóa, phân lớp). |
+| `users` | Xem và sửa thông tin cá nhân của mình (không đổi role). | Xem hồ sơ học sinh thuộc lớp mình dạy. | Toàn quyền xem và cập nhật phân quyền mọi user. |
+| `teacher_classes` | Không có quyền truy cập. | Xem phân công giảng dạy của mình. | Toàn quyền phân công giáo viên vào lớp theo môn. |
+| `exam_configs` | Xem các đề thi đang mở. | Xem cấu hình đề thi. | Toàn quyền cấu hình (số câu, thời gian, điểm đạt, loại kỳ thi). |
+| `questions` | Xem các câu hỏi đã duyệt (`approved`) thông qua bài thi. | Xem câu hỏi đã duyệt + các câu do mình đóng góp (`pending`, `rejected`). Sửa câu bị rejected để nộp lại. | Toàn quyền CRUD, duyệt / từ chối câu hỏi, xóa mềm câu hỏi. |
+| `question_options` | **Không SELECT trực tiếp (tránh F12)**; chỉ nhận dữ liệu qua RPC `fn_get_exam_questions` (ẩn `is_correct`). | Xem toàn bộ đáp án (kể cả `is_correct`) của môn mình phụ trách. | Toàn quyền quản trị đáp án. |
+| `exam_attempts` | **Chỉ xem bài của mình (`user_id = auth.uid()`, `is_student_deleted = false`)**. Điểm số bị khóa, không thể tự sửa. | Xem toàn bộ kết quả của học sinh lớp mình dạy theo đúng môn (kể cả bài học sinh đã xóa cá nhân). | Toàn quyền xem toàn bộ hệ thống để xuất báo cáo. |
+| `exam_attempt_answers` | Xem câu trả lời của bài mình sau khi nộp hoặc ở chế độ thi thử. | Xem bài làm chi tiết của học sinh lớp mình theo đúng môn. | Toàn quyền xem để phục vụ hậu kiểm. |
+| `notifications` | Nhận thông báo cá nhân. | Nhận thông báo duyệt câu hỏi, bài thi mới nộp. | Toàn quyền quản trị thông báo. |
+| `ai_chat_logs` | Xem và tạo nhật ký hỏi đáp AI của bài thi mình. | Xem nhật ký AI của học sinh lớp mình. | Toàn quyền quản trị. |

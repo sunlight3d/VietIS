@@ -127,10 +127,10 @@
       </div>
 
       <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">
-        Admin Quản Lý Lớp Học, Phân Công Giáo Viên & Chuyển Lớp
+        Admin Quản Lý Lớp Học, Import Học Sinh & Phân Công Giáo Viên
       </h1>
       <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base">
-        Quản lý cơ cấu tổ chức lớp học: Tạo lớp học mới, phân công giáo viên bộ môn phụ trách lớp theo từng môn học (Hóa/Sinh/Anh), quản lý danh sách học sinh và thực hiện chuyển lớp khi có sự điều chuyển mà vẫn bảo lưu toàn vẹn lịch sử bài thi.
+        Quản lý cơ cấu tổ chức lớp học: Tạo lớp học mới, Import danh sách học sinh vào lớp từ file Excel/CSV, phân công giáo viên bộ môn phụ trách lớp theo từng môn học (Hóa/Sinh/Anh) và thực hiện chuyển lớp khi có sự điều chuyển mà vẫn bảo lưu toàn vẹn lịch sử bài thi.
       </p>
     </div>
 
@@ -153,20 +153,26 @@
 flowchart TD
     Start([Admin vào mục 'Quản lý Lớp học & Học sinh']) --> ClassHub{Lựa chọn Nghiệp vụ}
     
-    ClassHub -->|Tạo Lớp mới| CreateClassForm[Nhập Mã lớp, Tên lớp, Niên khóa: VD 10A1 - 2026-2027]
+    ClassHub -->|Tạo Lớp mới| CreateClassForm[Nhập Mã lớp, Tên lớp, Khối, Niên khóa: VD 10A1 - 2026-2027]
     CreateClassForm --> SaveNewClass[Lưu lớp học mới vào CSDL]
     
     ClassHub -->|Phân công Giáo viên| AssignTeacherModal[Chọn Lớp & Gán Giáo viên phụ trách theo Môn]
     AssignTeacherModal --> MapTeacher[Gán: Thầy A dạy Hóa, Cô B dạy Sinh, Thầy C dạy Anh]
-    MapTeacher --> SaveTeacherScope[Lưu quyền quản lý lớp cho Giáo viên]
+    MapTeacher --> SaveTeacherScope[Lưu vào bảng teacher_classes]
     
     ClassHub -->|Quản lý Học sinh| StudentRoster[Mở danh sách học sinh của Lớp]
     StudentRoster --> StudentActions{Thao tác học sinh}
-    StudentActions -->|Thêm học sinh| AddStudent[Thêm học sinh thủ công hoặc duyệt đơn đăng ký]
+    
+    StudentActions -->|Import từ Excel| DownloadTpl[Tải template Excel: Mã HS, Họ tên, Email, SĐT]
+    DownloadTpl --> UploadExcel[Tải lên file Excel danh sách học sinh]
+    UploadExcel --> ValidateStudentData{Kiểm tra dữ liệu & Trùng email}
+    ValidateStudentData --> BulkInsertStudents[Tạo tài khoản Student & Gán vào lớp 10A1]
+    
+    StudentActions -->|Thêm học sinh lẻ| AddStudent[Thêm thủ công từng học sinh]
     StudentActions -->|Chuyển Lớp| TransferClassModal[Chọn Học sinh -> Chọn Lớp Đích mới]
     
     TransferClassModal --> ConfirmTransfer[Xác nhận Chuyển lớp: VD từ 10A1 sang 10A2]
-    ConfirmTransfer --> UpdateStudentClass[Cập nhật Class_ID mới cho học sinh]
+    ConfirmTransfer --> UpdateStudentClass[Cập nhật class_id mới cho học sinh]
     UpdateStudentClass --> KeepHistory[(Bảo lưu 100% lịch sử điểm thi cũ trong DB)]
     KeepHistory --> SuccessNotice[Thông báo chuyển lớp thành công]
       </div>
@@ -271,8 +277,50 @@ flowchart TD
         <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500 transition-all duration-300">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="flex items-center space-x-3">
-              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-purple-500/25 transform group-hover:scale-110 transition duration-200">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-teal-500/25 transform group-hover:scale-110 transition duration-200">
                 3
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                Import danh sách học sinh vào lớp từ file Excel
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Admin
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            Admin bấm 'Import Học Sinh Từ Excel', tải template mẫu (Mã HS, Họ tên, Email, SĐT), kiểm tra dữ liệu và tự động tạo tài khoản học sinh gán trực tiếp vào lớp tương ứng.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Modal tải file Excel kèm nút: <b>[📥 Tải Template Mẫu]</b> và <b>[🚀 Nạp Danh Sách Lớp]</b>.</span>
+            </div>
+          </div>
+        </div>
+        
+            <div class="flex justify-center my-3 text-slate-300 dark:text-slate-600">
+              <div class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <svg class="w-5 h-5 text-teal-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+            </div>
+            
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-purple-500/25 transform group-hover:scale-110 transition duration-200">
+                4
               </span>
               <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
                 Phân công Giáo viên bộ môn phụ trách lớp
@@ -314,7 +362,7 @@ flowchart TD
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="flex items-center space-x-3">
               <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-amber-500/25 transform group-hover:scale-110 transition duration-200">
-                4
+                5
               </span>
               <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
                 Thực hiện Chuyển lớp cho học sinh (Class Transfer)
