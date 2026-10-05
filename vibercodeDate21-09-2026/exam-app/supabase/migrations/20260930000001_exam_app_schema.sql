@@ -343,11 +343,11 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 5.3. Trigger bảo vệ điểm số bài thi (Chống học sinh tự sửa điểm / tạo điểm 10 qua API)
+-- 5.3. Trigger bảo vệ điểm số và tham số bài thi (Chống học sinh tự sửa điểm / hack số câu / tạo điểm 10 qua API)
 CREATE OR REPLACE FUNCTION public.trg_fn_protect_exam_attempt()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Nếu không phải admin, ngăn chặn can thiệp điểm số và trạng thái hoàn thành trực tiếp
+    -- Nếu không phải admin, ngăn chặn can thiệp điểm số và tham số bài thi trực tiếp
     IF NOT public.is_admin() THEN
         IF TG_OP = 'INSERT' THEN
             NEW.score := 0.00;
@@ -358,14 +358,30 @@ BEGIN
             NEW.submitted_at := NULL;
             NEW.auto_submitted := false;
             NEW.is_student_deleted := false;
+
+            -- Nếu có exam_config_id, cưỡng chế nạp các tham số cốt lõi từ bảng exam_configs gốc (chống hack total_questions/pass_score khi insert)
+            IF NEW.exam_config_id IS NOT NULL THEN
+                SELECT title, subject, duration_minutes, total_questions, pass_score 
+                INTO NEW.exam_title, NEW.subject, NEW.duration_minutes, NEW.total_questions, NEW.pass_score
+                FROM public.exam_configs WHERE id = NEW.exam_config_id;
+            END IF;
         ELSIF TG_OP = 'UPDATE' THEN
-            -- Học viên chỉ được phép cập nhật is_student_deleted (xóa mềm cá nhân)
-            -- Mọi thay đổi điểm số, số câu đúng, trạng thái nộp bài PHẢI thông qua fn_submit_exam_attempt (SECURITY DEFINER)
-            IF NEW.score <> OLD.score OR NEW.is_passed <> OLD.is_passed 
-               OR NEW.correct_answers_count <> OLD.correct_answers_count 
-               OR (NEW.status IN ('completed', 'timed_out') AND OLD.status = 'in_progress') THEN
-                IF current_setting('exam.is_submitting', true) IS DISTINCT FROM 'true' THEN
-                    RAISE EXCEPTION 'Bảo mật: Không được phép tự sửa đổi điểm số hoặc trạng thái bài thi trực tiếp!';
+            -- Học viên chỉ được phép cập nhật is_student_deleted (xóa mềm cá nhân) hoặc time_spent_seconds (đồng bộ đếm lùi)
+            -- Mọi thay đổi điểm số, số câu đúng, tổng số câu, điểm đạt, trạng thái nộp bài PHẢI thông qua fn_submit_exam_attempt (SECURITY DEFINER)
+            IF current_setting('exam.is_submitting', true) IS DISTINCT FROM 'true' THEN
+                IF NEW.score <> OLD.score 
+                   OR NEW.is_passed <> OLD.is_passed 
+                   OR NEW.correct_answers_count <> OLD.correct_answers_count 
+                   OR NEW.total_questions <> OLD.total_questions 
+                   OR NEW.pass_score <> OLD.pass_score 
+                   OR NEW.duration_minutes <> OLD.duration_minutes 
+                   OR NEW.status <> OLD.status 
+                   OR NEW.exam_config_id IS DISTINCT FROM OLD.exam_config_id 
+                   OR NEW.subject <> OLD.subject 
+                   OR NEW.user_id <> OLD.user_id 
+                   OR NEW.mode <> OLD.mode 
+                   OR NEW.config_snapshot IS DISTINCT FROM OLD.config_snapshot THEN
+                    RAISE EXCEPTION 'Bảo mật: Không được phép can thiệp số câu hỏi, điểm đạt, điểm số hoặc trạng thái bài thi!';
                 END IF;
             END IF;
         END IF;
@@ -441,9 +457,133 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
--- 5.7. Hàm nộp bài & chấm điểm bài thi tự động (Flow 04)
+-- 5.7. Hàm khởi tạo lượt thi và bốc ngẫu nhiên câu hỏi (Flow 03 & Flow 04)
+-- KHẮC PHỤC WARNING 2: Tự động bốc N câu hỏi ngẫu nhiên từ ngân hàng và nạp sẵn vào exam_attempt_answers
+CREATE OR REPLACE FUNCTION public.fn_start_exam(
+    p_exam_config_id UUID,
+    p_mode public.exam_mode DEFAULT 'real'
+)
+RETURNS JSONB AS $$
+DECLARE
+    v_user_id UUID;
+    v_class_id UUID;
+    v_config RECORD;
+    v_attempt_id UUID;
+    v_total_needed INT;
+    v_question_ids UUID[];
+    v_actual_count INT;
+BEGIN
+    v_user_id := auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION 'Bạn cần đăng nhập để bắt đầu bài thi!';
+    END IF;
+
+    -- Lấy thông tin lớp học của thí sinh
+    SELECT class_id INTO v_class_id FROM public.users WHERE id = v_user_id;
+
+    -- Lấy cấu hình đề thi
+    SELECT * INTO v_config FROM public.exam_configs WHERE id = p_exam_config_id;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy cấu hình đề thi!';
+    END IF;
+
+    IF NOT v_config.is_active AND NOT public.is_admin() THEN
+        RAISE EXCEPTION 'Đề thi này hiện đang tạm đóng!';
+    END IF;
+
+    -- Nếu là thi thật, kiểm tra thời gian mở đề
+    IF p_mode = 'real' THEN
+        IF v_config.start_time IS NOT NULL AND now() < v_config.start_time THEN
+            RAISE EXCEPTION 'Kỳ thi chưa đến thời gian mở đề!';
+        END IF;
+        IF v_config.end_time IS NOT NULL AND now() > v_config.end_time THEN
+            RAISE EXCEPTION 'Kỳ thi đã kết thúc, không thể bắt đầu làm bài!';
+        END IF;
+    END IF;
+
+    v_total_needed := COALESCE(v_config.total_questions, 20);
+
+    -- Bốc ngẫu nhiên N câu hỏi từ ngân hàng theo môn học (approved, active, not deleted)
+    SELECT array_agg(q_id) INTO v_question_ids
+    FROM (
+        SELECT id AS q_id
+        FROM public.questions
+        WHERE subject = v_config.subject
+          AND status = 'approved'
+          AND is_active = true
+          AND is_deleted = false
+        ORDER BY CASE WHEN COALESCE(v_config.shuffle_questions, true) THEN random() ELSE created_at END
+        LIMIT v_total_needed
+    ) sub;
+
+    v_actual_count := COALESCE(array_length(v_question_ids, 1), 0);
+    IF v_actual_count = 0 THEN
+        RAISE EXCEPTION 'Ngân hàng đề thi chưa có câu hỏi nào sẵn sàng cho môn %!', v_config.subject;
+    END IF;
+
+    -- Tạo bản ghi lượt thi mới trong exam_attempts
+    INSERT INTO public.exam_attempts (
+        user_id,
+        class_id,
+        exam_config_id,
+        exam_title,
+        subject,
+        mode,
+        status,
+        duration_minutes,
+        pass_score,
+        total_questions,
+        config_snapshot
+    ) VALUES (
+        v_user_id,
+        v_class_id,
+        v_config.id,
+        v_config.title,
+        v_config.subject,
+        p_mode,
+        'in_progress',
+        v_config.duration_minutes,
+        v_config.pass_score,
+        v_actual_count,
+        to_jsonb(v_config)
+    ) RETURNING id INTO v_attempt_id;
+
+    -- Nạp sẵn danh sách câu hỏi vào exam_attempt_answers với snapshot nội dung và đáp án
+    INSERT INTO public.exam_attempt_answers (
+        attempt_id,
+        question_id,
+        selected_option_ids,
+        question_snapshot_content,
+        options_snapshot
+    )
+    SELECT 
+        v_attempt_id,
+        q.id,
+        '{}'::uuid[],
+        q.content,
+        (
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'id', qo.id,
+                    'option_key', qo.option_key,
+                    'content', qo.content,
+                    'sort_order', qo.sort_order
+                ) ORDER BY CASE WHEN COALESCE(v_config.shuffle_options, true) THEN random() ELSE qo.sort_order::double precision END
+            )
+            FROM public.question_options qo
+            WHERE qo.question_id = q.id
+        )
+    FROM public.questions q
+    WHERE q.id = ANY(v_question_ids);
+
+    -- Lấy đề thi an toàn (không chứa is_correct và explanation) để trả về cho Frontend
+    RETURN public.fn_get_exam_questions(v_attempt_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5.8. Hàm nộp bài & chấm điểm bài thi tự động (Flow 04)
 -- BẢO MẬT & CHÍNH XÁC:
--- - Chấm trên tổng số câu thực tế của đề thi (Bỏ trống câu = 0 điểm)
+-- - Khắc phục Warning 3: Chống can thiệp số câu để hack điểm tuyệt đối bằng cách đọc cấu hình chuẩn từ exam_configs và số câu thực tế
 -- - Set config để bypass trigger bảo vệ điểm số
 CREATE OR REPLACE FUNCTION public.fn_submit_exam_attempt(
     p_attempt_id UUID,
@@ -453,6 +593,9 @@ RETURNS JSONB AS $$
 DECLARE
     v_attempt RECORD;
     v_total_questions INT;
+    v_config_total INT;
+    v_config_pass NUMERIC(4,2);
+    v_actual_questions_count INT := 0;
     v_correct_count INT := 0;
     v_score NUMERIC(4,2) := 0.00;
     v_pass_score NUMERIC(4,2) := 5.00;
@@ -472,14 +615,29 @@ BEGIN
         RAISE EXCEPTION 'Bạn không có quyền nộp bài thi này!';
     END IF;
 
-    -- Lấy pass_score và total_questions từ snapshot hoặc exam_configs
-    v_pass_score := COALESCE(v_attempt.pass_score, 5.00);
-    v_total_questions := COALESCE(v_attempt.total_questions, 20);
-    IF v_total_questions <= 0 AND v_attempt.exam_config_id IS NOT NULL THEN
-        SELECT total_questions, pass_score INTO v_total_questions, v_pass_score 
-        FROM public.exam_configs WHERE id = v_attempt.exam_config_id;
+    -- Chống nộp bài trùng lặp nếu bài thi đã hoàn thành
+    IF v_attempt.status IN ('completed', 'timed_out') THEN
+        RAISE EXCEPTION 'Bài thi này đã được hoàn thành và nộp trước đó!';
     END IF;
-    v_total_questions := GREATEST(COALESCE(v_total_questions, 20), 1);
+
+    -- Đếm số câu hỏi thực tế đã nạp trong bài thi
+    SELECT COUNT(*) INTO v_actual_questions_count 
+    FROM public.exam_attempt_answers 
+    WHERE attempt_id = p_attempt_id;
+
+    -- Lấy pass_score và total_questions từ exam_configs chính thức nếu có để chống hack điểm qua client UPDATE
+    IF v_attempt.exam_config_id IS NOT NULL THEN
+        SELECT total_questions, pass_score INTO v_config_total, v_config_pass 
+        FROM public.exam_configs WHERE id = v_attempt.exam_config_id;
+        v_total_questions := COALESCE(v_config_total, v_attempt.total_questions);
+        v_pass_score := COALESCE(v_config_pass, v_attempt.pass_score, 5.00);
+    ELSE
+        v_total_questions := v_attempt.total_questions;
+        v_pass_score := COALESCE(v_attempt.pass_score, 5.00);
+    END IF;
+
+    -- Bảo đảm mẫu số tính điểm không thể bị ép về 1: lấy giá trị lớn nhất giữa cấu hình và số câu thực tế
+    v_total_questions := GREATEST(COALESCE(v_total_questions, v_actual_questions_count, 20), COALESCE(v_actual_questions_count, 1), 1);
 
     -- Duyệt qua tất cả câu trả lời của attempt để chấm điểm
     FOR r_ans IN 
@@ -506,7 +664,6 @@ BEGIN
     END LOOP;
 
     -- CHẤM ĐIỂM CHUẨN XÁC: (Số câu đúng / Tổng số câu đề thi) * 10
-    -- Câu bỏ trống không nằm trong exam_attempt_answers nên không được tính vào v_correct_count
     v_score := ROUND((v_correct_count::numeric / v_total_questions::numeric) * 10.0, 2);
     v_is_passed := (v_score >= v_pass_score);
     v_rank := public.fn_get_academic_rank(v_score);
@@ -521,10 +678,14 @@ BEGIN
         submitted_at = now(),
         correct_answers_count = v_correct_count,
         total_questions = v_total_questions,
+        pass_score = v_pass_score,
         score = v_score,
         is_passed = v_is_passed,
         academic_rank = v_rank
     WHERE id = p_attempt_id;
+
+    -- Tắt cờ bảo mật sau khi cập nhật xong
+    PERFORM set_config('exam.is_submitting', 'false', true);
 
     -- Gửi thông báo cho Giáo viên phụ trách lớp khi học sinh nộp bài thi thật
     IF v_attempt.mode = 'real' AND v_attempt.class_id IS NOT NULL THEN
@@ -544,6 +705,7 @@ BEGIN
         'attempt_id', p_attempt_id,
         'status', CASE WHEN p_auto_submitted THEN 'timed_out' ELSE 'completed' END,
         'score', v_score,
+        'pass_score', v_pass_score,
         'correct_count', v_correct_count,
         'total_questions', v_total_questions,
         'is_passed', v_is_passed,
@@ -553,23 +715,88 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5.8. Hàm lấy đề thi cho học sinh (CHỐNG F12: Ẩn hoàn toàn is_correct và explanation)
+-- 5.9. Hàm lấy đề thi cho học sinh (CHỐNG F12: Ẩn hoàn toàn is_correct và explanation)
+-- KHẮC PHỤC WARNING 2: Tự động bốc câu hỏi nếu exam_attempt_answers chưa được nạp
 CREATE OR REPLACE FUNCTION public.fn_get_exam_questions(p_attempt_id UUID)
 RETURNS JSONB AS $$
 DECLARE
     v_attempt RECORD;
     v_questions JSONB;
+    v_total_needed INT;
+    v_question_ids UUID[];
+    v_config RECORD;
 BEGIN
     SELECT * INTO v_attempt FROM public.exam_attempts WHERE id = p_attempt_id;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Không tìm thấy lượt thi!';
     END IF;
 
-    IF v_attempt.user_id <> auth.uid() AND NOT public.is_admin() THEN
-        RAISE EXCEPTION 'Không có quyền truy cập lượt thi này!';
+    -- Kiểm tra quyền: Chỉ học sinh sở hữu lượt thi hoặc Admin/Giáo viên phụ trách
+    IF v_attempt.user_id <> auth.uid() 
+       AND NOT public.is_admin() 
+       AND NOT (public.is_teacher() AND public.is_teacher_of_class_and_subject(v_attempt.class_id, v_attempt.subject)) THEN
+        RAISE EXCEPTION 'Bảo mật: Không có quyền truy cập đề thi của lượt thi này!';
     END IF;
 
-    -- Trích xuất danh sách câu hỏi và các đáp án KHÔNG CHỨA cột is_correct
+    -- TỰ ĐỘNG KHẮC PHỤC nếu exam_attempt_answers đang rỗng (Lỗi trả về 0 câu hỏi khi bắt đầu làm bài)
+    IF NOT EXISTS (SELECT 1 FROM public.exam_attempt_answers WHERE attempt_id = p_attempt_id) THEN
+        v_total_needed := GREATEST(COALESCE(v_attempt.total_questions, 20), 1);
+        
+        -- Lấy cấu hình đề nếu có để kiểm tra shuffle
+        IF v_attempt.exam_config_id IS NOT NULL THEN
+            SELECT * INTO v_config FROM public.exam_configs WHERE id = v_attempt.exam_config_id;
+        END IF;
+
+        SELECT array_agg(q_id) INTO v_question_ids
+        FROM (
+            SELECT id AS q_id
+            FROM public.questions
+            WHERE subject = v_attempt.subject
+              AND status = 'approved'
+              AND is_active = true
+              AND is_deleted = false
+            ORDER BY CASE WHEN COALESCE(v_config.shuffle_questions, true) THEN random() ELSE created_at END
+            LIMIT v_total_needed
+        ) sub;
+
+        IF COALESCE(array_length(v_question_ids, 1), 0) > 0 THEN
+            INSERT INTO public.exam_attempt_answers (
+                attempt_id,
+                question_id,
+                selected_option_ids,
+                question_snapshot_content,
+                options_snapshot
+            )
+            SELECT 
+                p_attempt_id,
+                q.id,
+                '{}'::uuid[],
+                q.content,
+                (
+                    SELECT jsonb_agg(
+                        jsonb_build_object(
+                            'id', qo.id,
+                            'option_key', qo.option_key,
+                            'content', qo.content,
+                            'sort_order', qo.sort_order
+                        ) ORDER BY CASE WHEN COALESCE(v_config.shuffle_options, true) THEN random() ELSE qo.sort_order::double precision END
+                    )
+                    FROM public.question_options qo
+                    WHERE qo.question_id = q.id
+                )
+            FROM public.questions q
+            WHERE q.id = ANY(v_question_ids);
+
+            -- Cập nhật lại total_questions đúng số câu thực tế đã bốc
+            UPDATE public.exam_attempts 
+            SET total_questions = array_length(v_question_ids, 1)
+            WHERE id = p_attempt_id;
+            
+            v_attempt.total_questions := array_length(v_question_ids, 1);
+        END IF;
+    END IF;
+
+    -- Trích xuất danh sách câu hỏi và các đáp án KHÔNG CHỨA cột is_correct và explanation (CHỐNG F12)
     SELECT jsonb_agg(
         jsonb_build_object(
             'id', q.id,
@@ -578,6 +805,7 @@ BEGIN
             'content', q.content,
             'image_url', q.image_url,
             'difficulty', q.difficulty,
+            'selected_option_ids', ea.selected_option_ids,
             'options', (
                 SELECT jsonb_agg(
                     jsonb_build_object(
@@ -608,7 +836,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5.9. Hàm xem lại bài thi sau khi nộp (Hiện đáp án đúng & giải thích)
+-- 5.10. Hàm xem lại bài thi sau khi nộp (Hiện đáp án đúng & giải thích)
+-- KHẮC PHỤC WARNING 1: BẢO MẬT QUYỀN RIÊNG TƯ - CHỐNG XEM TRỘM BÀI BẠN KHÁC
 CREATE OR REPLACE FUNCTION public.fn_get_attempt_review(p_attempt_id UUID)
 RETURNS JSONB AS $$
 DECLARE
@@ -620,9 +849,20 @@ BEGIN
         RAISE EXCEPTION 'Không tìm thấy lượt thi!';
     END IF;
 
+    -- BẢO MẬT QUYỀN RIÊNG TƯ (CHỐNG XEM TRỘM BÀI BẠN KHÁC):
+    -- Chỉ cho phép:
+    -- 1. Thí sinh sở hữu chính bài thi này (v_attempt.user_id = auth.uid())
+    -- 2. Giáo viên phụ trách môn học và lớp học của bài thi này
+    -- 3. Quản trị viên (Admin)
+    IF v_attempt.user_id <> auth.uid() 
+       AND NOT public.is_admin() 
+       AND NOT (public.is_teacher() AND public.is_teacher_of_class_and_subject(v_attempt.class_id, v_attempt.subject)) THEN
+        RAISE EXCEPTION 'Bảo mật: Bạn không có quyền xem lại bài thi của thí sinh khác!';
+    END IF;
+
     -- Chỉ cho phép xem nếu bài thi đã hoàn thành hoặc ở chế độ practice
     IF v_attempt.status = 'in_progress' AND v_attempt.mode = 'real' THEN
-        RAISE EXCEPTION 'Bài thi đang trong thời gian làm bài, chưa thể xem đáp án!';
+        RAISE EXCEPTION 'Bài thi đang trong thời gian làm bài, chưa thể xem đáp án và lời giải!';
     END IF;
 
     SELECT jsonb_agg(
@@ -633,6 +873,7 @@ BEGIN
             'explanation', q.explanation,
             'student_selected_options', eaa.selected_option_ids,
             'is_correct', eaa.is_correct,
+            'points_awarded', eaa.points_awarded,
             'options', (
                 SELECT jsonb_agg(
                     jsonb_build_object(
@@ -653,11 +894,17 @@ BEGIN
 
     RETURN jsonb_build_object(
         'attempt_id', p_attempt_id,
+        'mode', v_attempt.mode,
+        'exam_title', v_attempt.exam_title,
+        'subject', v_attempt.subject,
         'score', v_attempt.score,
         'correct_answers_count', v_attempt.correct_answers_count,
         'total_questions', v_attempt.total_questions,
+        'pass_score', v_attempt.pass_score,
         'is_passed', v_attempt.is_passed,
         'academic_rank', v_attempt.academic_rank,
+        'submitted_at', v_attempt.submitted_at,
+        'auto_submitted', v_attempt.auto_submitted,
         'review_items', COALESCE(v_details, '[]'::jsonb)
     );
 END;

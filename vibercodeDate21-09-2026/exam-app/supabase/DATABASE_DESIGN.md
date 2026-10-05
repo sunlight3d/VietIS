@@ -1,7 +1,7 @@
 # THIẾT KẾ CƠ SỞ DỮ LIỆU SUPABASE CHO EXAM APP (SELF-HOSTED DOCKER)
 
 > **Căn cứ tài liệu:** [Supabase Self-Hosting with Docker Guide](https://supabase.com/docs/guides/self-hosting/docker)  
-> **Phiên bản:** 2.1 (Chuẩn hóa toàn diện 11 bảng, 3 views, 14 functions, xếp hạng theo học sinh, thống kê thi thử & RLS ma trận)  
+> **Phiên bản:** 2.2 (Chuẩn hóa toàn diện 11 bảng, 3 views, 15 functions, giải quyết trọn vẹn 3 Cảnh báo Mức độ Cao, xếp hạng theo học sinh, thống kê thi thử & RLS ma trận)  
 > **Phạm vi nghiệp vụ:** Toàn bộ 10 Flows (Đăng ký/Đăng nhập, Thi thử AI Chatbot, Thi thật tự nộp bài, Xóa mềm, Cấu hình đề thi, Phân lớp học sinh, Giáo viên quản lý lớp, Đóng góp & Phê duyệt câu hỏi, Import Excel, Dashboard & Bảng xếp hạng).
 
 ---
@@ -38,7 +38,7 @@ Theo chuẩn tài liệu chính thức mới nhất của Supabase, hệ thống
                                     └───────────────────────────┘
 ```
 
-- **PostgreSQL 17 (`supabase-db`)**: Cơ sở dữ liệu hạt nhân, chứa toàn bộ schema 11 bảng, 3 views, 14 stored procedures & triggers, và chính sách bảo mật hàng (Row Level Security - RLS).
+- **PostgreSQL 17 (`supabase-db`)**: Cơ sở dữ liệu hạt nhân, chứa toàn bộ schema 11 bảng, 3 views, 15 stored procedures & triggers, và chính sách bảo mật hàng (Row Level Security - RLS).
 - **Envoy Gateway (`api-gw`)**: Tiếp nhận toàn bộ traffic tại port `8000`, định tuyến đến Studio, REST API, Auth, Realtime và Storage.
 - **GoTrue (`auth`)**: Quản lý tài khoản thí sinh, giáo viên, admin qua Email/Password và Google OAuth 2.0.
 - **PostgREST (`rest`)**: Tự động sinh RESTful API từ schema PostgreSQL với bảo vệ RLS.
@@ -181,43 +181,46 @@ erDiagram
 
 ---
 
-## 3. DANH MỤC 3 VIEWS VÀ 14 FUNCTIONS HỆ THỐNG
+## 3. DANH MỤC 3 VIEWS VÀ 15 FUNCTIONS HỆ THỐNG
 
 ### 3.1. Danh mục 3 Views
 1. **`public.profiles`**: View bảo mật bọc trên bảng vật lý `users` (`WITH (security_invoker = true)`), loại bỏ `hash_password` để bảo vệ an toàn cho frontend.
 2. **`public.view_leaderboard`**: Bảng xếp hạng vinh danh **THEO HỌC SINH** (`user_id`). Mỗi học sinh chỉ xuất hiện đúng 1 lần với kết quả xuất sắc nhất (Điểm cao nhất $\to$ Thời gian nhanh nhất). Tính cả bài `completed` và `timed_out`, hỗ trợ phân nhóm theo chế độ (`mode`).
 3. **`public.view_class_performance`**: Thống kê kết quả theo Lớp và Môn học. **Bao gồm cả Thi Thật (`real`) và Thi Thử (`practice`)** với đầy đủ các chỉ số: tổng lượt thi, số học sinh duy nhất tham gia, điểm TB, cao nhất, thấp nhất và tỷ lệ đạt.
 
-### 3.2. Danh mục 14 Functions
+### 3.2. Danh mục 15 Functions
 1. `handle_updated_at()`: Tự động cập nhật `updated_at = now()`.
 2. `handle_new_user()`: Cưỡng chế `role = 'student'` khi đăng ký mới (chống tự phong Admin).
-3. `trg_fn_protect_exam_attempt()`: Khóa cứng điểm số và trạng thái, chống sửa điểm trực tiếp từ client API.
+3. `trg_fn_protect_exam_attempt()`: Khóa cứng `total_questions`, `pass_score`, `duration_minutes` và trạng thái, chống sửa điểm và tham số đề thi từ client API (Vá Warning 3).
 4. `fn_handle_question_teacher_resubmit()`: Tự động chuyển câu hỏi bị từ chối sang `pending` khi giáo viên sửa lại để Admin duyệt.
 5. `fn_notify_question_review()`: Tự động tạo thông báo gửi giáo viên khi Admin duyệt hoặc từ chối câu hỏi.
 6. `fn_get_academic_rank(p_score)`: Hàm quy đổi điểm sang xếp loại học lực Thang 10 (Xuất sắc, Giỏi, Khá, Trung bình, Yếu).
-7. `fn_submit_exam_attempt(...)`: Stored procedure nộp bài và chấm điểm chuẩn xác, cập nhật `score`, `is_passed`, `academic_rank`.
-8. `fn_get_exam_questions(p_attempt_id)`: RPC lấy đề thi an toàn, ẩn triệt để `is_correct` và `explanation` để chống gian lận F12.
-9. `fn_get_attempt_review(p_attempt_id)`: RPC trả về đáp án và lời giải thích sau khi bài thi đã hoàn thành (`completed` hoặc `timed_out`).
-10. `get_user_role()`: Helper kiểm tra vai trò hiện tại của người dùng.
-11. `is_admin()`: Helper kiểm tra người dùng có quyền Admin.
-12. `is_teacher()`: Helper kiểm tra người dùng có quyền Giáo viên.
-13. `is_teacher_of_class_and_subject(...)`: Helper kiểm tra giáo viên có phụ trách đúng lớp và môn học chỉ định.
-14. `is_teacher_of_subject(...)`: Helper kiểm tra giáo viên có phụ trách môn học chỉ định (khi đóng góp câu hỏi).
+7. `fn_start_exam(p_exam_config_id, p_mode)`: RPC khởi tạo lượt thi và tự động bốc ngẫu nhiên $N$ câu hỏi từ ngân hàng nạp sẵn vào `exam_attempt_answers` kèm snapshot, triệt tiêu lỗi trả về 0 câu hỏi khi thi (Vá Warning 2).
+8. `fn_submit_exam_attempt(...)`: Stored procedure nộp bài và chấm điểm chuẩn xác, lấy mẫu số authoritative từ `exam_configs`, cập nhật `score`, `is_passed`, `academic_rank` (Vá Warning 3).
+9. `fn_get_exam_questions(p_attempt_id)`: RPC lấy đề thi an toàn, ẩn triệt để `is_correct` và `explanation` để chống gian lận F12 (hỗ trợ tự phục hồi nạp câu hỏi).
+10. `fn_get_attempt_review(p_attempt_id)`: RPC trả về đáp án và lời giải thích sau khi bài thi hoàn thành, kiểm tra bảo mật nghiêm ngặt chỉ chính chủ (`user_id = auth.uid()`) hoặc GV phụ trách/Admin (Vá Warning 1).
+11. `get_user_role()`: Helper kiểm tra vai trò hiện tại của người dùng.
+12. `is_admin()`: Helper kiểm tra người dùng có quyền Admin.
+13. `is_teacher()`: Helper kiểm tra người dùng có quyền Giáo viên.
+14. `is_teacher_of_class_and_subject(...)`: Helper kiểm tra giáo viên có phụ trách đúng lớp và môn học chỉ định.
+15. `is_teacher_of_subject(...)`: Helper kiểm tra giáo viên có phụ trách môn học chỉ định (khi đóng góp câu hỏi).
 
 ---
 
 ## 4. BẢN VÁ BẢO MẬT & QUY TẮC TOÀN VẸN DỮ LIỆU ĐÃ ĐỒNG BỘ
 
-1. **Chống tự nâng quyền:** Trigger `handle_new_user()` luôn gán `role = 'student'` cho mọi tài khoản đăng ký. Quyền `teacher` và `admin` chỉ do Admin gán nội bộ. Hệ thống tuân thủ nghiêm ngặt **3 vai trò**: `student`, `teacher`, `admin`.
-2. **Chống F12 / API đọc trước đáp án:** Bảng `question_options` không cho học sinh SELECT trực tiếp cột `is_correct`. Đề thi được cung cấp qua hàm `fn_get_exam_questions()` giấu đáp án và giải thích.
-3. **Chống sửa điểm:** Trigger `trg_fn_protect_exam_attempt` chặn sửa đổi điểm số và trạng thái bài thi từ API. Điểm chỉ được tính và lưu bởi `fn_submit_exam_attempt()`.
-4. **Bảo mật View:** View `profiles` cấu hình `WITH (security_invoker = true)` kế thừa RLS từ bảng chính `users` và loại trừ hoàn toàn cột `hash_password`.
-5. **Bảo toàn bài hết giờ:** View xếp hạng và thống kê lớp tính cả `status = 'timed_out'`.
-6. **Bảo toàn điểm số khi học sinh xóa mềm:** Sử dụng cờ `is_student_deleted`. Giáo viên và Admin luôn thấy đầy đủ dữ liệu điểm số thật để đánh giá và xuất báo cáo.
-7. **Bảo toàn lịch sử câu hỏi bằng xóa mềm:** Bảng `questions` có cờ `is_deleted = true`, kết hợp khóa ngoại `ON DELETE RESTRICT` và Snapshot nội dung câu hỏi/đáp án trong bài làm.
-8. **Chấm điểm chuẩn xác theo thang điểm 10:** Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Bỏ trống câu bị tính 0 điểm. Ngưỡng điểm đạt mặc định là 5.0 / 10, Admin có toàn quyền tùy biến trong từng đề thi (`exam_configs.pass_score`).
-9. **Xếp hạng theo học sinh:** Bảng xếp hạng thi đua (`view_leaderboard`) nhóm theo từng học sinh, lấy lượt thi có điểm cao nhất để vinh danh.
-10. **Thi thử được tính vào lịch sử & thống kê:** Cả bài thi thật (`real`) và thi thử (`practice`) đều ghi nhận lịch sử và đưa vào thống kê lớp trong `view_class_performance`.
+1. **Khắc phục Warning 1 (Bảo mật riêng tư bài thi trong `fn_get_attempt_review`):** Hàm chạy `SECURITY DEFINER` được bổ sung kiểm tra bắt buộc `v_attempt.user_id = auth.uid()` OR `public.is_admin()` OR `(public.is_teacher() AND public.is_teacher_of_class_and_subject(v_attempt.class_id, v_attempt.subject))`. Ngăn chặn hoàn toàn học sinh xem trộm bài thi của bạn khác.
+2. **Khắc phục Warning 2 (Lỗi trả về 0 câu hỏi khi thi):** Bổ sung RPC `fn_start_exam(p_exam_config_id, p_mode)` tự động bốc ngẫu nhiên $N$ câu hỏi đã duyệt từ ngân hàng nạp sẵn vào `exam_attempt_answers` kèm snapshot câu hỏi & phương án. Hàm `fn_get_exam_questions` được tích hợp cơ chế tự phục hồi (Self-healing), triệt tiêu lỗi `questions: []`.
+3. **Khắc phục Warning 3 (Chống hack điểm bằng can thiệp tham số đề thi):** Trigger `trg_fn_protect_exam_attempt` khóa cứng các trường `total_questions`, `pass_score`, `duration_minutes`. Hàm `fn_submit_exam_attempt` lấy mẫu số authoritative trực tiếp từ `exam_configs`, ngăn chặn ép mẫu số về 1 để đạt 10 điểm tuyệt đối.
+4. **Chống tự nâng quyền:** Trigger `handle_new_user()` luôn gán `role = 'student'` cho mọi tài khoản đăng ký. Quyền `teacher` và `admin` chỉ do Admin gán nội bộ. Hệ thống tuân thủ nghiêm ngặt **3 vai trò**: `student`, `teacher`, `admin`.
+5. **Chống F12 / API đọc trước đáp án:** Bảng `question_options` không cho học sinh SELECT trực tiếp cột `is_correct`. Đề thi được cung cấp qua hàm `fn_start_exam` / `fn_get_exam_questions` giấu triệt để đáp án và giải thích.
+6. **Bảo mật View:** View `profiles` cấu hình `WITH (security_invoker = true)` kế thừa RLS từ bảng chính `users` và loại trừ hoàn toàn cột `hash_password`.
+7. **Bảo toàn bài hết giờ:** View xếp hạng và thống kê lớp tính cả `status = 'timed_out'`.
+8. **Bảo toàn điểm số khi học sinh xóa mềm:** Sử dụng cờ `is_student_deleted`. Giáo viên và Admin luôn thấy đầy đủ dữ liệu điểm số thật để đánh giá và xuất báo cáo.
+9. **Bảo toàn lịch sử câu hỏi bằng xóa mềm:** Bảng `questions` có cờ `is_deleted = true`, kết hợp khóa ngoại `ON DELETE RESTRICT` và Snapshot nội dung câu hỏi/đáp án trong bài làm.
+10. **Chấm điểm chuẩn xác theo thang điểm 10:** Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Bỏ trống câu bị tính 0 điểm. Ngưỡng điểm đạt mặc định là 5.0 / 10, Admin có toàn quyền tùy biến trong từng đề thi (`exam_configs.pass_score`).
+11. **Xếp hạng theo học sinh:** Bảng xếp hạng thi đua (`view_leaderboard`) nhóm theo từng học sinh, lấy lượt thi có điểm cao nhất để vinh danh.
+12. **Thi thử được tính vào lịch sử & thống kê:** Cả bài thi thật (`real`) và thi thử (`practice`) đều ghi nhận lịch sử và đưa vào thống kê lớp trong `view_class_performance`.
 
 ---
 
