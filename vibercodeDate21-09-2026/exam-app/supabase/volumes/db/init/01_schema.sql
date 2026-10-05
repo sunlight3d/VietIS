@@ -902,29 +902,62 @@ CREATE POLICY "notifications_user_own" ON public.notifications
 -- 8. VIEWS VÀ HÀM RPC CHO DASHBOARD & BÁO CÁO (Flow 07 & 10)
 -- ============================================================================
 
--- 8.1. View Bảng xếp hạng (Leaderboard) - BAO GỒM CẢ BÀI TIMED_OUT & KHÔNG BỊ ẨN BỞI HỌC SINH XÓA MỀM
+-- 8.1. View Bảng xếp hạng (Leaderboard) - XẾP HẠNG THEO HỌC SINH (Lấy lượt thi tốt nhất của mỗi học sinh)
+-- Bao gồm cả bài nộp timed_out, không bị ẩn khi học sinh xóa mềm cá nhân, hỗ trợ phân loại theo mode
 CREATE OR REPLACE VIEW public.view_leaderboard 
 WITH (security_invoker = true) AS
+WITH student_best_attempts AS (
+    SELECT DISTINCT ON (ea.user_id, ea.subject, COALESCE(ea.exam_config_id, '00000000-0000-0000-0000-000000000000'::uuid), ea.mode)
+        ea.id AS attempt_id,
+        ea.user_id,
+        u.full_name AS student_name,
+        u.email AS student_email,
+        c.code AS class_code,
+        ea.subject,
+        ea.exam_config_id,
+        ea.exam_title,
+        ea.mode,
+        ea.score,
+        ea.time_spent_seconds,
+        ea.academic_rank,
+        ea.submitted_at,
+        ea.auto_submitted
+    FROM public.exam_attempts ea
+    JOIN public.users u ON ea.user_id = u.id
+    LEFT JOIN public.classes c ON ea.class_id = c.id
+    WHERE ea.status IN ('completed', 'timed_out')
+    ORDER BY 
+        ea.user_id, 
+        ea.subject, 
+        COALESCE(ea.exam_config_id, '00000000-0000-0000-0000-000000000000'::uuid), 
+        ea.mode,
+        ea.score DESC, 
+        ea.time_spent_seconds ASC, 
+        ea.submitted_at DESC
+)
 SELECT 
-    ea.id AS attempt_id,
-    u.full_name AS student_name,
-    u.email AS student_email,
-    c.code AS class_code,
-    ea.subject,
-    ea.exam_title,
-    ea.score,
-    ea.time_spent_seconds,
-    ea.academic_rank,
-    ea.submitted_at,
-    ea.auto_submitted,
-    DENSE_RANK() OVER (PARTITION BY ea.subject, ea.exam_config_id ORDER BY ea.score DESC, ea.time_spent_seconds ASC) AS rank_position
-FROM public.exam_attempts ea
-JOIN public.users u ON ea.user_id = u.id
-LEFT JOIN public.classes c ON ea.class_id = c.id
-WHERE ea.status IN ('completed', 'timed_out')
-  AND ea.mode = 'real';
+    attempt_id,
+    user_id,
+    student_name,
+    student_email,
+    class_code,
+    subject,
+    exam_config_id,
+    exam_title,
+    mode,
+    score,
+    time_spent_seconds,
+    academic_rank,
+    submitted_at,
+    auto_submitted,
+    DENSE_RANK() OVER (
+        PARTITION BY subject, COALESCE(exam_config_id, '00000000-0000-0000-0000-000000000000'::uuid), mode 
+        ORDER BY score DESC, time_spent_seconds ASC
+    ) AS rank_position
+FROM student_best_attempts;
 
 -- 8.2. View Thống kê điểm số theo Lớp và Môn (Đánh giá chất lượng giảng dạy của Giáo viên)
+-- Bao gồm cả bài thi thật và thi thử, tính tổng số học sinh tham gia và tỷ lệ đạt
 CREATE OR REPLACE VIEW public.view_class_performance 
 WITH (security_invoker = true) AS
 SELECT 
@@ -932,7 +965,9 @@ SELECT
     c.code AS class_code,
     c.name AS class_name,
     ea.subject,
+    ea.mode,
     COUNT(ea.id) AS total_attempts,
+    COUNT(DISTINCT ea.user_id) AS total_students,
     ROUND(AVG(ea.score), 2) AS average_score,
     MAX(ea.score) AS highest_score,
     MIN(ea.score) AS lowest_score,
@@ -942,5 +977,4 @@ SELECT
 FROM public.exam_attempts ea
 JOIN public.classes c ON ea.class_id = c.id
 WHERE ea.status IN ('completed', 'timed_out')
-  AND ea.mode = 'real'
-GROUP BY c.id, c.code, c.name, ea.subject;
+GROUP BY c.id, c.code, c.name, ea.subject, ea.mode;

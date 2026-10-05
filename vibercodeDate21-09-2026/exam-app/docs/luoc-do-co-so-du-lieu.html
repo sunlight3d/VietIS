@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lược Đồ Cơ Sở Dữ Liệu Toàn Diện - Exam App (Bản Trực Quan v2.0)</title>
+  <title>Lược Đồ Cơ Sở Dữ Liệu Toàn Diện - Exam App (Bản Trực Quan v2.1)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -98,52 +98,57 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.6rem 1.2rem;
+      padding: 0.6rem 1.1rem;
       border-radius: 0.6rem;
-      font-weight: 600;
       font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
       cursor: pointer;
       border: none;
       transition: all 0.2s ease;
-      text-decoration: none;
-    }
-
-    .btn-theme {
-      background: rgba(11, 131, 116, 0.2);
-      color: var(--color-mint);
-      border: 1px solid var(--color-teal);
-    }
-
-    body.light .btn-theme {
-      background: rgba(11, 131, 116, 0.1);
-      color: var(--color-teal);
     }
 
     .btn-primary {
-      background: var(--color-orange);
+      background: linear-gradient(135deg, var(--color-teal), #0d9488);
       color: white;
     }
 
     .btn-primary:hover {
-      background: #ea580c;
-      transform: translateY(-2px);
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-theme {
+      background: var(--color-card-dark);
+      color: var(--color-text-dark);
+      border: 1px solid var(--color-border-dark);
+    }
+
+    body.light .btn-theme {
+      background: var(--color-card-light);
+      color: var(--color-text-light);
+      border-color: var(--color-border-light);
     }
 
     /* Hero Banner */
     .hero-banner {
-      background: linear-gradient(135deg, rgba(11, 131, 116, 0.25), rgba(242, 107, 56, 0.2));
+      background: linear-gradient(135deg, rgba(242, 107, 56, 0.12), rgba(11, 131, 116, 0.15));
       border: 1px solid rgba(242, 107, 56, 0.3);
-      border-radius: 1.2rem;
-      padding: 2.2rem 2rem;
-      margin-bottom: 3rem;
-      position: relative;
-      overflow: hidden;
+      border-radius: 1.25rem;
+      padding: 2.2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    body.light .hero-banner {
+      background: linear-gradient(135deg, rgba(242, 107, 56, 0.08), rgba(11, 131, 116, 0.08));
+      border-color: rgba(242, 107, 56, 0.2);
     }
 
     .hero-banner h1 {
@@ -155,7 +160,7 @@
 
     .hero-banner p {
       font-size: 1.05rem;
-      max-width: 900px;
+      max-width: 950px;
       color: var(--color-mint);
     }
 
@@ -425,29 +430,67 @@
       margin-bottom: 0.3rem;
     }
 
-    .sample-table {
+    /* RLS Matrix & System Tables */
+    .table-container {
       width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .sample-table th, .sample-table td {
+      overflow-x: auto;
+      background: var(--color-card-dark);
       border: 1px solid var(--color-border-dark);
-      padding: 0.4rem 0.5rem;
-      text-align: left;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 3rem;
     }
 
-    body.light .sample-table th, body.light .sample-table td {
+    body.light .table-container {
+      background: var(--color-card-light);
       border-color: var(--color-border-light);
     }
 
-    .sample-table th {
-      background: rgba(242, 107, 56, 0.1);
-      color: var(--color-orange);
-      font-weight: 600;
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
     }
+
+    .styled-table th, .styled-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--color-border-dark);
+      text-align: left;
+    }
+
+    body.light .styled-table th, body.light .styled-table td {
+      border-bottom-color: var(--color-border-light);
+    }
+
+    .styled-table th {
+      background: rgba(242, 107, 56, 0.12);
+      color: var(--color-orange);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+    }
+
+    .styled-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    body.light .styled-table tr:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .tag-student { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    .tag-teacher { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    .tag-admin { background: rgba(242, 107, 56, 0.2); color: #fdba74; }
 
     /* Ranking Scale Box */
     .ranking-box {
@@ -504,7 +547,7 @@
     <!-- Header Navigation -->
     <header class="header">
       <div class="brand-title">
-        <span class="brand-badge">Supabase Docker DB v2.0</span>
+        <span class="brand-badge">Supabase Docker DB v2.1</span>
         <span class="brand-name">Hệ Thống Thi Trắc Nghiệm Exam App</span>
       </div>
       <div class="header-actions">
@@ -522,40 +565,41 @@
 
     <!-- Hero Banner -->
     <div class="hero-banner">
-      <h1>Lược Đồ Cơ Sở Dữ Liệu Dành Cho Người Không Chuyên (Non-Technical v2.0)</h1>
+      <h1>Lược Đồ Cơ Sở Dữ Liệu Dành Cho Người Không Chuyên (Non-Technical v2.1)</h1>
       <p>
-        Tài liệu này giải thích trực quan cách hệ thống lưu trữ, bảo mật và kết nối dữ liệu của <b>3 môn học (Hóa học, Sinh học, Tiếng Anh)</b>, 
-        giúp Quản trị viên (Admin), Giáo viên và Quản lý nắm bắt ngay quy trình vận hành và toàn bộ 8 giải pháp bảo mật nâng cao mà không cần biết viết câu lệnh SQL.
+        Tài liệu này giải thích trực quan cách hệ thống lưu trữ, bảo mật và kết nối dữ liệu của <b>3 môn học (Hóa học, Sinh học, Tiếng Anh)</b>. 
+        Được đồng bộ 100% với mã nguồn SQL thực tế: chuẩn hóa bảng vật lý <code>users(username, hash_password)</code>, cấu trúc <b>11 bảng, 3 views, 14 functions</b>, 
+        xếp hạng theo học sinh, thống kê bài thi thử và ma trận phân quyền RLS chặt chẽ.
       </p>
     </div>
 
     <!-- 0. KHẮC PHỤC 8 VẤN ĐỀ BẢO MẬT & TOÀN VẸN DỮ LIỆU -->
-    <h2 class="section-title">🛡️ 0. Bản Vá 8 Lỗ Hổng Bảo Mật & Quy Tắc Toàn Vẹn Dữ Liệu</h2>
+    <h2 class="section-title">🛡️ 0. Bản Vá 8 Lỗ Hổng Bảo Mật & Quy Tắc Nghiệp Vụ Đã Chuẩn Hóa</h2>
     <div class="security-grid">
       <div class="sec-card">
         <span class="sec-badge">Bảo Mật Phân Quyền</span>
         <h4 class="sec-title">1. Chống Tự Nâng Quyền Khi Đăng Ký</h4>
-        <p class="sec-desc">Trigger Auth cưỡng chế 100% tài khoản mới là <code>student</code>. Bất kể học sinh gửi payload gì lên, không bao giờ được phép tự gán quyền <code>admin</code> hay <code>teacher</code>.</p>
+        <p class="sec-desc">Trigger Auth cưỡng chế 100% tài khoản mới là <code>student</code>. Quyền <code>teacher</code> và <code>admin</code> chỉ do Admin cấp nội bộ. Hệ thống nghiêm ngặt 3 vai trò: Học sinh, Giáo viên, Admin (Ban giám hiệu dùng tài khoản Admin).</p>
       </div>
       <div class="sec-card teal">
         <span class="sec-badge">Chống Gian Lận Thi</span>
         <h4 class="sec-title">2. Chống F12 / API Đọc Trộm Đáp Án</h4>
-        <p class="sec-desc">Học sinh không được SELECT bảng <code>question_options</code> có cột <code>is_correct</code>. Đề thi lấy qua hàm RPC bảo mật chỉ chứa nội dung câu hỏi và các lựa chọn không đáp án.</p>
+        <p class="sec-desc">Học sinh không được SELECT bảng <code>question_options</code> có cột <code>is_correct</code>. Đề thi lấy qua hàm RPC <code>fn_get_exam_questions</code> đã ẩn triệt để đáp án và lời giải.</p>
       </div>
       <div class="sec-card">
         <span class="sec-badge">Chống Can Thiệp Điểm</span>
         <h4 class="sec-title">3. Khóa Chặt Điểm Số (Chống Tự Sửa Điểm 10)</h4>
-        <p class="sec-desc">Trigger chặn học sinh chèn hoặc cập nhật điểm trực tiếp qua API. Điểm số chỉ được ghi nhận duy nhất bởi Stored Procedure <code>fn_submit_exam_attempt</code> có xác thực máy chủ.</p>
+        <p class="sec-desc">Trigger chặn học sinh can thiệp điểm qua API. Điểm số chỉ được ghi nhận duy nhất bởi Stored Procedure <code>fn_submit_exam_attempt</code> với cờ bảo mật máy chủ.</p>
       </div>
       <div class="sec-card teal">
         <span class="sec-badge">Bảo Mật Người Dùng</span>
-        <h4 class="sec-title">4. Giấu Mật Khẩu (hash_password) & RLS View</h4>
-        <p class="sec-desc">View <code>profiles</code> bật cờ <code>security_invoker = true</code> và loại trừ hoàn toàn cột <code>hash_password</code>, ngăn chặn việc đọc trộm thông tin đăng nhập của người khác.</p>
+        <h4 class="sec-title">4. Giấu Mật Khẩu & View profiles Bảo Mật</h4>
+        <p class="sec-desc">Bảng vật lý là <code>users</code>. View <code>profiles</code> cấu hình <code>WITH (security_invoker = true)</code> kế thừa RLS và loại trừ hoàn toàn cột <code>hash_password</code>.</p>
       </div>
       <div class="sec-card">
         <span class="sec-badge">Toàn Vẹn Báo Cáo</span>
-        <h4 class="sec-title">5. Bảo Toàn Bài Thi Hết Giờ (timed_out)</h4>
-        <p class="sec-desc">Bảng xếp hạng (Leaderboard) và Thống kê lớp học tính cả các bài tự nộp khi hết giờ (<code>status = 'timed_out'</code>), không bỏ sót kết quả của thí sinh.</p>
+        <h4 class="sec-title">5. Bảo Toàn Bài Hết Giờ & Xếp Hạng Theo Học Sinh</h4>
+        <p class="sec-desc">Bảng xếp hạng (Leaderboard) nhóm theo từng Học sinh (chọn lượt thi xuất sắc nhất). Cả bài thi thật và thi thử, bài hoàn thành và hết giờ tự nộp (<code>timed_out</code>) đều được tính vào lịch sử & thống kê lớp.</p>
       </div>
       <div class="sec-card teal">
         <span class="sec-badge">Quyền Giáo Viên</span>
@@ -564,13 +608,13 @@
       </div>
       <div class="sec-card">
         <span class="sec-badge">Lịch Sử Khách Quan</span>
-        <h4 class="sec-title">7. Bảo Toàn Lịch Sử Khi Xóa Câu Hỏi</h4>
-        <p class="sec-desc">Áp dụng <code>ON DELETE RESTRICT</code> và Snapshot nội dung câu hỏi trong bài làm. Xóa câu hỏi trong ngân hàng không làm mất câu trả lời của các bài thi đã làm trong quá khứ.</p>
+        <h4 class="sec-title">7. Xóa Mềm Câu Hỏi (is_deleted = true)</h4>
+        <p class="sec-desc">Áp dụng cờ xóa mềm <code>is_deleted</code> kết hợp <code>ON DELETE RESTRICT</code> và Snapshot nội dung câu hỏi/đáp án. Khi câu hỏi bị xóa, các bài thi đã làm trong quá khứ vẫn giữ nguyên vẹn 100%.</p>
       </div>
       <div class="sec-card teal">
         <span class="sec-badge">Thuật Toán Điểm</span>
-        <h4 class="sec-title">8. Chấm Chuẩn Theo Tổng Số Câu Đề Thi</h4>
-        <p class="sec-desc">Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Học sinh bỏ trống câu hỏi sẽ bị tính 0 điểm câu đó, triệt tiêu lỗi bỏ trống câu mà vẫn được 10 điểm.</p>
+        <h4 class="sec-title">8. Chấm Chuẩn Thang 10 & Ngưỡng Đạt Linh Hoạt</h4>
+        <p class="sec-desc">Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Ngưỡng điểm đạt chuẩn mặc định là 5.0 / 10, Admin được toàn quyền thay đổi trong từng đề thi (<code>exam_configs.pass_score</code>) để kích hoạt giao diện Xanh/Đỏ.</p>
       </div>
     </div>
 
@@ -579,23 +623,23 @@
     <div class="concept-grid">
       <div class="concept-card">
         <div class="concept-icon">🗂️</div>
-        <h3>Bảng Dữ Liệu (Table)</h3>
-        <p>Giống như từng trang tính trong Excel (Trang "Học sinh", Trang "Câu hỏi", Trang "Lượt thi", Trang "Thông báo").</p>
+        <h3>Bảng Dữ Liệu Vật Lý (Physical Table)</h3>
+        <p>Hệ thống có <b>11 bảng</b> lưu trữ chính thức: <code>users</code>, <code>classes</code>, <code>teacher_classes</code>, <code>exam_configs</code>, <code>questions</code>, <code>question_options</code>, <code>exam_attempts</code>, <code>exam_attempt_answers</code>, <code>notifications</code>, <code>ai_chat_logs</code>, <code>question_import_logs</code>.</p>
       </div>
       <div class="concept-card">
-        <div class="concept-icon">🔗</div>
-        <h3>Mối Quan Hệ (Relationship)</h3>
-        <p>Các bảng được liên kết chặt chẽ: <b>1 Lớp</b> có <b>Nhiều Học sinh</b>; <b>1 Giáo viên</b> phụ trách <b>Đúng môn học tại Lớp</b>.</p>
+        <div class="concept-icon">👁️</div>
+        <h3>Views Phân Tích & Bảo Mật (3 Views)</h3>
+        <p>Bao gồm <b>3 View</b>: <code>profiles</code> (ẩn mật khẩu), <code>view_leaderboard</code> (xếp hạng theo học sinh), và <code>view_class_performance</code> (thống kê lớp cả thi thật & thi thử).</p>
+      </div>
+      <div class="concept-card">
+        <div class="concept-icon">⚙️</div>
+        <h3>Hàm Xử Lý & Triggers (14 Functions)</h3>
+        <p>Bao gồm <b>9 hàm nghiệp vụ/RPC/trigger</b> (chấm điểm, kiểm tra câu hỏi, chống sửa điểm...) và <b>5 hàm helper</b> kiểm tra quyền truy cập RLS.</p>
       </div>
       <div class="concept-card">
         <div class="concept-icon">📸</div>
-        <h3>Snapshot Cấu Hình Đề</h3>
-        <p>Lưu lại thời lượng, điểm đạt, tiêu đề kỳ thi tại thời điểm thí sinh nộp bài để không bị ảnh hưởng nếu cấu hình sau này thay đổi.</p>
-      </div>
-      <div class="concept-card">
-        <div class="concept-icon">🔔</div>
-        <h3>Bảng Thông Báo (Notifications)</h3>
-        <p>Hệ thống tự động báo cho Giáo viên khi Admin duyệt hoặc từ chối câu hỏi, và báo khi học sinh vừa nộp bài thi.</p>
+        <h3>Snapshot Bất Biến Lúc Làm Bài</h3>
+        <p>Lưu lại tiêu đề, thời lượng, điểm đạt, nội dung câu hỏi và danh sách đáp án tại thời điểm nộp bài. Đảm bảo lịch sử bài thi không bị đổi khi đề thi được chỉnh sửa.</p>
       </div>
       <div class="concept-card">
         <div class="concept-icon">🧪</div>
@@ -605,12 +649,12 @@
       <div class="concept-card">
         <div class="concept-icon">☑️</div>
         <h3>Phân Loại Câu 1 Hoặc Nhiều Đáp Án</h3>
-        <p>Cột <code>question_type</code> quy định rõ câu trắc nghiệm 1 đáp án (radio) hay nhiều đáp án đúng (checkbox multi-select).</p>
+        <p>Cột <code>question_type</code> quy định rõ câu trắc nghiệm 1 đáp án (radio) hay nhiều đáp án đúng (checkbox multi-select) để giao diện hiển thị chính xác.</p>
       </div>
     </div>
 
     <!-- 2. Sơ đồ thực thể liên kết (Mermaid) -->
-    <h2 class="section-title">🗺️ 2. Bản Đồ Kết Nối Toàn Hệ Thống (Sơ Đồ Thực Thể ERD v2.0)</h2>
+    <h2 class="section-title">🗺️ 2. Bản Đồ Kết Nối Toàn Hệ Thống (Sơ Đồ Thực Thể ERD v2.1)</h2>
     <div class="mermaid-box">
       <pre class="mermaid" id="erdDiagram">
 erDiagram
@@ -622,21 +666,23 @@ erDiagram
     users ||--o{ questions : "contributes"
     questions ||--o{ question_options : "has"
     classes ||--o{ exam_attempts : "groups"
-    exam_configs ||--o{ exam_attempts : "defines"
+    exam_configs ||--o{ exam_attempts : "defines (exam_config_id)"
     exam_attempts ||--o{ exam_attempt_answers : "contains"
-    questions ||--o{ exam_attempt_answers : "evaluates (RESTRICT)"
+    questions ||--o{ exam_attempt_answers : "evaluates (ON DELETE RESTRICT)"
     exam_attempts ||--o{ ai_chat_logs : "records"
     users ||--o{ question_import_logs : "uploads"
     users ||--o{ notifications : "receives"
 
     users {
-        uuid id PK "Khóa chính"
-        varchar username UK "Tên đăng nhập"
+        uuid id PK "Khóa chính (auth.users)"
+        varchar username UK "Tên đăng nhập duy nhất"
         varchar email UK "Email đăng nhập"
-        varchar hash_password "Mật khẩu mã hóa"
+        varchar hash_password "Mật khẩu mã hóa (ẩn ở view profiles)"
         varchar full_name "Họ và tên"
         user_role role "student | teacher | admin"
         uuid class_id FK "Lớp trực thuộc"
+        text avatar_url "Ảnh đại diện"
+        boolean is_active "Trạng thái hoạt động"
     }
 
     classes {
@@ -644,6 +690,7 @@ erDiagram
         varchar code UK "Mã lớp: 10A1, 11B2"
         varchar name "Tên hiển thị lớp"
         varchar grade "Khối 10, 11, 12"
+        varchar school_year "Năm học 2026-2027"
     }
 
     teacher_classes {
@@ -656,21 +703,21 @@ erDiagram
     exam_configs {
         uuid id PK "Khóa chính"
         varchar title "Tên kỳ thi"
-        varchar exam_type "15_min | mid_term | final_term"
-        subject_type subject "Môn thi"
-        int duration_minutes "Thời gian làm bài"
+        varchar exam_type "15_min | 45_min | mid_term | final_term"
+        subject_type subject "chemistry | biology | english"
+        int duration_minutes "Thời gian thi (phút)"
         int total_questions "Số câu hỏi đề thi"
-        numeric pass_score "Điểm đạt chuẩn"
+        numeric pass_score "Ngưỡng điểm đạt (mặc định 5.0, Admin đổi)"
     }
 
     questions {
         uuid id PK "Khóa chính"
-        subject_type subject "Môn học"
+        subject_type subject "chemistry | biology | english"
         question_type question_type "single_choice | multiple_choice"
         text content "Nội dung câu hỏi (LaTeX)"
         question_status status "pending | approved | rejected"
         text rejection_reason "Lý do từ chối"
-        boolean is_deleted "Cờ xóa mềm"
+        boolean is_deleted "Cờ xóa mềm (giữ lịch sử)"
     }
 
     question_options {
@@ -684,11 +731,13 @@ erDiagram
     exam_attempts {
         uuid id PK "Khóa chính"
         uuid user_id FK "Thí sinh làm bài"
+        uuid exam_config_id FK "Cấu hình đề thi"
         varchar exam_title "Tên bài thi snapshot"
-        numeric score "Điểm số (0 - 10)"
-        boolean is_passed "Chỉ báo Đạt/Không đạt"
+        exam_mode mode "practice | real (cả 2 tính vào lịch sử & thống kê)"
+        numeric score "Điểm số thang 10 (0 - 10)"
+        boolean is_passed "Chỉ báo Đạt (score >= pass_score)"
         exam_status status "in_progress | completed | timed_out"
-        boolean is_student_deleted "Ẩn phía học sinh"
+        boolean is_student_deleted "Cờ xóa mềm phía học sinh"
         jsonb config_snapshot "Snapshot cấu hình đề"
     }
 
@@ -698,6 +747,7 @@ erDiagram
         uuid question_id FK "Câu hỏi (ON DELETE RESTRICT)"
         uuid[] selected_option_ids "Các đáp án đã chọn"
         boolean is_correct "Kết quả chấm câu"
+        text question_snapshot_content "Snapshot nội dung câu hỏi"
     }
 
     notifications {
@@ -706,6 +756,23 @@ erDiagram
         varchar title "Tiêu đề thông báo"
         notification_type type "question_approved | exam_submitted"
         boolean is_read "Trạng thái đã đọc"
+    }
+
+    ai_chat_logs {
+        uuid id PK "Khóa chính"
+        uuid attempt_id FK "Thuộc lượt thi thử"
+        uuid user_id FK "Học sinh hỏi"
+        text student_prompt "Câu hỏi học sinh"
+        text ai_response "Giải thích sư phạm của AI"
+    }
+
+    question_import_logs {
+        uuid id PK "Khóa chính"
+        uuid imported_by FK "Người tải lên"
+        varchar filename "Tên file Excel"
+        int total_rows "Tổng số dòng"
+        int success_count "Số câu thành công"
+        int error_count "Số câu lỗi"
     }
       </pre>
     </div>
@@ -734,7 +801,7 @@ erDiagram
         <p class="entity-desc">Lưu danh sách các lớp học (10A1, 11B2, 12A1). Học sinh khi đăng ký tài khoản bắt buộc chọn lớp trực thuộc.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Học sinh:</b> Xem danh sách lớp để chọn khi đăng ký.<br>• <b>Admin:</b> Toàn quyền tạo lớp, import danh sách học sinh vào lớp.</div>
+          <div>• <b>Học sinh:</b> Xem danh sách lớp hoạt động để chọn khi đăng ký.<br>• <b>Admin:</b> Toàn quyền tạo lớp, sửa, xóa, import danh sách học sinh vào lớp.</div>
         </div>
       </div>
 
@@ -744,10 +811,10 @@ erDiagram
           <div class="entity-name">👤 Người Dùng</div>
           <span class="table-tech-name">users(username, hash_password)</span>
         </div>
-        <p class="entity-desc">Lưu tài khoản Học sinh, Giáo viên và Quản trị viên. Đăng ký mới luôn mặc định là student để chống tự nâng quyền. Mật khẩu mã hóa tách biệt khỏi các View thông thường.</p>
+        <p class="entity-desc">Bảng vật lý chính thức lưu tài khoản Học sinh, Giáo viên và Quản trị viên. Đăng ký mới luôn cưỡng chế <code>student</code> để chống tự phong Admin. Mật khẩu mã hóa <code>hash_password</code> được bảo vệ tách biệt khỏi view <code>profiles</code>.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Học sinh:</b> Xem và sửa thông tin cá nhân mình.<br>• <b>Giáo viên:</b> Xem danh sách học sinh các lớp mình phụ trách.<br>• <b>Admin:</b> Toàn quyền quản trị tài khoản và phân quyền.</div>
+          <div>• <b>Học sinh:</b> Xem và sửa thông tin cá nhân của mình (không được tự đổi vai trò).<br>• <b>Giáo viên:</b> Xem thông tin học sinh thuộc lớp mình dạy.<br>• <b>Admin:</b> Toàn quyền quản trị tài khoản và phân quyền.</div>
         </div>
       </div>
 
@@ -757,10 +824,10 @@ erDiagram
           <div class="entity-name">👩‍🏫 Phân Công Giáo Viên</div>
           <span class="table-tech-name">teacher_classes</span>
         </div>
-        <p class="entity-desc">Xác định chính xác giáo viên phụ trách môn học nào tại lớp học nào, bảo đảm giáo viên dạy Hóa chỉ xem và chấm điểm môn Hóa của lớp mình.</p>
+        <p class="entity-desc">Xác định chính xác giáo viên phụ trách môn học nào tại lớp học nào, bảo đảm giáo viên dạy Hóa chỉ xem và chấm điểm môn Hóa của lớp mình phụ trách.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Giáo viên:</b> Xem danh sách lớp và môn mình phụ trách.<br>• <b>Admin:</b> Toàn quyền phân công giảng dạy.</div>
+          <div>• <b>Giáo viên:</b> Xem danh sách lớp và môn mình được phân công.<br>• <b>Admin:</b> Toàn quyền phân công giảng dạy.</div>
         </div>
       </div>
 
@@ -770,10 +837,10 @@ erDiagram
           <div class="entity-name">⚙️ Cấu Hình Đề Thi</div>
           <span class="table-tech-name">exam_configs</span>
         </div>
-        <p class="entity-desc">Cấu hình chi tiết theo từng bài thi và môn học: loại kỳ thi (15 phút, 1 tiết, giữa kỳ), thời lượng làm bài, số câu hỏi (mặc định 20 câu), điểm đạt chuẩn (5.0 điểm).</p>
+        <p class="entity-desc">Cấu hình chi tiết theo từng bài thi và môn học: loại kỳ thi (15 phút, 1 tiết, giữa kỳ), thời lượng làm bài, số câu hỏi (mặc định 20 câu), ngưỡng điểm đạt (mặc định 5.0 / 10, Admin được tùy chỉnh).</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Học sinh / GV:</b> Xem các đề thi đang mở.<br>• <b>Admin:</b> Toàn quyền cấu hình và lên lịch thi.</div>
+          <div>• <b>Học sinh / GV:</b> Xem các đề thi đang mở hoạt động.<br>• <b>Admin:</b> Toàn quyền cấu hình tham số và lên lịch thi.</div>
         </div>
       </div>
 
@@ -783,10 +850,10 @@ erDiagram
           <div class="entity-name">❓ Ngân Hàng Câu Hỏi</div>
           <span class="table-tech-name">questions</span>
         </div>
-        <p class="entity-desc">Lưu trữ câu hỏi kèm công thức LaTeX. Bổ sung cột <code>question_type</code> (1 hay nhiều đáp án), cờ xóa mềm <code>is_deleted</code> và cho phép giáo viên sửa lại câu hỏi bị từ chối để nộp lại.</p>
+        <p class="entity-desc">Lưu trữ câu hỏi kèm công thức LaTeX. Cột <code>question_type</code> (1 hay nhiều đáp án), cờ xóa mềm <code>is_deleted</code> và cho phép giáo viên sửa lại câu hỏi bị từ chối để nộp lại.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Học sinh:</b> Xem câu đã duyệt qua đề thi.<br>• <b>Giáo viên:</b> Đóng góp câu hỏi đúng môn dạy, sửa câu rejected.<br>• <b>Admin:</b> Phê duyệt, từ chối và quản trị ngân hàng đề.</div>
+          <div>• <b>Học sinh:</b> Xem câu đã duyệt qua đề thi.<br>• <b>Giáo viên:</b> Đóng góp câu hỏi đúng môn dạy, sửa câu rejected để nộp lại.<br>• <b>Admin:</b> Duyệt, từ chối kèm lý do và quản trị ngân hàng đề (xóa mềm).</div>
         </div>
       </div>
 
@@ -799,7 +866,7 @@ erDiagram
         <p class="entity-desc">Lưu các đáp án A, B, C, D, E. Cột <code>is_correct</code> được khóa chặt với học sinh để chống xem trước đáp án bằng F12 / API trong khi làm bài.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Học sinh:</b> Không thể SELECT trực tiếp; chỉ nhận lựa chọn đã giấu đáp án qua RPC.<br>• <b>Admin / GV:</b> Toàn quyền quản lý đáp án.</div>
+          <div>• <b>Học sinh:</b> Không thể SELECT trực tiếp; chỉ nhận lựa chọn đã giấu đáp án qua hàm RPC.<br>• <b>Admin / GV:</b> Toàn quyền xem và quản lý đáp án.</div>
         </div>
       </div>
 
@@ -809,10 +876,10 @@ erDiagram
           <div class="entity-name">📊 Lượt Thi & Bài Làm</div>
           <span class="table-tech-name">exam_attempts</span>
         </div>
-        <p class="entity-desc">Lưu lượt thi, điểm số (thang 10), chỉ báo Đạt/Không đạt. Điểm số bị khóa bảo mật. Học sinh bấm xóa chỉ ẩn giao diện cá nhân (<code>is_student_deleted</code>), giáo viên luôn xem trọn vẹn điểm thật.</p>
+        <p class="entity-desc">Lưu lượt thi, liên kết <code>exam_config_id</code>, chế độ (<code>real</code> hoặc <code>practice</code>), điểm số (thang 10), chỉ báo Đạt/Không đạt. Điểm số bị khóa bảo mật. Học sinh bấm xóa chỉ ẩn giao diện cá nhân (<code>is_student_deleted</code>), giáo viên luôn xem trọn vẹn điểm thật.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền & RLS:</div>
-          <div>• <b>Học sinh:</b> Xem bài chưa ẩn của mình.<br>• <b>Giáo viên:</b> Xem toàn bộ kết quả học sinh lớp mình dạy.<br>• <b>Admin:</b> Toàn quyền quản trị và lập báo cáo.</div>
+          <div>• <b>Học sinh:</b> Xem bài chưa ẩn của mình. Tạo bài thi mới. Nộp bài qua RPC.<br>• <b>Giáo viên:</b> Xem toàn bộ kết quả học sinh lớp mình dạy theo đúng môn.<br>• <b>Admin:</b> Toàn quyền quản trị và lập báo cáo.</div>
         </div>
       </div>
 
@@ -822,10 +889,10 @@ erDiagram
           <div class="entity-name">✍️ Chi Tiết Câu Trả Lời</div>
           <span class="table-tech-name">exam_attempt_answers</span>
         </div>
-        <p class="entity-desc">Ghi nhận các đáp án thí sinh đã chọn. Ràng buộc <code>ON DELETE RESTRICT</code> kèm snapshot nội dung bảo đảm bài thi cũ không bao giờ bị mất khi câu hỏi bị xóa khỏi ngân hàng.</p>
+        <p class="entity-desc">Ghi nhận các đáp án thí sinh đã chọn. Ràng buộc <code>ON DELETE RESTRICT</code> kèm snapshot nội dung bảo đảm bài thi cũ không bao giờ bị mất khi câu hỏi bị xóa khỏi ngân hàng đề.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• Đi kèm lượt thi, được bảo vệ tính toàn vẹn lịch sử.</div>
+          <div>• Đi kèm lượt thi, được bảo vệ tính toàn vẹn lịch sử bất biến.</div>
         </div>
       </div>
 
@@ -851,7 +918,7 @@ erDiagram
         <p class="entity-desc">Lưu lịch sử thí sinh hỏi Chatbot AI giải thích nguyên nhân đáp án đúng/sai ở chế độ thi thử, phục vụ phân tích sư phạm của giáo viên.</p>
         <div class="perms-box">
           <div class="perms-title">🔐 Phân quyền:</div>
-          <div>• Học sinh xem lịch sử mình hỏi; Giáo viên xem câu hỏi của học sinh lớp mình.</div>
+          <div>• Học sinh xem lịch sử mình hỏi; Giáo viên xem câu hỏi của học sinh lớp mình phụ trách.</div>
         </div>
       </div>
 
@@ -870,11 +937,156 @@ erDiagram
 
     </div>
 
-    <!-- 4. Thang Điểm & Xếp Loại Chuẩn -->
-    <h2 class="section-title">🏆 4. Quy Chuẩn Xếp Loại Học Lực Thang Điểm 10</h2>
+    <!-- 4. DANH MỤC 3 VIEWS VÀ 14 FUNCTIONS HỆ THỐNG -->
+    <h2 class="section-title">📊 4. Danh Mục 3 Views & 14 Functions Hệ Thống (Đồng Bộ SQL)</h2>
+    <div class="table-container">
+      <h3 style="color: var(--color-teal); margin-bottom: 0.8rem; font-size: 1.1rem;">👁️ A. 3 Views Bảo Mật & Thống Kê Báo Cáo</h3>
+      <table class="styled-table" style="margin-bottom: 2rem;">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Tên View</th>
+            <th style="width: 25%;">Đặc Tính Bảo Mật</th>
+            <th>Nghiệp Vụ & Quy Tắc Dữ Liệu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>public.profiles</code></td>
+            <td><code>security_invoker = true</code></td>
+            <td>View bảo mật thay thế bảng <code>users</code> cho Frontend, kế thừa toàn bộ RLS và loại bỏ hoàn toàn cột nhạy cảm <code>hash_password</code>.</td>
+          </tr>
+          <tr>
+            <td><code>public.view_leaderboard</code></td>
+            <td><code>security_invoker = true</code></td>
+            <td><b>Bảng xếp hạng THEO HỌC SINH:</b> Mỗi học sinh chỉ xuất hiện đúng 1 lần với kết quả xuất sắc nhất (Điểm cao nhất & Thời gian nhanh nhất). Tính cả bài thi <code>completed</code> và <code>timed_out</code>, hỗ trợ lọc theo chế độ (<code>real</code> / <code>practice</code>).</td>
+          </tr>
+          <tr>
+            <td><code>public.view_class_performance</code></td>
+            <td><code>security_invoker = true</code></td>
+            <td><b>Thống kê chất lượng lớp:</b> Tính toán điểm trung bình, điểm cao nhất/thấp nhất, tỷ lệ đạt theo từng Lớp và Môn học. <b>Bao gồm cả bài Thi Thật và Thi Thử</b> (phân nhóm theo <code>mode</code>).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 style="color: var(--color-teal); margin-bottom: 0.8rem; font-size: 1.1rem;">⚙️ B. 14 Functions (Stored Procedures, Triggers & Security Helpers)</h3>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th style="width: 5%;">STT</th>
+            <th style="width: 25%;">Tên Function</th>
+            <th style="width: 20%;">Phân Loại</th>
+            <th>Mục Đích Hoạt Động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><code>handle_updated_at()</code></td><td>Trigger Helper</td><td>Tự động cập nhật mốc thời gian <code>updated_at = now()</code>.</td></tr>
+          <tr><td>2</td><td><code>handle_new_user()</code></td><td>Auth Trigger</td><td>Cưỡng chế <code>role = 'student'</code> khi đăng ký tài khoản mới, chặn đứng tự nâng quyền Admin.</td></tr>
+          <tr><td>3</td><td><code>trg_fn_protect_exam_attempt()</code></td><td>Security Trigger</td><td>Khóa cứng điểm số, chặn học sinh tự chèn điểm 10 hoặc sửa trạng thái bài thi qua API.</td></tr>
+          <tr><td>4</td><td><code>fn_handle_question_teacher_resubmit()</code></td><td>Business Trigger</td><td>Tự động đưa câu hỏi bị từ chối về <code>pending</code> khi giáo viên sửa lại để Admin duyệt lại.</td></tr>
+          <tr><td>5</td><td><code>fn_notify_question_review()</code></td><td>Business Trigger</td><td>Tự động gửi thông báo hệ thống cho giáo viên khi Admin duyệt hoặc từ chối câu hỏi kèm lý do.</td></tr>
+          <tr><td>6</td><td><code>fn_get_academic_rank(p_score)</code></td><td>Business Helper</td><td>Quy đổi điểm Thang 10 sang mức học lực: Xuất sắc, Giỏi, Khá, Trung bình, Yếu.</td></tr>
+          <tr><td>7</td><td><code>fn_submit_exam_attempt(...)</code></td><td>RPC Procedure</td><td>Nộp bài và chấm điểm bảo mật máy chủ, tính điểm theo tổng số câu đề thi và gửi thông báo.</td></tr>
+          <tr><td>8</td><td><code>fn_get_exam_questions(p_attempt_id)</code></td><td>RPC Security</td><td>Cung cấp đề thi cho thí sinh làm bài, ẩn triệt để <code>is_correct</code> và <code>explanation</code> chống F12.</td></tr>
+          <tr><td>9</td><td><code>fn_get_attempt_review(p_attempt_id)</code></td><td>RPC Security</td><td>Cung cấp đáp án đúng và lời giải chi tiết sau khi bài thi đã kết thúc (completed/timed_out).</td></tr>
+          <tr><td>10</td><td><code>get_user_role()</code></td><td>Security Helper</td><td>Lấy vai trò hiện tại của tài khoản đang đăng nhập trong hệ thống.</td></tr>
+          <tr><td>11</td><td><code>is_admin()</code></td><td>Security Helper</td><td>Kiểm tra nhanh người dùng có quyền Quản trị viên (Admin) hay không.</td></tr>
+          <tr><td>12</td><td><code>is_teacher()</code></td><td>Security Helper</td><td>Kiểm tra nhanh người dùng có quyền Giáo viên (Teacher) hay không.</td></tr>
+          <tr><td>13</td><td><code>is_teacher_of_class_and_subject(...)</code></td><td>Security Helper</td><td>Xác minh giáo viên có được phân công giảng dạy đúng lớp và đúng môn học chỉ định.</td></tr>
+          <tr><td>14</td><td><code>is_teacher_of_subject(...)</code></td><td>Security Helper</td><td>Xác minh giáo viên có phụ trách môn học chỉ định khi tham gia đóng góp câu hỏi.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. MA TRẬN PHÂN QUYỀN RLS ĐẦY ĐỦ 11 BẢNG -->
+    <h2 class="section-title">🔐 5. Ma Trận Phân Quyền Row Level Security (RLS) Đầy Đủ 11 Bảng</h2>
+    <div class="table-container">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Bảng Dữ Liệu</th>
+            <th style="width: 25%;"><span class="tag-badge tag-student">Thí Sinh (Student)</span></th>
+            <th style="width: 30%;"><span class="tag-badge tag-teacher">Giáo Viên (Teacher)</span></th>
+            <th style="width: 30%;"><span class="tag-badge tag-admin">Quản Trị Viên (Admin)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>classes</code></td>
+            <td>Chỉ SELECT các lớp đang mở (<code>is_active = true</code>) khi đăng ký.</td>
+            <td>SELECT danh sách lớp đang hoạt động.</td>
+            <td>Toàn quyền ALL (CRUD), tạo lớp, phân lớp học sinh.</td>
+          </tr>
+          <tr>
+            <td><code>users</code></td>
+            <td>SELECT & UPDATE hồ sơ cá nhân của mình (không được đổi vai trò).</td>
+            <td>SELECT hồ sơ học sinh thuộc các lớp mình phụ trách giảng dạy.</td>
+            <td>Toàn quyền ALL (CRUD), phân quyền tài khoản toàn trường.</td>
+          </tr>
+          <tr>
+            <td><code>teacher_classes</code></td>
+            <td>Không có quyền truy cập.</td>
+            <td>SELECT phân công giảng dạy môn & lớp của chính mình.</td>
+            <td>Toàn quyền ALL (CRUD) phân công giáo viên vào từng lớp theo môn.</td>
+          </tr>
+          <tr>
+            <td><code>exam_configs</code></td>
+            <td>SELECT các đề thi đang mở hoạt động.</td>
+            <td>SELECT cấu hình các đề thi đang mở hoặc thuộc môn mình dạy.</td>
+            <td>Toàn quyền ALL (CRUD) cấu hình số câu, thời gian, điểm đạt, kỳ thi.</td>
+          </tr>
+          <tr>
+            <td><code>questions</code></td>
+            <td>SELECT câu hỏi đã duyệt (<code>approved</code>), hoạt động và chưa xóa mềm trong đề thi.</td>
+            <td>SELECT câu đã duyệt + câu mình đề xuất. Tạo câu mới (<code>pending</code>). Sửa câu bị từ chối để nộp lại.</td>
+            <td>Toàn quyền ALL (CRUD), phê duyệt, từ chối kèm lý do, xóa mềm (<code>is_deleted</code>).</td>
+          </tr>
+          <tr>
+            <td><code>question_options</code></td>
+            <td><b>Không SELECT trực tiếp (Chống F12)</b>. Lấy đề thi qua RPC ẩn đáp án.</td>
+            <td>SELECT đáp án câu hỏi thuộc môn mình phụ trách hoặc mình đóng góp.</td>
+            <td>Toàn quyền ALL (CRUD) quản lý đáp án các câu hỏi.</td>
+          </tr>
+          <tr>
+            <td><code>exam_attempts</code></td>
+            <td>SELECT bài của mình (<code>is_student_deleted = false</code>). Tạo bài thi mới. Nộp qua RPC.</td>
+            <td>SELECT toàn bộ kết quả học sinh lớp mình dạy theo đúng môn (kể cả bài xóa mềm cá nhân).</td>
+            <td>Toàn quyền ALL (CRUD) xem toàn bộ kết quả để xuất báo cáo.</td>
+          </tr>
+          <tr>
+            <td><code>exam_attempt_answers</code></td>
+            <td>SELECT đáp án bài mình sau khi nộp hoặc khi thi thử. Tích đáp án lúc <code>in_progress</code>.</td>
+            <td>SELECT chi tiết bài làm của học sinh lớp mình dạy theo đúng môn.</td>
+            <td>Toàn quyền ALL (CRUD) tra cứu bài làm mọi thí sinh phục vụ hậu kiểm.</td>
+          </tr>
+          <tr>
+            <td><code>notifications</code></td>
+            <td>Toàn quyền với thông báo của chính mình (<code>user_id = auth.uid()</code>).</td>
+            <td>Nhận thông báo duyệt câu hỏi, học sinh nộp bài thi mới.</td>
+            <td>Toàn quyền ALL (CRUD) quản trị thông báo toàn hệ thống.</td>
+          </tr>
+          <tr>
+            <td><code>ai_chat_logs</code></td>
+            <td>Tạo và xem nhật ký hỏi đáp Chatbot AI trong bài thi của mình.</td>
+            <td>Xem lịch sử hỏi đáp AI của học sinh lớp mình dạy trong bài thi thử.</td>
+            <td>Toàn quyền ALL (CRUD) quản trị nhật ký AI Chatbot.</td>
+          </tr>
+          <tr>
+            <td><code>question_import_logs</code></td>
+            <td>Không có quyền truy cập.</td>
+            <td>Xem lịch sử các đợt import file Excel do chính mình thực hiện.</td>
+            <td>Toàn quyền ALL (CRUD) theo dõi mọi phiên import câu hỏi toàn trường.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6. Thang Điểm & Xếp Loại Chuẩn -->
+    <h2 class="section-title">🏆 6. Quy Chuẩn Xếp Loại Học Lực Thang Điểm 10 & Ngưỡng Đạt</h2>
     <div class="ranking-box">
       <p style="font-size: 0.95rem; color: var(--color-mint);">
-        Hệ thống tự động chấm điểm theo công thức: <b>Điểm = (Số câu đúng / Tổng số câu đề thi) × 10</b>. Sau đó tự động xếp loại và hiển thị giao diện trực quan:
+        Hệ thống tự động chấm điểm theo công thức: <b>Điểm = (Số câu đúng / Tổng số câu đề thi) × 10</b>. 
+        Ngưỡng điểm đạt chuẩn mặc định là <b>5.00 điểm / 10</b> (Admin có thể tùy chỉnh theo từng bài thi). 
+        Điểm số được xếp loại học lực và hiển thị mã màu trực quan:
       </p>
       <div class="scale-grid">
         <div class="scale-card scale-xuat-sac">
@@ -907,8 +1119,8 @@ erDiagram
 
     <!-- Footer -->
     <footer class="footer">
-      <p>Exam App Database Schema v2.0 • Chuẩn hóa theo Supabase Self-Hosted Docker Architecture</p>
-      <p style="margin-top: 0.3rem;">Bảo mật phân quyền đa tầng • Chống gian lận F12 • Toàn vẹn dữ liệu lịch sử</p>
+      <p>Exam App Database Schema v2.1 • Chuẩn hóa theo Supabase Self-Hosted Docker Architecture</p>
+      <p style="margin-top: 0.3rem;">Bảo mật phân quyền đa tầng • Chống gian lận F12 • 11 Bảng • 3 Views • 14 Functions</p>
     </footer>
 
   </div>
