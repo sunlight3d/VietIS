@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lược Đồ Cơ Sở Dữ Liệu Toàn Diện - Exam App (Bản Trực Quan v2.2)</title>
+  <title>Lược Đồ Cơ Sở Dữ Liệu Toàn Diện - Exam App (Bản Trực Quan v2.3)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -565,16 +565,16 @@
 
     <!-- Hero Banner -->
     <div class="hero-banner">
-      <h1>Lược Đồ Cơ Sở Dữ Liệu Dành Cho Người Không Chuyên (Non-Technical v2.2)</h1>
+      <h1>Lược Đồ Cơ Sở Dữ Liệu Dành Cho Người Không Chuyên (Non-Technical v2.3)</h1>
       <p>
         Tài liệu này giải thích trực quan cách hệ thống lưu trữ, bảo mật và kết nối dữ liệu của <b>3 môn học (Hóa học, Sinh học, Tiếng Anh)</b>. 
         Được đồng bộ 100% với mã nguồn SQL thực tế: chuẩn hóa bảng vật lý <code>users(username, hash_password)</code>, cấu trúc <b>11 bảng, 3 views, 15 functions</b>, 
-        xếp hạng theo học sinh, thống kê bài thi thử và giải quyết trọn vẹn <b>3 Cảnh báo Mức độ Cao</b> (bảo mật riêng tư bài thi, tự động bốc câu hỏi và chống hack điểm).
+        xếp hạng theo học sinh, thống kê bài thi thử và giải quyết trọn vẹn <b>toàn bộ 8 Cảnh báo</b> (bảo mật riêng tư bài thi, tự động bốc câu hỏi, chống hack điểm, đồng bộ tham số RPC nộp bài, chống nhảy lớp, ẩn câu hỏi xóa mềm, đồng bộ Flow và làm sạch migrations).
       </p>
     </div>
 
-    <!-- 0. KHẮC PHỤC 3 CẢNH BÁO CAO & 8 VẤN ĐỀ BẢO MẬT -->
-    <h2 class="section-title">🛡️ 0. Bản Vá Toàn Diện: 3 Cảnh Báo Mức Độ Cao & 8 Quy Tắc Nghiệp Vụ Chuẩn Hóa</h2>
+    <!-- 0. KHẮC PHỤC TOÀN BỘ 8 CẢNH BÁO BẢO MẬT & ĐỒNG BỘ HỆ THỐNG -->
+    <h2 class="section-title">🛡️ 0. Bản Vá Toàn Diện: 8 Cảnh Báo Bảo Mật, Lỗi Logic & Quy Tắc Đồng Bộ</h2>
     <div class="security-grid">
       <div class="sec-card" style="border: 2px solid var(--color-orange);">
         <span class="sec-badge" style="background: var(--color-orange);">⚠️ Warning 1 - Bảo Mật Riêng Tư</span>
@@ -591,40 +591,30 @@
         <h4 class="sec-title">Khóa Tham Số Đề Thi & Chống Hack Điểm Tuyệt Đối</h4>
         <p class="sec-desc">Trigger <code>trg_fn_protect_exam_attempt</code> khóa cứng <code>total_questions</code>, <code>pass_score</code>; hàm nộp bài lấy mẫu số authoritatively từ <code>exam_configs</code>, ngăn chặn kỹ thuật ép mẫu số về 1 để ăn điểm 10.</p>
       </div>
-      <div class="sec-card teal">
-        <span class="sec-badge">Bảo Mật Phân Quyền</span>
-        <h4 class="sec-title">4. Chống Tự Nâng Quyền Khi Đăng Ký</h4>
-        <p class="sec-desc">Trigger Auth cưỡng chế 100% tài khoản mới là <code>student</code>. Quyền <code>teacher</code> và <code>admin</code> chỉ do Admin cấp nội bộ. Hệ thống nghiêm ngặt 3 vai trò: Học sinh, Giáo viên, Admin (Ban giám hiệu dùng tài khoản Admin).</p>
+      <div class="sec-card teal" style="border: 2px solid var(--color-teal);">
+        <span class="sec-badge" style="background: var(--color-teal);">⚠️ Warning 4 - Đồng Bộ API Nộp Bài</span>
+        <h4 class="sec-title">Hỗ Trợ Đầy Đủ 3 Tham Số Trong fn_submit_exam_attempt</h4>
+        <p class="sec-desc">Khai báo hàm hỗ trợ cả 3 tham số <code>(p_attempt_id, p_answers, p_auto_submitted)</code>. Cho phép nộp kèm danh sách câu trả lời hoặc chấm tự động các câu đã lưu, tương thích 100% với tài liệu và client.</p>
+      </div>
+      <div class="sec-card" style="border: 2px solid var(--color-orange);">
+        <span class="sec-badge" style="background: var(--color-orange);">⚠️ Warning 5 - Phân Quyền RLS Lớp Học</span>
+        <h4 class="sec-title">Chống Học Sinh Tự Ý Nhảy Lớp (class_id)</h4>
+        <p class="sec-desc">Policy RLS <code>users_update_own</code> bổ sung ràng buộc khóa cứng <code>class_id</code>. Học sinh chỉ cập nhật thông tin cá nhân, không thể tự đổi lớp học nếu không có Admin phê duyệt.</p>
+      </div>
+      <div class="sec-card teal" style="border: 2px solid var(--color-teal);">
+        <span class="sec-badge" style="background: var(--color-teal);">⚠️ Warning 6 - Ẩn Câu Hỏi Xóa Mềm</span>
+        <h4 class="sec-title">Lọc is_deleted = false Ở Nhánh Giáo Viên</h4>
+        <p class="sec-desc">Policy <code>questions_select</code> ở nhánh Giáo viên được bổ sung điều kiện <code>is_deleted = false</code>, đảm bảo các câu hỏi đã bị Admin xóa mềm không còn xuất hiện trong danh sách câu hỏi hoạt động của giáo viên.</p>
       </div>
       <div class="sec-card">
-        <span class="sec-badge">Chống Gian Lận Thi</span>
-        <h4 class="sec-title">5. Chống F12 / API Đọc Trộm Đáp Án</h4>
-        <p class="sec-desc">Học sinh không được SELECT bảng <code>question_options</code> có cột <code>is_correct</code>. Đề thi lấy qua hàm RPC <code>fn_get_exam_questions</code> đã ẩn triệt để đáp án và lời giải.</p>
+        <span class="sec-badge">⚠️ Warning 7 - Chuẩn Hóa Flow</span>
+        <h4 class="sec-title">Đồng Bộ Thuật Ngữ Flow 09 & Flow 02</h4>
+        <p class="sec-desc">Flow 09 đổi thành <code>is_deleted = true</code> (xóa mềm câu hỏi bảo toàn lịch sử thi). Flow 02 đổi thành <code>is_student_deleted = true</code> (xóa mềm cá nhân, điểm số thật vẫn lưu trữ trọn vẹn cho giáo viên).</p>
       </div>
       <div class="sec-card teal">
-        <span class="sec-badge">Bảo Mật Người Dùng</span>
-        <h4 class="sec-title">6. Giấu Mật Khẩu & View profiles Bảo Mật</h4>
-        <p class="sec-desc">Bảng vật lý là <code>users</code>. View <code>profiles</code> cấu hình <code>WITH (security_invoker = true)</code> kế thừa RLS và loại trừ hoàn toàn cột <code>hash_password</code>.</p>
-      </div>
-      <div class="sec-card">
-        <span class="sec-badge">Toàn Vẹn Báo Cáo</span>
-        <h4 class="sec-title">7. Bảo Toàn Bài Hết Giờ & Xếp Hạng Theo Học Sinh</h4>
-        <p class="sec-desc">Bảng xếp hạng (Leaderboard) nhóm theo từng Học sinh (chọn lượt thi xuất sắc nhất). Cả bài thi thật và thi thử, bài hoàn thành và hết giờ tự nộp (<code>timed_out</code>) đều được tính vào lịch sử & thống kê lớp.</p>
-      </div>
-      <div class="sec-card teal">
-        <span class="sec-badge">Quyền Giáo Viên</span>
-        <h4 class="sec-title">8. Xóa Mềm Không Ảnh Hưởng Điểm Của Lớp</h4>
-        <p class="sec-desc">Học sinh bấm xóa bài thi điểm kém chỉ ẩn ở danh sách cá nhân (<code>is_student_deleted</code>). Giáo viên và Admin vẫn xem trọn vẹn điểm thật để xuất sổ điểm chính xác.</p>
-      </div>
-      <div class="sec-card">
-        <span class="sec-badge">Lịch Sử Khách Quan</span>
-        <h4 class="sec-title">9. Xóa Mềm Câu Hỏi (is_deleted = true)</h4>
-        <p class="sec-desc">Áp dụng cờ xóa mềm <code>is_deleted</code> kết hợp <code>ON DELETE RESTRICT</code> và Snapshot nội dung câu hỏi/đáp án. Khi câu hỏi bị xóa, các bài thi đã làm trong quá khứ vẫn giữ nguyên vẹn 100%.</p>
-      </div>
-      <div class="sec-card teal">
-        <span class="sec-badge">Thuật Toán Điểm</span>
-        <h4 class="sec-title">10. Chấm Chuẩn Thang 10 & Ngưỡng Đạt Linh Hoạt</h4>
-        <p class="sec-desc">Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Ngưỡng điểm đạt chuẩn mặc định là 5.0 / 10, Admin được toàn quyền thay đổi trong từng đề thi (<code>exam_configs.pass_score</code>) để kích hoạt giao diện Xanh/Đỏ.</p>
+        <span class="sec-badge">⚠️ Warning 8 - Dọn Dẹp Migration</span>
+        <h4 class="sec-title">Xóa File Seed Trùng Lặp</h4>
+        <p class="sec-desc">Đã xóa bỏ file cũ <code>20260930000002_exam_app_seed.sql</code>, giữ lại duy nhất <code>20260930000002_seed_data.sql</code> đã chuẩn hóa trường <code>question_type</code>, <code>exam_type</code>, ngăn ngừa lỗi conflict khi deploy.</p>
       </div>
     </div>
 
@@ -996,7 +986,7 @@ erDiagram
           <tr><td>5</td><td><code>fn_notify_question_review()</code></td><td>Business Trigger</td><td>Tự động gửi thông báo hệ thống cho giáo viên khi Admin duyệt hoặc từ chối câu hỏi kèm lý do.</td></tr>
           <tr><td>6</td><td><code>fn_get_academic_rank(p_score)</code></td><td>Business Helper</td><td>Quy đổi điểm Thang 10 sang mức học lực: Xuất sắc, Giỏi, Khá, Trung bình, Yếu.</td></tr>
           <tr><td>7</td><td><code>fn_start_exam(p_exam_config_id, p_mode)</code></td><td>RPC Core Logic</td><td><b>Vá Warning 2:</b> Khởi tạo bài thi và tự động bốc ngẫu nhiên $N$ câu hỏi từ ngân hàng nạp sẵn vào bài thi kèm snapshot, triệt tiêu lỗi 0 câu hỏi.</td></tr>
-          <tr><td>8</td><td><code>fn_submit_exam_attempt(...)</code></td><td>RPC Procedure</td><td><b>Vá Warning 3:</b> Nộp bài và chấm điểm bảo mật máy chủ, lấy mẫu số chuẩn authoritative từ <code>exam_configs</code> chống hack điểm.</td></tr>
+          <tr><td>8</td><td><code>fn_submit_exam_attempt(...)</code></td><td>RPC Procedure</td><td><b>Vá Warning 3 & 4:</b> Nộp bài & chấm điểm an toàn máy chủ, hỗ trợ đầy đủ 3 tham số <code>(p_attempt_id, p_answers, p_auto_submitted)</code>, chia điểm theo số câu chuẩn từ <code>exam_configs</code>.</td></tr>
           <tr><td>9</td><td><code>fn_get_exam_questions(p_attempt_id)</code></td><td>RPC Security</td><td>Cung cấp đề thi cho thí sinh làm bài, ẩn triệt để <code>is_correct</code> và <code>explanation</code> chống F12 (có cơ chế tự phục hồi nạp câu hỏi).</td></tr>
           <tr><td>10</td><td><code>fn_get_attempt_review(p_attempt_id)</code></td><td>RPC Security</td><td><b>Vá Warning 1:</b> Kiểm tra bảo mật nghiêm ngặt, chỉ chính chủ thí sinh (<code>user_id = auth.uid()</code>) hoặc GV phụ trách/Admin mới được xem lại đáp án và giải thích.</td></tr>
           <tr><td>11</td><td><code>get_user_role()</code></td><td>Security Helper</td><td>Lấy vai trò hiện tại của tài khoản đang đăng nhập trong hệ thống.</td></tr>
@@ -1029,7 +1019,7 @@ erDiagram
           </tr>
           <tr>
             <td><code>users</code></td>
-            <td>SELECT & UPDATE hồ sơ cá nhân của mình (không được đổi vai trò).</td>
+            <td>SELECT & UPDATE hồ sơ cá nhân của mình (không được đổi vai trò và không được tự đổi lớp học - Fix Warning 5).</td>
             <td>SELECT hồ sơ học sinh thuộc các lớp mình phụ trách giảng dạy.</td>
             <td>Toàn quyền ALL (CRUD), phân quyền tài khoản toàn trường.</td>
           </tr>
@@ -1048,7 +1038,7 @@ erDiagram
           <tr>
             <td><code>questions</code></td>
             <td>SELECT câu hỏi đã duyệt (<code>approved</code>), hoạt động và chưa xóa mềm trong đề thi.</td>
-            <td>SELECT câu đã duyệt + câu mình đề xuất. Tạo câu mới (<code>pending</code>). Sửa câu bị từ chối để nộp lại.</td>
+            <td>SELECT câu đã duyệt + câu mình đề xuất (chưa xóa mềm: <code>is_deleted = false</code> - Fix Warning 6). Tạo câu mới (<code>pending</code>). Sửa câu bị từ chối để nộp lại.</td>
             <td>Toàn quyền ALL (CRUD), phê duyệt, từ chối kèm lý do, xóa mềm (<code>is_deleted</code>).</td>
           </tr>
           <tr>
@@ -1130,8 +1120,8 @@ erDiagram
 
     <!-- Footer -->
     <footer class="footer">
-      <p>Exam App Database Schema v2.2 • Chuẩn hóa theo Supabase Self-Hosted Docker Architecture</p>
-      <p style="margin-top: 0.3rem;">Bảo mật phân quyền đa tầng • Chống gian lận F12 • 11 Bảng • 3 Views • 15 Functions • Vá triệt để 3 Cảnh báo Mức độ Cao</p>
+      <p>Exam App Database Schema v2.3 • Chuẩn hóa theo Supabase Self-Hosted Docker Architecture</p>
+      <p style="margin-top: 0.3rem;">Bảo mật phân quyền đa tầng • Chống gian lận F12 • 11 Bảng • 3 Views • 15 Functions • Vá triệt để toàn bộ 8 Cảnh báo hệ thống</p>
     </footer>
 
   </div>

@@ -196,7 +196,7 @@ erDiagram
 5. `fn_notify_question_review()`: Tự động tạo thông báo gửi giáo viên khi Admin duyệt hoặc từ chối câu hỏi.
 6. `fn_get_academic_rank(p_score)`: Hàm quy đổi điểm sang xếp loại học lực Thang 10 (Xuất sắc, Giỏi, Khá, Trung bình, Yếu).
 7. `fn_start_exam(p_exam_config_id, p_mode)`: RPC khởi tạo lượt thi và tự động bốc ngẫu nhiên $N$ câu hỏi từ ngân hàng nạp sẵn vào `exam_attempt_answers` kèm snapshot, triệt tiêu lỗi trả về 0 câu hỏi khi thi (Vá Warning 2).
-8. `fn_submit_exam_attempt(...)`: Stored procedure nộp bài và chấm điểm chuẩn xác, lấy mẫu số authoritative từ `exam_configs`, cập nhật `score`, `is_passed`, `academic_rank` (Vá Warning 3).
+8. `fn_submit_exam_attempt(p_attempt_id, p_answers, p_auto_submitted)`: Stored procedure nộp bài và chấm điểm chuẩn xác, hỗ trợ đầy đủ 3 tham số (p_answers tùy chọn JSONB), lấy mẫu số authoritative từ `exam_configs`, cập nhật `score`, `is_passed`, `academic_rank` (Vá Warning 3 & 4).
 9. `fn_get_exam_questions(p_attempt_id)`: RPC lấy đề thi an toàn, ẩn triệt để `is_correct` và `explanation` để chống gian lận F12 (hỗ trợ tự phục hồi nạp câu hỏi).
 10. `fn_get_attempt_review(p_attempt_id)`: RPC trả về đáp án và lời giải thích sau khi bài thi hoàn thành, kiểm tra bảo mật nghiêm ngặt chỉ chính chủ (`user_id = auth.uid()`) hoặc GV phụ trách/Admin (Vá Warning 1).
 11. `get_user_role()`: Helper kiểm tra vai trò hiện tại của người dùng.
@@ -212,15 +212,20 @@ erDiagram
 1. **Khắc phục Warning 1 (Bảo mật riêng tư bài thi trong `fn_get_attempt_review`):** Hàm chạy `SECURITY DEFINER` được bổ sung kiểm tra bắt buộc `v_attempt.user_id = auth.uid()` OR `public.is_admin()` OR `(public.is_teacher() AND public.is_teacher_of_class_and_subject(v_attempt.class_id, v_attempt.subject))`. Ngăn chặn hoàn toàn học sinh xem trộm bài thi của bạn khác.
 2. **Khắc phục Warning 2 (Lỗi trả về 0 câu hỏi khi thi):** Bổ sung RPC `fn_start_exam(p_exam_config_id, p_mode)` tự động bốc ngẫu nhiên $N$ câu hỏi đã duyệt từ ngân hàng nạp sẵn vào `exam_attempt_answers` kèm snapshot câu hỏi & phương án. Hàm `fn_get_exam_questions` được tích hợp cơ chế tự phục hồi (Self-healing), triệt tiêu lỗi `questions: []`.
 3. **Khắc phục Warning 3 (Chống hack điểm bằng can thiệp tham số đề thi):** Trigger `trg_fn_protect_exam_attempt` khóa cứng các trường `total_questions`, `pass_score`, `duration_minutes`. Hàm `fn_submit_exam_attempt` lấy mẫu số authoritative trực tiếp từ `exam_configs`, ngăn chặn ép mẫu số về 1 để đạt 10 điểm tuyệt đối.
-4. **Chống tự nâng quyền:** Trigger `handle_new_user()` luôn gán `role = 'student'` cho mọi tài khoản đăng ký. Quyền `teacher` và `admin` chỉ do Admin gán nội bộ. Hệ thống tuân thủ nghiêm ngặt **3 vai trò**: `student`, `teacher`, `admin`.
-5. **Chống F12 / API đọc trước đáp án:** Bảng `question_options` không cho học sinh SELECT trực tiếp cột `is_correct`. Đề thi được cung cấp qua hàm `fn_start_exam` / `fn_get_exam_questions` giấu triệt để đáp án và giải thích.
-6. **Bảo mật View:** View `profiles` cấu hình `WITH (security_invoker = true)` kế thừa RLS từ bảng chính `users` và loại trừ hoàn toàn cột `hash_password`.
-7. **Bảo toàn bài hết giờ:** View xếp hạng và thống kê lớp tính cả `status = 'timed_out'`.
-8. **Bảo toàn điểm số khi học sinh xóa mềm:** Sử dụng cờ `is_student_deleted`. Giáo viên và Admin luôn thấy đầy đủ dữ liệu điểm số thật để đánh giá và xuất báo cáo.
-9. **Bảo toàn lịch sử câu hỏi bằng xóa mềm:** Bảng `questions` có cờ `is_deleted = true`, kết hợp khóa ngoại `ON DELETE RESTRICT` và Snapshot nội dung câu hỏi/đáp án trong bài làm.
-10. **Chấm điểm chuẩn xác theo thang điểm 10:** Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Bỏ trống câu bị tính 0 điểm. Ngưỡng điểm đạt mặc định là 5.0 / 10, Admin có toàn quyền tùy biến trong từng đề thi (`exam_configs.pass_score`).
-11. **Xếp hạng theo học sinh:** Bảng xếp hạng thi đua (`view_leaderboard`) nhóm theo từng học sinh, lấy lượt thi có điểm cao nhất để vinh danh.
-12. **Thi thử được tính vào lịch sử & thống kê:** Cả bài thi thật (`real`) và thi thử (`practice`) đều ghi nhận lịch sử và đưa vào thống kê lớp trong `view_class_performance`.
+4. **Khắc phục Warning 4 (Đồng bộ tham số hàm nộp bài `fn_submit_exam_attempt`):** Khai báo hỗ trợ 3 tham số `(p_attempt_id UUID, p_answers JSONB DEFAULT NULL, p_auto_submitted BOOLEAN DEFAULT false)`. Xử lý nạp đáp án tự động nếu client gửi kèm `p_answers`, hoặc chấm trực tiếp các câu đã lưu nếu `p_answers` là NULL.
+5. **Khắc phục Warning 5 (Chống học sinh tự ý nhảy lớp `class_id`):** Policy `users_update_own` bổ sung kiểm tra `class_id IS NOT DISTINCT FROM (SELECT class_id FROM public.users WHERE id = auth.uid())`, ngăn chặn học sinh tự đổi lớp học.
+6. **Khắc phục Warning 6 (Ẩn câu hỏi đã xóa mềm với Giáo viên):** Policy `questions_select` ở nhánh Giáo viên được bổ sung điều kiện `is_deleted = false`, ngăn chặn câu hỏi xóa mềm xuất hiện trong danh sách hoạt động của giáo viên.
+7. **Khắc phục Warning 7 (Chuẩn hóa câu chữ Flow 09 và Flow 02):** Flow 09 chuẩn hóa thành `is_deleted = true` (xóa mềm câu hỏi bảo toàn lịch sử thi). Flow 02 chuẩn hóa thành `is_student_deleted = true` (xóa mềm cá nhân, bảo toàn điểm số thật cho giáo viên).
+8. **Khắc phục Warning 8 (Xóa file migration seed trùng lặp):** Đã xóa file `20260930000002_exam_app_seed.sql`, giữ lại duy nhất file `20260930000002_seed_data.sql` chuẩn hóa.
+9. **Chống tự nâng quyền:** Trigger `handle_new_user()` luôn gán `role = 'student'` cho mọi tài khoản đăng ký. Quyền `teacher` và `admin` chỉ do Admin gán nội bộ. Hệ thống tuân thủ nghiêm ngặt **3 vai trò**: `student`, `teacher`, `admin`.
+10. **Chống F12 / API đọc trước đáp án:** Bảng `question_options` không cho học sinh SELECT trực tiếp cột `is_correct`. Đề thi được cung cấp qua hàm `fn_start_exam` / `fn_get_exam_questions` giấu triệt để đáp án và giải thích.
+11. **Bảo mật View:** View `profiles` cấu hình `WITH (security_invoker = true)` kế thừa RLS từ bảng chính `users` và loại trừ hoàn toàn cột `hash_password`.
+12. **Bảo toàn bài hết giờ:** View xếp hạng và thống kê lớp tính cả `status = 'timed_out'`.
+13. **Bảo toàn điểm số khi học sinh xóa mềm:** Sử dụng cờ `is_student_deleted`. Giáo viên và Admin luôn thấy đầy đủ dữ liệu điểm số thật để đánh giá và xuất báo cáo.
+14. **Bảo toàn lịch sử câu hỏi bằng xóa mềm:** Bảng `questions` có cờ `is_deleted = true`, kết hợp khóa ngoại `ON DELETE RESTRICT` và Snapshot nội dung câu hỏi/đáp án trong bài làm.
+15. **Chấm điểm chuẩn xác theo thang điểm 10:** Điểm = (Số câu đúng / Tổng số câu đề thi) × 10. Bỏ trống câu bị tính 0 điểm. Ngưỡng điểm đạt mặc định là 5.0 / 10, Admin có toàn quyền tùy biến trong từng đề thi (`exam_configs.pass_score`).
+16. **Xếp hạng theo học sinh:** Bảng xếp hạng thi đua (`view_leaderboard`) nhóm theo từng học sinh, lấy lượt thi có điểm cao nhất để vinh danh.
+17. **Thi thử được tính vào lịch sử & thống kê:** Cả bài thi thật (`real`) và thi thử (`practice`) đều ghi nhận lịch sử và đưa vào thống kê lớp trong `view_class_performance`.
 
 ---
 
@@ -229,10 +234,10 @@ erDiagram
 | Bảng | Thí sinh (Student) | Giáo viên bộ môn (Teacher) | Quản trị viên (Admin) |
 | :--- | :--- | :--- | :--- |
 | `classes` | **SELECT**: Chỉ xem các lớp đang hoạt động (`is_active = true`) để chọn khi đăng ký. | **SELECT**: Xem danh sách lớp học. | **ALL (CRUD)**: Toàn quyền tạo, sửa, xóa, phân lớp. |
-| `users` | **SELECT / UPDATE**: Xem và sửa thông tin cá nhân của mình (`id = auth.uid()`). Không thể tự đổi `role`. | **SELECT**: Xem hồ sơ của mình và học sinh thuộc các lớp mình phụ trách. | **ALL (CRUD)**: Toàn quyền xem và cập nhật phân quyền mọi user. |
+| `users` | **SELECT / UPDATE**: Xem và sửa thông tin cá nhân của mình (`id = auth.uid()`). Không thể tự đổi `role` và không thể tự đổi `class_id` (chỉ Admin phân lớp - Fix Warning 5). | **SELECT**: Xem hồ sơ của mình và học sinh thuộc các lớp mình phụ trách. | **ALL (CRUD)**: Toàn quyền xem và cập nhật phân quyền mọi user. |
 | `teacher_classes` | **Không có quyền truy cập**. | **SELECT**: Xem phân công giảng dạy của mình. | **ALL (CRUD)**: Toàn quyền phân công giáo viên vào lớp theo môn. |
 | `exam_configs` | **SELECT**: Xem các đề thi đang mở hoạt động (`is_active = true`). | **SELECT**: Xem cấu hình các đề thi. | **ALL (CRUD)**: Toàn quyền cấu hình (số câu, thời gian, điểm đạt, loại kỳ thi). |
-| `questions` | **SELECT**: Chỉ đọc các câu hỏi đã duyệt (`approved`), hoạt động và chưa bị xóa mềm trong bài thi. | **SELECT / INSERT / UPDATE**: Xem câu đã duyệt + câu mình đề xuất (`pending`, `rejected`). Đề xuất câu mới thuộc môn mình dạy. Sửa câu bị rejected để nộp lại. | **ALL (CRUD)**: Toàn quyền duyệt, từ chối kèm lý do, sửa và xóa mềm câu hỏi (`is_deleted = true`). |
+| `questions` | **SELECT**: Chỉ đọc các câu hỏi đã duyệt (`approved`), hoạt động và chưa bị xóa mềm trong bài thi. | **SELECT / INSERT / UPDATE**: Xem câu đã duyệt (chưa xóa mềm: `is_deleted = false` - Fix Warning 6) + câu mình đề xuất (`pending`, `rejected`). Đề xuất câu mới thuộc môn mình dạy. Sửa câu bị rejected để nộp lại. | **ALL (CRUD)**: Toàn quyền duyệt, từ chối kèm lý do, sửa và xóa mềm câu hỏi (`is_deleted = true`). |
 | `question_options` | **Không SELECT trực tiếp (Chống F12)**; chỉ nhận dữ liệu qua RPC `fn_get_exam_questions` (đã giấu `is_correct`). | **SELECT / ALL**: Xem đáp án câu hỏi của môn mình dạy hoặc do mình đóng góp. | **ALL (CRUD)**: Toàn quyền quản trị đáp án. |
 | `exam_attempts` | **SELECT / INSERT / UPDATE**: Chỉ xem bài của mình (`is_student_deleted = false`). Điểm số bị khóa, nộp bài qua RPC. | **SELECT**: Xem toàn bộ kết quả của học sinh lớp mình dạy theo đúng môn (kể cả bài học sinh đã xóa cá nhân). | **ALL (CRUD)**: Toàn quyền xem toàn bộ hệ thống để lập báo cáo, xếp hạng. |
 | `exam_attempt_answers` | **SELECT / INSERT / UPDATE**: Xem câu trả lời của bài mình sau khi nộp hoặc ở chế độ thi thử. Tích đáp án khi `in_progress`. | **SELECT**: Xem bài làm chi tiết của học sinh lớp mình dạy theo đúng môn. | **ALL (CRUD)**: Toàn quyền tra cứu chi tiết bài làm phục vụ hậu kiểm. |

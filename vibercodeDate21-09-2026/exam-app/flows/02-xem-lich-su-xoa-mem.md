@@ -31,7 +31,7 @@ flowchart TD
     ActionChoice -->|Bấm nút Thùng rác| ConfirmModal[Hiện Modal xác nhận xóa bài thi]
     
     ConfirmModal -->|Hủy| KeepView[Giữ nguyên danh sách]
-    ConfirmModal -->|Đồng ý Xóa| SoftDelete[Cập nhật cờ: is_deleted = true]
+    ConfirmModal -->|Đồng ý Xóa| SoftDelete[Cập nhật cờ: is_student_deleted = true]
     SoftDelete --> UpdateUI[Ẩn bài thi khỏi danh sách của học viên]
     UpdateUI --> DBNote[(Dữ liệu gốc vẫn lưu an toàn trong DB)]
 ```
@@ -60,9 +60,9 @@ flowchart TD
 * **Mô tả chi tiết:** Học viên bấm vào từng đề thi để xem danh sách câu hỏi, phương án mình đã chọn, đáp án đúng của hệ thống và giải thích chi tiết vì sao đúng.
 * **Giao diện trực quan (UI View):** Màn hình chi tiết: Câu đúng có tích xanh, câu sai có dấu X đỏ kèm ô lời giải thích chi tiết.
 
-### Bước 5: Xóa bài thi cũ bằng cơ chế Xóa mềm (Soft Delete)
+### Bước 5: Xóa bài thi cũ bằng cơ chế Xóa mềm cá nhân (Soft Delete)
 * **Tác nhân thực hiện:** Học viên & Hệ thống (Xóa mềm)
-* **Mô tả chi tiết:** Học viên bấm icon thùng rác và xác nhận. Hệ thống cập nhật `is_deleted = true`, ẩn bài thi khỏi màn hình học viên nhưng bảo lưu trong CSDL cho Giáo viên/Admin.
+* **Mô tả chi tiết:** Học viên bấm icon thùng rác và xác nhận. Hệ thống cập nhật `is_student_deleted = true`, ẩn bài thi khỏi màn hình học viên nhưng bảo lưu trọn vẹn trong CSDL cho Giáo viên và Admin đánh giá/thống kê lớp.
 * **Giao diện trực quan (UI View):** Hộp thoại xác nhận và thông báo 'Đã ẩn bài thi khỏi lịch sử cá nhân thành công'.
 
 ---
@@ -71,4 +71,4 @@ flowchart TD
 
 * Quy chuẩn Thang điểm 10: Xuất sắc (>=9.0), Giỏi (8.0-8.9), Khá (6.5-7.9), Trung bình (5.0-6.4), Yếu (<5.0).
 * Ngưỡng Đạt (Pass Threshold) mặc định là 5.0 điểm. Điểm >= 5.0 hiển thị màu XANH; Điểm < 5.0 hiển thị màu ĐỎ.
-* Cơ chế Xóa mềm (Soft Delete) là bắt buộc: Không bao giờ xóa cứng khỏi cơ sở dữ liệu.
+* Cơ chế Xóa mềm phía học sinh (`is_student_deleted = true`): Học sinh ẩn bài làm cá nhân nhưng Giáo viên và Admin luôn bảo toàn trọn vẹn dữ liệu điểm số thật phục vụ thống kê lớp và xuất báo cáo. Không bao giờ xóa cứng bài thi khỏi cơ sở dữ liệu.

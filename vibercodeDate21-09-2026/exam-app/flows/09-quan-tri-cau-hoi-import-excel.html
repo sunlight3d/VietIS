@@ -173,7 +173,7 @@ flowchart TD
     DeleteAction -->|Xóa 1 câu| ConfirmSingle[Xác nhận xóa câu hỏi]
     DeleteAction -->|Xóa nhiều câu| BulkSelect[Tích chọn hàng loạt checkbox câu hỏi]
     BulkSelect --> ConfirmBulk[Bấm nút 'Xóa Đã Chọn' - Bulk Delete]
-    ConfirmSingle --> DeleteDB[Xóa khỏi CSDL]
+    ConfirmSingle --> DeleteDB[Xóa mềm: is_deleted = true]
     ConfirmBulk --> DeleteDB
       </div>
     </div>
@@ -365,7 +365,7 @@ flowchart TD
                 5
               </span>
               <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
-                Xóa đơn lẻ hoặc Xóa hàng loạt (Bulk Delete)
+                Xóa đơn lẻ hoặc Xóa hàng loạt bằng cơ chế Xóa mềm (Soft Delete)
               </h3>
             </div>
             <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
@@ -374,7 +374,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Admin có thể bấm icon xóa ở từng dòng, hoặc tích chọn vào ô checkbox ở đầu các dòng rồi bấm nút 'Xóa đã chọn (Bulk Delete)' để dọn dẹp kho đề.
+            Admin có thể bấm icon xóa ở từng dòng, hoặc tích chọn vào ô checkbox ở đầu các dòng rồi bấm nút 'Xóa đã chọn (Bulk Delete)' để dọn dẹp kho đề. Hệ thống áp dụng cơ chế Xóa mềm (<code>is_deleted = true</code>), ẩn câu hỏi khỏi ngân hàng đề thi nhưng bảo toàn 100% dữ liệu bài thi cũ của học sinh.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -389,7 +389,7 @@ flowchart TD
             </div>
             <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
               <span class="text-base">🖥️</span>
-              <span class="leading-relaxed">Hộp thoại xác nhận cảnh báo màu đỏ: 'Bạn đang chọn xóa N câu hỏi. Thao tác này không thể hoàn tác!'.</span>
+              <span class="leading-relaxed">Hộp thoại xác nhận: 'Bạn đang chọn xóa N câu hỏi. Hệ thống sẽ áp dụng Xóa mềm (is_deleted = true) để lưu trữ trọn vẹn lịch sử thi của học sinh'.</span>
             </div>
           </div>
         </div>
@@ -404,7 +404,10 @@ flowchart TD
         <h3>Quy Tắc Nghiệp Vụ Quan Trọng Cần Ghi Nhớ</h3>
       </div>
       <div class="space-y-2.5">
-        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cột Correct_Answers trong Excel phải khớp với các ký tự phương án (A, B, C, D). Nếu nhiều đáp án đúng thì phân tách bằng dấu phẩy (ví dụ: A,C hoặc B,D).</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Mã LaTeX phải nằm giữa cặp dấu $ để hệ thống nhận diện và hiển thị đúng công thức.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Xóa hàng loạt (Bulk Delete) yêu cầu hộp thoại xác nhận 2 lớp để tránh Admin bấm nhầm.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cột Correct_Answers trong Excel phải khớp với các ký tự phương án (A, B, C, D). Nếu nhiều đáp án đúng thì phân tách bằng dấu phẩy (ví dụ: A,C hoặc B,D).</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Mã LaTeX phải nằm giữa cặp dấu $ để hệ thống nhận diện và hiển thị đúng công thức.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Xóa hàng loạt (Bulk Delete) yêu cầu hộp thoại xác nhận 2 lớp để tránh Admin bấm nhầm.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cơ chế Xóa mềm (is_deleted = true): Câu hỏi bị xóa sẽ ẩn khỏi ngân hàng đề thi nhưng các bài thi trong quá khứ vẫn bảo toàn nguyên vẹn 100% lịch sử và điểm số.</span></div>
       </div>
     </div>
 

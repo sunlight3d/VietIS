@@ -32,7 +32,7 @@ flowchart TD
     DeleteAction -->|Xóa 1 câu| ConfirmSingle[Xác nhận xóa câu hỏi]
     DeleteAction -->|Xóa nhiều câu| BulkSelect[Tích chọn hàng loạt checkbox câu hỏi]
     BulkSelect --> ConfirmBulk[Bấm nút 'Xóa Đã Chọn' - Bulk Delete]
-    ConfirmSingle --> DeleteDB[Xóa khỏi CSDL]
+    ConfirmSingle --> DeleteDB[Xóa mềm: is_deleted = true]
     ConfirmBulk --> DeleteDB
 ```
 
@@ -60,10 +60,10 @@ flowchart TD
 * **Mô tả chi tiết:** Admin chọn file Excel và tải lên. Hệ thống quét tự động từng dòng: nếu có lỗi thì báo rõ số dòng bị sai; nếu chuẩn thì nạp toàn bộ câu hỏi vào CSDL.
 * **Giao diện trực quan (UI View):** Bảng hiển thị tiến trình: 'Quét 150 câu hỏi... Thành công 150/150 câu' kèm nút 'Xác nhận Lưu'.
 
-### Bước 5: Xóa đơn lẻ hoặc Xóa hàng loạt (Bulk Delete)
-* **Tác nhân thực hiện:** Admin (Xóa linh hoạt)
-* **Mô tả chi tiết:** Admin có thể bấm icon xóa ở từng dòng, hoặc tích chọn vào ô checkbox ở đầu các dòng rồi bấm nút 'Xóa đã chọn (Bulk Delete)' để dọn dẹp kho đề.
-* **Giao diện trực quan (UI View):** Hộp thoại xác nhận cảnh báo màu đỏ: 'Bạn đang chọn xóa N câu hỏi. Thao tác này không thể hoàn tác!'.
+### Bước 5: Xóa đơn lẻ hoặc Xóa hàng loạt bằng cơ chế Xóa mềm (Soft Delete)
+* **Tác nhân thực hiện:** Admin (Xóa mềm linh hoạt)
+* **Mô tả chi tiết:** Admin có thể bấm icon xóa ở từng dòng, hoặc tích chọn vào ô checkbox ở đầu các dòng rồi bấm nút 'Xóa đã chọn (Bulk Delete)' để dọn dẹp kho đề. Hệ thống áp dụng cơ chế Xóa mềm (`is_deleted = true`), ẩn câu hỏi khỏi ngân hàng đề thi nhưng bảo toàn 100% dữ liệu bài thi cũ của học sinh.
+* **Giao diện trực quan (UI View):** Hộp thoại xác nhận: 'Bạn đang chọn xóa N câu hỏi. Hệ thống sẽ áp dụng Xóa mềm (is_deleted = true) để lưu trữ trọn vẹn lịch sử thi của học sinh'.
 
 ---
 
@@ -72,3 +72,4 @@ flowchart TD
 * Cột Correct_Answers trong Excel phải khớp với các ký tự phương án (A, B, C, D). Nếu nhiều đáp án đúng thì phân tách bằng dấu phẩy (ví dụ: A,C hoặc B,D).
 * Mã LaTeX phải nằm giữa cặp dấu $ để hệ thống nhận diện và hiển thị đúng công thức.
 * Xóa hàng loạt (Bulk Delete) yêu cầu hộp thoại xác nhận 2 lớp để tránh Admin bấm nhầm.
+* Cơ chế Xóa mềm (`is_deleted = true`): Câu hỏi bị xóa sẽ không xuất hiện trong ngân hàng câu hỏi và các đề thi mới, nhưng toàn bộ lịch sử thi và bài làm trong quá khứ của học sinh được bảo toàn trọn vẹn (kết hợp ràng buộc `ON DELETE RESTRICT` và snapshot nội dung).

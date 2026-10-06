@@ -584,9 +584,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 5.8. Hàm nộp bài & chấm điểm bài thi tự động (Flow 04)
 -- BẢO MẬT & CHÍNH XÁC:
 -- - Khắc phục Warning 3: Chống can thiệp số câu để hack điểm tuyệt đối bằng cách đọc cấu hình chuẩn từ exam_configs và số câu thực tế
+-- - Khắc phục Warning 4: Hỗ trợ đầy đủ 3 tham số (p_attempt_id, p_answers, p_auto_submitted) tương thích hoàn hảo giữa tài liệu và API
 -- - Set config để bypass trigger bảo vệ điểm số
+DROP FUNCTION IF EXISTS public.fn_submit_exam_attempt(UUID, BOOLEAN);
+DROP FUNCTION IF EXISTS public.fn_submit_exam_attempt(UUID, JSONB, BOOLEAN);
+
 CREATE OR REPLACE FUNCTION public.fn_submit_exam_attempt(
     p_attempt_id UUID,
+    p_answers JSONB DEFAULT NULL,
     p_auto_submitted BOOLEAN DEFAULT false
 )
 RETURNS JSONB AS $$
@@ -602,6 +607,7 @@ DECLARE
     v_is_passed BOOLEAN := false;
     v_rank public.academic_rank;
     r_ans RECORD;
+    r_sub_ans RECORD;
     v_correct_opt_ids UUID[];
 BEGIN
     -- Lấy thông tin bài thi
@@ -618,6 +624,29 @@ BEGIN
     -- Chống nộp bài trùng lặp nếu bài thi đã hoàn thành
     IF v_attempt.status IN ('completed', 'timed_out') THEN
         RAISE EXCEPTION 'Bài thi này đã được hoàn thành và nộp trước đó!';
+    END IF;
+
+    -- Nếu client gửi kèm payload đáp án (p_answers) lúc nộp bài (Khắc phục Warning 4)
+    IF p_answers IS NOT NULL AND jsonb_typeof(p_answers) = 'array' THEN
+        FOR r_sub_ans IN 
+            SELECT 
+                (item->>'question_id')::UUID AS question_id,
+                ARRAY(
+                    SELECT jsonb_array_elements_text(COALESCE(item->'selected_option_ids', '[]'::jsonb))::UUID
+                ) AS selected_option_ids,
+                NULLIF(item->>'selected_option_id', '')::UUID AS selected_option_id
+            FROM jsonb_array_elements(p_answers) AS item
+        LOOP
+            IF cardinality(r_sub_ans.selected_option_ids) > 0 THEN
+                UPDATE public.exam_attempt_answers
+                SET selected_option_ids = r_sub_ans.selected_option_ids
+                WHERE attempt_id = p_attempt_id AND question_id = r_sub_ans.question_id;
+            ELSIF r_sub_ans.selected_option_id IS NOT NULL THEN
+                UPDATE public.exam_attempt_answers
+                SET selected_option_ids = ARRAY[r_sub_ans.selected_option_id]
+                WHERE attempt_id = p_attempt_id AND question_id = r_sub_ans.question_id;
+            END IF;
+        END LOOP;
     END IF;
 
     -- Đếm số câu hỏi thực tế đã nạp trong bài thi
@@ -990,7 +1019,11 @@ CREATE POLICY "users_update_own" ON public.users
     USING (id = auth.uid() OR public.is_admin())
     WITH CHECK (
         public.is_admin() 
-        OR (id = auth.uid() AND role = (SELECT role FROM public.users WHERE id = auth.uid())) -- Không thể tự nâng quyền
+        OR (
+            id = auth.uid() 
+            AND role = (SELECT role FROM public.users WHERE id = auth.uid()) -- Không thể tự nâng quyền
+            AND class_id IS NOT DISTINCT FROM (SELECT class_id FROM public.users WHERE id = auth.uid()) -- Chống học sinh tự ý nhảy lớp (Fix Warning 5)
+        )
     );
 
 -- 7.3. Bảng teacher_classes
@@ -1016,7 +1049,7 @@ CREATE POLICY "questions_select" ON public.questions
     FOR SELECT TO authenticated 
     USING (
         public.is_admin()
-        OR (public.is_teacher() AND (status = 'approved' OR contributed_by = auth.uid()))
+        OR (public.is_teacher() AND is_deleted = false AND (status = 'approved' OR contributed_by = auth.uid())) -- Ẩn câu hỏi xóa mềm với giáo viên (Fix Warning 6)
         OR (public.get_user_role() = 'student' AND status = 'approved' AND is_active = true AND is_deleted = false)
     );
 
