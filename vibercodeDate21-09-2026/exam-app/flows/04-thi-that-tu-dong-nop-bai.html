@@ -114,8 +114,8 @@
           <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 text-white text-xs font-black uppercase tracking-wider shadow-md">
             FLOW 04
           </span>
-          <span class="px-3 py-1 rounded-xl border text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
-            Trung bình
+          <span class="px-3 py-1 rounded-xl border text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20">
+            Nâng cao (Bảo mật tuyệt đối)
           </span>
         </div>
         <div class="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -130,7 +130,7 @@
         Chế độ Thi Thật & Tự Động Nộp Bài khi Hết Giờ
       </h1>
       <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base">
-        Tổ chức thi chính quy nghiêm ngặt. Đảm bảo tính bảo mật tối đa (không gửi đáp án về client), đếm lùi thời gian thực, tự động lưu tạm tiến độ bài làm và tự động khóa màn hình thu bài khi hết giờ (00:00).
+        Tổ chức thi chính quy nghiêm ngặt. Khóa 100% quyền direct INSERT/UPDATE bảng CSDL, quản trị toàn bộ phiên thi qua các RPC bảo mật (fn_start_exam, fn_save_answer, fn_submit_exam_attempt, fn_get_attempt_review), đảm bảo tính bảo mật tối đa (chống F12 soi đáp án), đếm lùi thời gian thực kèm kiểm tra thời gian Server-side, tự động lưu tiến độ và tự động khóa màn hình thu bài khi hết giờ (00:00).
       </p>
     </div>
 
@@ -151,29 +151,35 @@
       </div>
       <div class="mermaid flex justify-center overflow-x-auto py-3">
 flowchart TD
-    Start([Học viên chọn Môn thi]) --> ClickReal[Bấm 'BẮT ĐẦU THI THẬT']
-    ClickReal --> ServerFetch[Hệ thống nạp đề - Giấu toàn bộ đáp án đúng]
-    ServerFetch --> StartTimer[Khởi động Đồng hồ đếm lùi theo cấu hình Admin]
+    Start([Học viên chọn Môn thi & Cấu hình đề]) --> ClickReal[Bấm 'BẮT ĐẦU THI THẬT']
+    ClickReal --> CallStartRPC[Gọi RPC fn_start_exam: p_exam_config_id, mode: real]
+    CallStartRPC --> ServerFetch[Hệ thống tạo attempt, bốc đề ngẫu nhiên, giấu hoàn toàn is_correct]
+    ServerFetch --> StartTimer[Khởi động Đồng hồ đếm lùi: duration_minutes]
     
     StartTimer --> ExamLoop[Học viên làm bài & chọn đáp án]
-    ExamLoop --> AutoSave[Hệ thống tự động lưu tạm tiến độ vào Local/Server Cache]
-    AutoSave --> ExamLoop
+    ExamLoop --> CallSaveRPC[Gọi RPC fn_save_answer lưu từng câu]
+    CallSaveRPC --> CheckServerTime{Kiểm tra Server Time: now <= started_at + duration + 60s}
+    CheckServerTime -->|Hợp lệ| SaveSuccess[Lưu đáp án vào exam_attempt_answers]
+    CheckServerTime -->|Quá giờ H4| AutoTimeout[Tự động đánh dấu status = timed_out & Từ chối lưu]
+    SaveSuccess --> ExamLoop
     
     ExamLoop --> EndTrigger{Điều kiện Kết thúc Bài thi}
     
     EndTrigger -->|Học viên xong sớm| ClickSubmit[Học viên bấm nút 'NỘP BÀI']
     ClickSubmit --> ConfirmModal[Hiện Popup: 'Bạn chắc chắn muốn nộp bài?']
     ConfirmModal -->|Chưa nộp| ExamLoop
-    ConfirmModal -->|Đồng ý| SendServer[Gửi kết quả bài làm lên Máy chủ]
+    ConfirmModal -->|Đồng ý| CallSubmitRPC[Gọi RPC fn_submit_exam_attempt: auto_submitted = false]
     
     EndTrigger -->|Đồng hồ về 00:00| TimeOutEvent[HẾT GIỜ LÀM BÀI]
-    TimeOutEvent --> FreezeUI[Hệ thống ĐÓNG BĂNG toàn bộ thao tác]
-    FreezeUI --> AutoSubmit[Tự động thu bài và gửi bài về Máy chủ]
-    AutoSubmit --> SendServer
+    TimeOutEvent --> FreezeUI[Hệ thống ĐÓNG BĂNG toàn bộ thao tác client]
+    FreezeUI --> AutoSubmitRPC[Tự động gọi RPC fn_submit_exam_attempt: auto_submitted = true]
     
-    SendServer --> GradeExam[Máy chủ thực hiện Chấm điểm tự động]
-    GradeExam --> CalcRank[Xếp loại học lực chuẩn: Xuất sắc / Giỏi / Khá / TB / Yếu]
-    CalcRank --> ShowResult[Hiển thị Bảng kết quả, Đáp án chuẩn & Lời giải]
+    AutoTimeout --> AutoSubmitRPC
+    CallSubmitRPC --> GradeExam[Server chấm điểm tự động & tính pass_score]
+    AutoSubmitRPC --> GradeExam
+    GradeExam --> CalcRank[Xếp loại học lực chuẩn thang 10: Xuất sắc / Giỏi / Khá / TB / Yếu]
+    CalcRank --> CallReviewRPC[Gọi RPC fn_get_attempt_review để xem lại bài]
+    CallReviewRPC --> ShowResult[Hiển thị Bảng kết quả, Đáp án chuẩn & Lời giải]
       </div>
     </div>
 
@@ -205,7 +211,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Học viên xác nhận sẵn sàng làm bài. Hệ thống chuyển sang giao diện phòng thi toàn màn hình, thiết lập các biện pháp chống gian lận.
+            Học viên xác nhận sẵn sàng làm bài. Do quyền direct INSERT trên bảng <code>exam_attempts</code> bị khóa 100% bằng RLS, Frontend gọi RPC bảo mật <code>fn_start_exam(p_exam_config_id, 'real')</code>. RPC này thiết lập <code>started_at = now()</code>, <code>total_questions</code> và <code>pass_score</code> cố định theo cấu hình Admin (ngăn chặn triệt để lỗ hổng H1 - tự tạo bài điểm 10, và H2 - tự giảm số câu để hack điểm), đồng thời tự động bốc ngẫu nhiên câu hỏi chèn vào <code>exam_attempt_answers</code>.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -247,7 +253,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Máy chủ gửi câu hỏi về máy học viên. Toàn bộ đáp án đúng bị ẩn hoàn toàn (không lưu trong HTML/JS để chống F12 gian lận). Đồng hồ đếm lùi bắt đầu chạy liên tục.
+            Hệ thống trả danh sách câu hỏi về máy học viên. Cột <code>is_correct</code> và <code>explanation</code> tuyệt đối không được gửi về client (chống hoàn toàn lỗ hổng H3 - dùng F12 DevTools soi đáp án). Đồng hồ đếm lùi bắt đầu chạy đồng bộ theo số phút quy định.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -289,7 +295,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Học viên tích chọn đáp án (hỗ trợ câu 1 hoặc nhiều đáp án). Mỗi lần chọn, hệ thống tự động lưu tạm (Auto-save) lên bộ nhớ đệm chống mất bài nếu rớt mạng.
+            Học viên chọn đáp án (hỗ trợ 1 đáp án hoặc nhiều đáp án). Mỗi lựa chọn được gửi qua RPC <code>fn_save_answer(p_attempt_id, p_question_id, p_selected_option_ids)</code>. RPC kiểm tra nghiêm ngặt thời gian máy chủ: <code>EXTRACT(EPOCH FROM (now() - started_at)) &lt;= duration_minutes * 60 + 60s</code>. Nếu phát hiện quá giờ, server tự động chuyển bài thi sang <code>timed_out</code> và từ chối lưu đáp án (ngăn chặn triệt để gian lận H4 - chỉnh đồng hồ máy khách để làm bài sau khi hết giờ).
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -373,7 +379,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Máy chủ đối chiếu đáp án, tính tổng điểm trên thang điểm 10, xếp loại học lực chuẩn, công bố điểm số kèm đáp án chuẩn và lời giải thích chi tiết.
+            Hàm <code>fn_submit_exam_attempt</code> chạy trên PostgreSQL tự động đối chiếu các phương án đã chọn với <code>question_options</code>, tính điểm chính xác trên thang 10: <code>score = ROUND((correct_count::NUMERIC / total_questions) * 10, 2)</code> (chống việc bỏ trắng câu vẫn đạt điểm tối đa), đánh giá <code>is_passed</code> theo <code>pass_score</code>, và cập nhật trạng thái <code>completed</code>/<code>timed_out</code>. Sau khi nộp bài thành công, học viên gọi RPC <code>fn_get_attempt_review(p_attempt_id)</code> (kiểm tra quyền sở hữu chính chủ) để xem chi tiết đáp án đúng và lời giải thích.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -403,7 +409,10 @@ flowchart TD
         <h3>Quy Tắc Nghiệp Vụ Quan Trọng Cần Ghi Nhớ</h3>
       </div>
       <div class="space-y-2.5">
-        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bảo mật tuyệt đối: Ở chế độ Thi Thật, đáp án đúng không được gửi về trình duyệt trước khi nộp bài.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Tự động thu bài là bắt buộc: Khi đồng hồ về 00:00, không cho phép chọn thêm đáp án.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cơ chế Auto-save đảm bảo học sinh mất mạng vẫn có thể tải lại trang và tiếp tục làm bài trong khoảng thời gian còn lại.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Khóa 100% quyền direct INSERT/UPDATE: Học viên không có quyền ghi trực tiếp vào các bảng exam_attempts và exam_attempt_answers. Toàn bộ hoạt động thực hiện qua 4 RPC bảo mật (fn_start_exam, fn_save_answer, fn_submit_exam_attempt, fn_get_attempt_review).</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Triệt tiêu 4 lỗ hổng bảo mật: H1 (chống sửa điểm trực tiếp), H2 (cố định số câu hỏi/pass_score), H3 (chống F12 soi đáp án), H4 (chặn lưu đáp án sau khi hết thời gian thi trên server).</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bài thi tự động nộp (timed_out) được bảo toàn điểm số trên các câu đã lưu và hiển thị trong Bảng xếp hạng và Báo cáo giáo viên.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bảo vệ quyền riêng tư: RPC fn_get_attempt_review chỉ cho phép chính chủ học sinh hoặc Giáo viên phụ trách bộ môn xem chi tiết bài làm.</span></div>
       </div>
     </div>
 

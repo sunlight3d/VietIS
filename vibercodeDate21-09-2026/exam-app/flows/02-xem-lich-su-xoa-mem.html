@@ -168,13 +168,13 @@ flowchart TD
     TB --> ActionChoice
     Yeu --> ActionChoice
     
-    ActionChoice -->|Bấm xem chi tiết| DetailView[Xem chi tiết từng câu: Đúng/Sai/Lời giải]
+    ActionChoice -->|Bấm xem chi tiết| DetailView[Xem chi tiết từng câu: Đúng/Sai/Lời giải qua RPC fn_get_attempt_review]
     ActionChoice -->|Bấm nút Thùng rác| ConfirmModal[Hiện Modal xác nhận xóa bài thi]
     
     ConfirmModal -->|Hủy| KeepView[Giữ nguyên danh sách]
-    ConfirmModal -->|Đồng ý Xóa| SoftDelete[Cập nhật cờ: is_student_deleted = true]
+    ConfirmModal -->|Đồng ý Xóa| SoftDelete[Gọi RPC bảo mật: fn_delete_student_attempt]
     SoftDelete --> UpdateUI[Ẩn bài thi khỏi danh sách của học viên]
-    UpdateUI --> DBNote[(Dữ liệu gốc vẫn lưu an toàn trong DB)]
+    UpdateUI --> DBNote[(Dữ liệu gốc vẫn lưu an toàn trong DB: is_student_deleted = true)]
       </div>
     </div>
 
@@ -365,7 +365,7 @@ flowchart TD
                 5
               </span>
               <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
-                Xóa bài thi cũ bằng cơ chế Xóa mềm cá nhân (Soft Delete)
+                Xóa bài thi cũ bằng cơ chế Xóa mềm cá nhân qua RPC (Soft Delete)
               </h3>
             </div>
             <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
@@ -374,7 +374,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Học viên bấm icon thùng rác và xác nhận. Hệ thống cập nhật <code>is_student_deleted = true</code>, ẩn bài thi khỏi màn hình học viên nhưng bảo lưu trọn vẹn trong CSDL cho Giáo viên và Admin đánh giá/thống kê lớp.
+            Học viên bấm icon thùng rác và xác nhận. Do học sinh bị khóa toàn bộ quyền direct UPDATE trên bảng vật lý, hệ thống gọi RPC bảo mật <code>fn_delete_student_attempt(p_attempt_id)</code> để cập nhật <code>is_student_deleted = true</code>, ẩn bài thi khỏi màn hình học viên nhưng bảo lưu trọn vẹn trong CSDL cho Giáo viên và Admin đánh giá/thống kê lớp.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -406,7 +406,7 @@ flowchart TD
       <div class="space-y-2.5">
         <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Quy chuẩn Thang điểm 10: Xuất sắc (>=9.0), Giỏi (8.0-8.9), Khá (6.5-7.9), Trung bình (5.0-6.4), Yếu (<5.0).</span></div>
         <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Ngưỡng Đạt (Pass Threshold) mặc định là 5.0 điểm. Điểm >= 5.0 hiển thị màu XANH; Điểm < 5.0 hiển thị màu ĐỎ.</span></div>
-        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cơ chế Xóa mềm phía học sinh (is_student_deleted = true): Học sinh ẩn bài làm cá nhân nhưng Giáo viên và Admin luôn bảo toàn trọn vẹn dữ liệu điểm số thật phục vụ thống kê lớp và xuất báo cáo. Không bao giờ xóa cứng bài thi khỏi cơ sở dữ liệu.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Cơ chế Xóa mềm phía học sinh thực hiện qua RPC bảo mật <code>fn_delete_student_attempt</code> (is_student_deleted = true): Học sinh ẩn bài làm cá nhân mà không cần cấp quyền UPDATE trực tiếp bảng exam_attempts, đảm bảo Giáo viên và Admin luôn bảo toàn trọn vẹn dữ liệu điểm số thật phục vụ thống kê lớp và xuất báo cáo. Không bao giờ xóa cứng bài thi khỏi cơ sở dữ liệu.</span></div>
       </div>
     </div>
 

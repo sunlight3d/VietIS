@@ -27,13 +27,13 @@ flowchart TD
     TB --> ActionChoice
     Yeu --> ActionChoice
     
-    ActionChoice -->|Bấm xem chi tiết| DetailView[Xem chi tiết từng câu: Đúng/Sai/Lời giải]
+    ActionChoice -->|Bấm xem chi tiết| DetailView[Xem chi tiết từng câu: Đúng/Sai/Lời giải qua RPC fn_get_attempt_review]
     ActionChoice -->|Bấm nút Thùng rác| ConfirmModal[Hiện Modal xác nhận xóa bài thi]
     
     ConfirmModal -->|Hủy| KeepView[Giữ nguyên danh sách]
-    ConfirmModal -->|Đồng ý Xóa| SoftDelete[Cập nhật cờ: is_student_deleted = true]
+    ConfirmModal -->|Đồng ý Xóa| SoftDelete[Gọi RPC bảo mật: fn_delete_student_attempt]
     SoftDelete --> UpdateUI[Ẩn bài thi khỏi danh sách của học viên]
-    UpdateUI --> DBNote[(Dữ liệu gốc vẫn lưu an toàn trong DB)]
+    UpdateUI --> DBNote[(Dữ liệu gốc vẫn lưu an toàn trong DB: is_student_deleted = true)]
 ```
 
 ---
@@ -57,12 +57,12 @@ flowchart TD
 
 ### Bước 4: Bấm xem lại bài thi đã làm
 * **Tác nhân thực hiện:** Học viên (Xem chi tiết)
-* **Mô tả chi tiết:** Học viên bấm vào từng đề thi để xem danh sách câu hỏi, phương án mình đã chọn, đáp án đúng của hệ thống và giải thích chi tiết vì sao đúng.
+* **Mô tả chi tiết:** Học viên bấm vào từng đề thi để xem danh sách câu hỏi, phương án mình đã chọn, đáp án đúng của hệ thống và giải thích chi tiết vì sao đúng thông qua RPC `fn_get_attempt_review(attempt_id)`.
 * **Giao diện trực quan (UI View):** Màn hình chi tiết: Câu đúng có tích xanh, câu sai có dấu X đỏ kèm ô lời giải thích chi tiết.
 
-### Bước 5: Xóa bài thi cũ bằng cơ chế Xóa mềm cá nhân (Soft Delete)
-* **Tác nhân thực hiện:** Học viên & Hệ thống (Xóa mềm)
-* **Mô tả chi tiết:** Học viên bấm icon thùng rác và xác nhận. Hệ thống cập nhật `is_student_deleted = true`, ẩn bài thi khỏi màn hình học viên nhưng bảo lưu trọn vẹn trong CSDL cho Giáo viên và Admin đánh giá/thống kê lớp.
+### Bước 5: Xóa bài thi cũ bằng cơ chế Xóa mềm cá nhân qua RPC (Soft Delete)
+* **Tác nhân thực hiện:** Học viên & Hệ thống (Xóa mềm qua RPC)
+* **Mô tả chi tiết:** Học viên bấm icon thùng rác và xác nhận. Do học sinh bị khóa toàn bộ quyền direct UPDATE trên bảng vật lý, hệ thống gọi RPC bảo mật `fn_delete_student_attempt(attempt_id)` để cập nhật `is_student_deleted = true`, ẩn bài thi khỏi màn hình học viên nhưng bảo lưu trọn vẹn trong CSDL cho Giáo viên và Admin đánh giá/thống kê lớp.
 * **Giao diện trực quan (UI View):** Hộp thoại xác nhận và thông báo 'Đã ẩn bài thi khỏi lịch sử cá nhân thành công'.
 
 ---

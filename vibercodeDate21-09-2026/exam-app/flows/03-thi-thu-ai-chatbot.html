@@ -152,16 +152,19 @@
       <div class="mermaid flex justify-center overflow-x-auto py-3">
 flowchart TD
     Start([Học viên chọn Môn thi: Hóa / Sinh / Anh]) --> ChooseMode[Chọn Chế độ: 'THI THỬ']
-    ChooseMode --> FetchPractice[Hệ thống nạp 20 câu hỏi ngẫu nhiên kèm đáp án & lời giải]
+    ChooseMode --> CallStartRPC[Gọi RPC fn_start_exam: p_exam_config_id, mode: practice]
+    CallStartRPC --> FetchPractice[Hệ thống tạo attempt & bốc ngẫu nhiên câu hỏi]
     FetchPractice --> RenderQ[Hiển thị câu hỏi + Công thức LaTeX + Các phương án]
     
     RenderQ --> CheckQType{Loại câu hỏi?}
     CheckQType -->|Đơn đáp án - Radio| SelectSingle[Học viên chọn 1 đáp án]
-    SelectSingle --> InstantFeedback
+    SelectSingle --> SaveSingleRPC[Gọi RPC fn_save_answer lưu đáp án]
+    SaveSingleRPC --> InstantFeedback
     
     CheckQType -->|Nhiều đáp án - Checkbox| SelectMulti[Học viên tích chọn các phương án]
     SelectMulti --> ClickVerify[Học viên bấm nút 'Kiểm tra đáp án']
-    ClickVerify --> InstantFeedback
+    ClickVerify --> SaveMultiRPC[Gọi RPC fn_save_answer lưu đáp án]
+    SaveMultiRPC --> InstantFeedback
     
     InstantFeedback{Hệ thống Đánh giá & Phản hồi}
     InstantFeedback --> HighlightGreen[Đáp án Đúng: PHÁT SÁNG XANH LÁ]
@@ -177,9 +180,10 @@ flowchart TD
     TypePrompt --> AICall[Hệ thống gửi câu hỏi + Ngữ cảnh đề bài lên AI Model]
     AICall --> AIResponse[Chatbot AI diễn giải cặn kẽ bản chất học thuật]
     AIResponse --> NextQuestion
-    NextQuestion --> CheckFinished{Đã hết 20 câu?}
+    NextQuestion --> CheckFinished{Đã hoàn thành số câu?}
     CheckFinished -->|Chưa| RenderQ
-    CheckFinished -->|Đã xong| SummaryView[Hiển thị Bảng tổng kết buổi luyện tập]
+    CheckFinished -->|Đã xong / Nộp bài| CallSubmitRPC[Gọi RPC fn_submit_exam_attempt chấm điểm & lưu kết quả]
+    CallSubmitRPC --> SummaryView[Hiển thị Bảng tổng kết buổi luyện tập & Lưu vào Lịch sử thi]
       </div>
     </div>
 
@@ -190,7 +194,7 @@ flowchart TD
           <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 mr-2"></span>
           Diễn Giải Các Bước Trực Quan Cho Người Dùng
         </h2>
-        <span class="text-xs text-slate-400">Bước 1 đến 5</span>
+        <span class="text-xs text-slate-400">Bước 1 đến 6</span>
       </div>
 
       <div class="space-y-4">
@@ -211,7 +215,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Học viên lựa chọn môn học (Hóa học, Sinh học hoặc Tiếng Anh) và bấm nút 'Luyện tập / Thi Thử'.
+            Học viên lựa chọn môn học (Hóa học, Sinh học hoặc Tiếng Anh) và bấm nút 'Luyện tập / Thi Thử'. Do học sinh bị khóa quyền direct INSERT trên bảng CSDL, Frontend gọi RPC bảo mật <code>fn_start_exam(p_exam_config_id, 'practice')</code>. Hệ thống khởi tạo lượt thi, bốc ngẫu nhiên bộ câu hỏi từ ngân hàng đề và nạp vào <code>exam_attempt_answers</code>.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -295,7 +299,7 @@ flowchart TD
           </div>
 
           <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
-            Với câu hỏi 1 đáp án (Radio), hệ thống phản hồi ngay sau khi chọn. Với câu hỏi nhiều đáp án (Checkbox), học viên tích chọn các phương án theo suy đoán, sau đó bấm nút <b>"Kiểm tra đáp án"</b> để tránh việc phản hồi sớm làm lộ kết quả các ô còn lại.
+            Với câu hỏi 1 đáp án (Radio), học viên chọn đáp án và hệ thống gọi RPC <code>fn_save_answer(p_attempt_id, p_question_id, p_selected_option_ids)</code> để lưu rồi phản hồi ngay. Với câu hỏi nhiều đáp án (Checkbox), học viên tích chọn các phương án theo suy đoán, sau đó bấm nút <b>"Kiểm tra đáp án"</b> để gọi RPC <code>fn_save_answer</code> lưu dữ liệu và hiển thị đánh giá toàn diện, tránh việc phản hồi sớm làm lộ kết quả các ô còn lại.
           </p>
 
           <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
@@ -399,6 +403,48 @@ flowchart TD
           </div>
         </div>
         
+            <div class="flex justify-center my-3 text-slate-300 dark:text-slate-600">
+              <div class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <svg class="w-5 h-5 text-purple-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+              </div>
+            </div>
+            
+        <div class="group relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white font-black text-sm flex items-center justify-center shadow-lg shadow-emerald-500/25 transform group-hover:scale-110 transition duration-200">
+                6
+              </span>
+              <h3 class="font-bold text-slate-900 dark:text-white text-base md:text-lg group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
+                Hoàn tất buổi luyện tập & Chấm điểm qua RPC fn_submit_exam_attempt
+              </h3>
+            </div>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-full border border-slate-200/80 dark:border-slate-600">
+              Hệ thống & Học viên
+            </span>
+          </div>
+
+          <p class="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-4 pl-0 md:pl-12 leading-relaxed">
+            Sau khi hoàn thành hoặc muốn kết thúc buổi luyện tập, học viên bấm 'Hoàn thành'. Hệ thống gọi RPC <code>fn_submit_exam_attempt(p_attempt_id, p_answers, false)</code> để chấm điểm tự động, cập nhật trạng thái <code>completed</code> và lưu điểm số vào lịch sử học tập cá nhân cũng như thống kê lớp.
+          </p>
+
+          <div class="md:ml-12 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/80 shadow-inner">
+            <div class="px-4 py-2 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">Giao diện người dùng mô phỏng</span>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400">Preview UI</span>
+            </div>
+            <div class="p-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start space-x-2">
+              <span class="text-base">🖥️</span>
+              <span class="leading-relaxed">Bảng tổng kết buổi thi thử: Số câu đúng, điểm quy đổi thang 10, nút xem lại chi tiết bài làm và lưu vào lịch sử cá nhân.</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -409,7 +455,11 @@ flowchart TD
         <h3>Quy Tắc Nghiệp Vụ Quan Trọng Cần Ghi Nhớ</h3>
       </div>
       <div class="space-y-2.5">
-        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Không áp lực thời gian: Chế độ Thi Thử không đếm ngược tự nộp bài.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Đáp án đúng và lời giải thích luôn hiển thị ngay lập tức để học sinh ghi nhớ kiến thức.</span></div><div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>AI Chatbot được cung cấp ngữ cảnh đề bài để trả lời bám sát kiến thức môn học.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Bảo mật CSDL 100% qua RPC: Học viên bị khóa toàn bộ quyền direct INSERT/UPDATE trên bảng exam_attempts và exam_attempt_answers. Mọi thao tác bắt buộc gọi qua các hàm RPC fn_start_exam, fn_save_answer, fn_submit_exam_attempt.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Không áp lực thời gian: Chế độ Thi Thử không đếm ngược tự nộp bài.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Lưu lịch sử & Thống kê: Kết quả thi thử CÓ tính vào lịch sử cá nhân và báo cáo thống kê tiến độ học sinh.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>Chống lộ đáp án câu nhiều lựa chọn: Tuyệt đối không phản hồi màu sắc từng ô khi học sinh chưa bấm 'Kiểm tra đáp án'.</span></div>
+        <div class="flex items-start space-x-2 text-sm text-slate-700 dark:text-slate-300"><span class="text-amber-500 font-bold mt-0.5">⚡</span><span>AI Chatbot được cung cấp ngữ cảnh đề bài để trả lời bám sát kiến thức môn học.</span></div>
       </div>
     </div>
 

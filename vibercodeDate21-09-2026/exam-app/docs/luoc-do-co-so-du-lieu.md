@@ -1,15 +1,15 @@
 # LƯỢC ĐỒ CƠ SỞ DỮ LIỆU TOÀN DIỆN - EXAM APP (SUPABASE / POSTGRESQL)
 
 > **Tài liệu tham chiếu:** Phân tích từ 10 Flows nghiệp vụ (Hóa, Sinh, Tiếng Anh) & Hướng dẫn chuẩn [Supabase Self-Hosting with Docker](https://supabase.com/docs/guides/self-hosting/docker).  
-> **Phiên bản:** 2.3 (Chuẩn hóa toàn diện: Bảng `users`, RLS Matrix, 3 Views, 15 Functions, Xử lý trọn vẹn toàn bộ 8 Cảnh báo: Bảo mật riêng tư, bốc câu hỏi, chống hack điểm, đồng bộ tham số nộp bài, chống nhảy lớp, lọc câu hỏi xóa mềm & làm sạch migrations)  
-> **Cập nhật:** 2026-10-06  
+> **Phiên bản:** 2.4 (Kiến trúc Bảo mật Chuẩn: Khóa 100% quyền INSERT/UPDATE trực tiếp của học sinh trên `exam_attempts` & `exam_attempt_answers`, vận hành toàn diện qua 3 RPC bảo mật `SECURITY DEFINER`, đóng triệt để 4 lỗ hổng H1, H2, H3, H4; bổ sung `fn_save_answer` và `fn_delete_student_attempt`; 11 bảng, 3 views, 17 functions)  
+> **Cập nhật:** 2026-10-07  
 > **Mục tiêu:** Cung cấp tài liệu tra cứu hoàn chỉnh về cấu trúc bảng, mối quan hệ, quy tắc nghiệp vụ, bảo mật hàng (RLS) và hướng dẫn tích hợp cho cả nhân sự kỹ thuật (Developers) lẫn quản lý dự án (Product Owners / Stakeholders).
 
 ---
 
 ## 1. TỔNG QUAN HỆ THỐNG VÀ 4 PHÂN HỆ NGHIỆP VỤ CHÍNH
 
-Cơ sở dữ liệu của **Exam App** được chuẩn hóa bậc 3 (3NF), gồm **11 bảng thực thể vật lý**, **3 views bảo mật & phân tích**, **15 hàm chức năng** (10 hàm nghiệp vụ/trigger/RPC + 5 hàm bảo mật/phân quyền helper) và hệ thống bảo mật hàng (Row Level Security - RLS) đa tầng, chia thành 4 phân hệ chính:
+Cơ sở dữ liệu của **Exam App** được chuẩn hóa bậc 3 (3NF), gồm **11 bảng thực thể vật lý**, **3 views bảo mật & phân tích**, **17 hàm chức năng** (12 hàm nghiệp vụ/trigger/RPC + 5 hàm bảo mật/phân quyền helper) và hệ thống bảo mật hàng (Row Level Security - RLS) đa tầng, chia thành 4 phân hệ chính:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -30,6 +30,17 @@ Cơ sở dữ liệu của **Exam App** được chuẩn hóa bậc 3 (3NF), g�
 ```
 
 > [!IMPORTANT]
+> **Đột phá Kiến trúc Bảo mật (v2.4):**
+> Thay vì phụ thuộc vào hàng loạt trigger phức tạp để canh chừng từng cột khi học sinh INSERT/UPDATE trực tiếp, hệ thống áp dụng kiến trúc bảo mật chuẩn:
+> 1. **Khóa toàn bộ quyền INSERT/UPDATE trực tiếp** của học sinh trên cả 2 bảng `exam_attempts` và `exam_attempt_answers` thông qua Row Level Security (RLS).
+> 2. **Vận hành 100% qua 3 RPC bảo mật (`SECURITY DEFINER`)**:
+>    - `fn_start_exam(p_exam_config_id, p_mode)`: Khởi tạo đề và bốc câu hỏi an toàn từ máy chủ.
+>    - `fn_save_answer(p_attempt_id, p_question_id, p_selected_option_ids)`: Lưu câu trả lời từng câu (kiểm tra nghiêm ngặt server-timer chống lưu sau khi hết giờ).
+>    - `fn_submit_exam_attempt(p_attempt_id, p_answers, p_auto_submitted)`: Chấm điểm và công bố kết quả chuẩn xác.
+>    - Bổ sung `fn_delete_student_attempt(p_attempt_id)`: Xóa mềm cá nhân học sinh mà không cần cấp quyền UPDATE trên bảng vật lý.
+> 3. **Đóng đồng thời 4 lỗ hổng cốt lõi:** H1 (sửa điểm), H2 (can thiệp số câu/điểm đạt), H3 (lộ đáp án F12), H4 (gian lận sau giờ thi).
+
+> [!NOTE]
 > **Quy chuẩn thực thể Người dùng (`users` vs `profiles`):**
 > - Bảng dữ liệu vật lý chính thức là `public.users(id, username, email, hash_password, full_name, role, class_id...)` tuân theo đúng quy ước đặt tên tiếng Anh `users(username, hash_password)`.
 > - View `public.profiles` là view bảo mật (`security_invoker = true`) bọc trên bảng `users`, loại bỏ hoàn toàn cột nhạy cảm `hash_password` để phục vụ Frontend truy vấn an toàn và duy trì tương thích ngược.
@@ -218,29 +229,47 @@ erDiagram
    - **Bao gồm cả Thi Thật (`real`) và Thi Thử (`practice`):** Nhóm theo `(class_id, subject, mode)` giúp Giáo viên và Ban giám hiệu/Admin xem được cả kết quả kiểm tra chính thức lẫn tình hình luyện tập tự do của học sinh.
    - Tính toán đầy đủ: `total_attempts`, `total_students` (số học sinh duy nhất), `average_score`, `highest_score`, `lowest_score`, `passed_count`, `failed_count`, `pass_rate_percent`.
 
-### 3.2. Danh mục 15 Functions (Stored Procedures & Triggers)
+   - Tính toán đầy đủ: `total_attempts`, `total_students` (số học sinh duy nhất), `average_score`, `highest_score`, `lowest_score`, `passed_count`, `failed_count`, `pass_rate_percent`.
+
+### 3.2. Danh mục 17 Functions (Stored Procedures & Triggers)
 
 | STT | Tên Hàm | Phân Loại | Mục Đích & Cơ Chế Hoạt Động |
 | :---: | :--- | :--- | :--- |
 | 1 | `handle_updated_at()` | Trigger Helper | Tự động gán `updated_at = now()` khi có cập nhật bản ghi (`users`, `questions`). |
 | 2 | `handle_new_user()` | Auth Trigger | Chặn tự nâng quyền khi đăng ký: Cưỡng chế gán `role = 'student'` cho mọi tài khoản mới từ `auth.users`. Quyền `teacher` và `admin` chỉ do Admin cấp nội bộ. |
-| 3 | `trg_fn_protect_exam_attempt()` | Security Trigger | **Khóa cứng điểm số & tham số đề thi (Fix Warning 3):** Cưỡng chế `score = 0`, `is_passed = false` khi tạo mới. Ép buộc lấy `total_questions`, `pass_score`, `duration_minutes` từ `exam_configs`. Chặn đứng mọi hành vi client tự gửi lệnh UPDATE sửa `total_questions = 1` hoặc `pass_score = 0.0` để hack điểm 10. |
+| 3 | `trg_fn_protect_exam_attempt()` | Security Trigger | **Khóa cứng điểm số & tham số đề thi (Fix Warning 3 - Defense in Depth):** Cưỡng chế `score = 0`, `is_passed = false` khi tạo mới. Ép buộc lấy `total_questions`, `pass_score`, `duration_minutes` từ `exam_configs`. Chặn đứng mọi hành vi client can thiệp điểm số ngoài luồng nộp bài chính thức. |
 | 4 | `fn_handle_question_teacher_resubmit()` | Business Trigger | Hỗ trợ giáo viên nộp lại câu hỏi bị từ chối: Khi giáo viên sửa câu hỏi có trạng thái `rejected`, trigger tự động chuyển về `pending` và xóa lý do từ chối để Admin duyệt lại. |
 | 5 | `fn_notify_question_review()` | Business Trigger | Tự động tạo bản ghi `notifications` gửi cho giáo viên khi Admin duyệt hoặc từ chối câu hỏi, kèm lý do từ chối. |
 | 6 | `fn_get_academic_rank(p_score)` | Business Function | Hàm quy đổi điểm sang xếp loại học lực theo chuẩn Thang 10: Xuất sắc ($\ge 9.0$), Giỏi ($8.0 - 8.9$), Khá ($6.5 - 7.9$), Trung bình ($5.0 - 6.4$), Yếu ($< 5.0$). |
-| 7 | `fn_start_exam(p_exam_config_id, p_mode)` | RPC Stored Procedure | **Khởi tạo bài thi & bốc câu hỏi tự động (Fix Warning 2):** Kiểm tra trạng thái kỳ thi, tự động bốc ngẫu nhiên $N$ câu hỏi từ ngân hàng (`status = 'approved'`, `is_active = true`, `is_deleted = false`), tạo lượt thi trong `exam_attempts` và nạp sẵn vào `exam_attempt_answers` kèm snapshot nội dung và đáp án. |
-| 8 | `fn_submit_exam_attempt(p_attempt_id, p_answers, p_auto_submitted)` | RPC Stored Procedure | **Nộp bài & chấm điểm an toàn (Fix Warning 3, 4):** Hỗ trợ đầy đủ 3 tham số. Cho phép truyền payload danh sách câu trả lời `p_answers` (`JSONB DEFAULT NULL`) hoặc chấm trực tiếp câu đã lưu; chạy `SECURITY DEFINER`, chống nộp trùng lặp, chia điểm theo số câu authoritative từ `exam_configs`, cập nhật kết quả và tự động gửi thông báo cho giáo viên. |
-| 9 | `fn_get_exam_questions(p_attempt_id)` | RPC Security | **Lấy đề thi an toàn (Fix Warning 2 & Chống F12):** Kiểm tra quyền sở hữu lượt thi, tự động nạp câu hỏi dự phòng nếu bảng câu trả lời trống (không bao giờ trả về mảng 0 câu), ẩn hoàn toàn cột `is_correct` và `explanation`. |
-| 10 | `fn_get_attempt_review(p_attempt_id)` | RPC Security | **Xem lại bài thi có bảo mật quyền riêng tư (Fix Warning 1):** Kiểm tra nghiêm ngặt `user_id = auth.uid()` hoặc Giáo viên phụ trách lớp/môn hoặc Admin. Chặn đứng tuyệt đối hành vi học sinh xem trộm bài làm, điểm số và đáp án của thí sinh khác. |
-| 11 | `get_user_role()` | Security Helper | Trả về `user_role` hiện tại của user đang đăng nhập (`auth.uid()`) từ bảng `users`. |
-| 12 | `is_admin()` | Security Helper | Kiểm tra nhanh user hiện tại có quyền `admin` hay không. |
-| 13 | `is_teacher()` | Security Helper | Kiểm tra nhanh user hiện tại có quyền `teacher` hay không. |
-| 14 | `is_teacher_of_class_and_subject(target_class_id, target_subject)` | Security Helper | Kiểm tra xem giáo viên hiện tại có được phân công giảng dạy đúng lớp và đúng môn học đó trong bảng `teacher_classes` hay không. |
-| 15 | `is_teacher_of_subject(target_subject)` | Security Helper | Kiểm tra xem giáo viên hiện tại có được phân công phụ trách môn học đó hay không (dùng khi kiểm tra quyền đóng góp câu hỏi). |
+| 7 | `fn_start_exam(p_exam_config_id, p_mode)` | RPC Core Procedure | **Khởi tạo bài thi & bốc câu hỏi tự động (Fix Warning 2 & H2, H3):** Chạy `SECURITY DEFINER`. Tự động bốc $N$ câu hỏi đã duyệt từ ngân hàng, nạp vào `exam_attempts` & `exam_attempt_answers` kèm snapshot, trả về đề thi an toàn (đã ẩn `is_correct`). |
+| 8 | `fn_save_answer(p_attempt_id, p_question_id, p_selected_option_ids)` | RPC Core Procedure | **Lưu câu trả lời real-time & kiểm tra đồng hồ máy chủ (Fix H4):** Chạy `SECURITY DEFINER`. Xác thực quyền sở hữu, kiểm tra trạng thái `in_progress`. So khớp thời gian thực tại server: nếu quá giờ (`duration_minutes * 60 + 60s`), tự động khóa `timed_out` và từ chối lưu đáp án gian lận muộn. |
+| 9 | `fn_submit_exam_attempt(p_attempt_id, p_answers, p_auto_submitted)` | RPC Core Procedure | **Nộp bài & chấm điểm an toàn (Fix Warning 3, 4 & H1, H2):** Chạy `SECURITY DEFINER`. Hỗ trợ 3 tham số. Tự động chấm điểm đối chiếu với `is_correct` trên máy chủ, chia điểm chuẩn xác theo `exam_configs`, khóa điểm và gửi thông báo cho giáo viên. |
+| 10 | `fn_delete_student_attempt(p_attempt_id)` | RPC Soft Delete | **Xóa mềm cá nhân học sinh (Flow 02):** Chạy `SECURITY DEFINER`. Cho phép học sinh ẩn bài thi khỏi danh sách cá nhân (`is_student_deleted = true`) mà không cần mở quyền direct UPDATE trên bảng vật lý `exam_attempts`. |
+| 11 | `fn_get_exam_questions(p_attempt_id)` | RPC Security | **Lấy đề thi an toàn (Fix Warning 2 & Chống F12 - H3):** Kiểm tra quyền sở hữu lượt thi, tự động nạp câu hỏi dự phòng nếu bảng câu trả lời trống, ẩn hoàn toàn cột `is_correct` và `explanation`. |
+| 12 | `fn_get_attempt_review(p_attempt_id)` | RPC Security | **Xem lại bài thi có bảo mật quyền riêng tư (Fix Warning 1):** Kiểm tra nghiêm ngặt `user_id = auth.uid()` hoặc Giáo viên phụ trách lớp/môn hoặc Admin. Chặn đứng tuyệt đối hành vi học sinh xem trộm bài làm, điểm số và đáp án của thí sinh khác. |
+| 13 | `get_user_role()` | Security Helper | Trả về `user_role` hiện tại của user đang đăng nhập (`auth.uid()`) từ bảng `users`. |
+| 14 | `is_admin()` | Security Helper | Kiểm tra nhanh user hiện tại có quyền `admin` hay không. |
+| 15 | `is_teacher()` | Security Helper | Kiểm tra nhanh user hiện tại có quyền `teacher` hay không. |
+| 16 | `is_teacher_of_class_and_subject(...)` | Security Helper | Kiểm tra xem giáo viên hiện tại có được phân công giảng dạy đúng lớp và đúng môn học đó trong bảng `teacher_classes` hay không. |
+| 17 | `is_teacher_of_subject(target_subject)` | Security Helper | Kiểm tra xem giáo viên hiện tại có được phân công phụ trách môn học đó hay không (dùng khi kiểm tra quyền đóng góp câu hỏi). |
 
 ---
 
 ## 4. CHI TIẾT CÁC QUY TẮC NGHIỆP VỤ & BẢO MẬT ĐÃ ĐƯỢC ĐỒNG BỘ
+
+### 4.0. Đột phá Kiến trúc Bảo mật: Khóa 100% Ghi trực tiếp & Đóng đồng thời 4 Lỗ hổng H1, H2, H3, H4
+Thay vì phải viết nhiều Trigger phức tạp để theo dõi từng cột khi học sinh gửi lệnh `INSERT`/`UPDATE` trực tiếp, giải pháp chuẩn kiến trúc nhất được triển khai:
+- **Khóa toàn bộ quyền INSERT/UPDATE trực tiếp của học sinh** trên cả 2 bảng `exam_attempts` và `exam_attempt_answers`. Bất kỳ lệnh API REST nào gửi trực tiếp đến 2 bảng này đều bị PostgreSQL từ chối với mã lỗi `42501 (RLS violation)`.
+- **Học sinh thao tác 100% qua các RPC bảo mật (`SECURITY DEFINER`)**:
+  - `fn_start_exam`: Khởi tạo đề và bốc câu hỏi an toàn từ ngân hàng.
+  - `fn_save_answer`: Lưu câu trả lời từng câu và kiểm tra thời gian thực.
+  - `fn_submit_exam_attempt`: Nộp bài, chấm điểm và công bố kết quả.
+  - `fn_delete_student_attempt`: Xóa mềm bài thi cá nhân.
+- **Cơ chế đóng trọn vẹn 4 lỗ hổng cốt lõi:**
+  1. **Lỗ hổng H1 (Học sinh tự sửa điểm / chèn điểm 10):** Do không có quyền direct `UPDATE`/`INSERT` trên `exam_attempts`, học sinh không thể sửa `score`, `is_passed`, `academic_rank`. Điểm số được tính toán duy nhất tại server bởi `fn_submit_exam_attempt`.
+  2. **Lỗ hổng H2 (Can thiệp số câu hỏi / điểm đạt):** Các tham số `total_questions`, `pass_score`, `duration_minutes` do server đọc trực tiếp từ `exam_configs`, client hoàn toàn không có tham số hay quyền can thiệp vào các trường này.
+  3. **Lỗ hổng H3 (Lộ đáp án qua F12 / API inspect):** `question_options` chặn SELECT cột `is_correct` đối với học sinh; `exam_attempt_answers` chặn SELECT khi đang thi; `fn_start_exam` và `fn_get_exam_questions` chỉ trả về option an toàn đã ẩn `is_correct` và `explanation`.
+  4. **Lỗ hổng H4 (Gian lận lưu câu trả lời sau khi hết giờ thi):** `exam_attempt_answers` chặn direct `UPDATE`. Mọi thao tác lưu đáp án đi qua `fn_save_answer`, nơi server kiểm tra `EXTRACT(EPOCH FROM (now() - started_at))`. Nếu quá thời gian quy định (`duration_minutes * 60 + 60s`), server tự động khóa bài thi `timed_out` và từ chối cập nhật đáp án.
 
 ### 4.1. Khắc phục Warning 1: Chống xem trộm bài thi của bạn khác trong `fn_get_attempt_review`
 - **Lỗ hổng cũ:** Hàm chạy quyền `SECURITY DEFINER` nhưng quên kiểm tra quyền sở hữu, dẫn đến việc bất kỳ học sinh nào chỉ cần biết UUID `attempt_id` của bạn khác là gọi hàm xem được toàn bộ bài làm, điểm số và đáp án.
@@ -347,8 +376,8 @@ erDiagram
 | 4 | `exam_configs` | **SELECT**: Chỉ xem các cấu hình đề thi đang mở hoạt động (`is_active = true`). | **SELECT**: Xem cấu hình các đề thi đang mở hoặc liên quan môn mình dạy. | **ALL (CRUD)**: Toàn quyền thiết lập đề thi, thời gian, số câu, điểm đạt, kỳ thi. |
 | 5 | `questions` | **SELECT**: Chỉ xem câu hỏi đã được phê duyệt (`approved`), đang hoạt động và chưa bị xóa mềm trong bài thi. | **SELECT / INSERT / UPDATE**: Xem câu đã duyệt + câu mình đóng góp (chưa xóa mềm: `is_deleted = false` - Fix Warning 6). Đề xuất câu mới thuộc môn mình dạy (`pending`). Sửa câu bị từ chối (`rejected`) để nộp lại. | **ALL (CRUD)**: Toàn quyền duyệt, từ chối kèm lý do, sửa đổi và xóa mềm câu hỏi (`is_deleted = true`). |
 | 6 | `question_options` | **Không SELECT trực tiếp (Chống F12)**. Nhận dữ liệu câu hỏi qua RPC `fn_start_exam` / `fn_get_exam_questions` (ẩn `is_correct`). | **SELECT / ALL**: Xem và quản lý đáp án các câu hỏi thuộc môn mình phụ trách hoặc do mình đóng góp. | **ALL (CRUD)**: Toàn quyền quản trị danh sách phương án lựa chọn và đáp án đúng. |
-| 7 | `exam_attempts` | **SELECT / INSERT / UPDATE**: Chỉ xem bài của mình (`is_student_deleted = false`). Điểm số và tham số đề thi bị khóa chặt bởi trigger. Nộp bài qua RPC. | **SELECT**: Xem toàn bộ kết quả thi của học sinh lớp mình dạy theo đúng môn phụ trách (kể cả bài học sinh đã xóa mềm cá nhân). | **ALL (CRUD)**: Toàn quyền xem và quản lý kết quả thi của toàn bộ học sinh trên hệ thống. |
-| 8 | `exam_attempt_answers` | **SELECT / INSERT / UPDATE**: Xem câu trả lời của bài mình sau khi nộp hoặc ở chế độ thi thử. Ghi nhận lựa chọn khi bài thi `in_progress`. | **SELECT**: Xem bài làm chi tiết từng câu của học sinh lớp mình phụ trách theo đúng môn. | **ALL (CRUD)**: Toàn quyền tra cứu chi tiết bài làm của mọi thí sinh phục vụ hậu kiểm. |
+| 7 | `exam_attempts` | **KHÓA 100% INSERT/UPDATE TRỰC TIẾP**. Chỉ **SELECT** bài của mình (`is_student_deleted = false`). Mọi thao tác ghi dữ liệu (tạo bài, cập nhật, nộp bài, xóa mềm) thực hiện qua các RPC bảo mật: `fn_start_exam`, `fn_save_answer`, `fn_submit_exam_attempt`, `fn_delete_student_attempt` (Đóng H1, H2). | **SELECT**: Xem toàn bộ kết quả thi của học sinh lớp mình dạy theo đúng môn phụ trách (kể cả bài học sinh đã xóa mềm cá nhân). | **ALL (CRUD)**: Toàn quyền xem và quản lý kết quả thi của toàn bộ học sinh trên hệ thống. |
+| 8 | `exam_attempt_answers` | **KHÓA 100% INSERT/UPDATE TRỰC TIẾP**. Chỉ **SELECT** sau khi nộp bài hoặc thi thử. Thao tác lưu đáp án từng câu real-time 100% qua RPC `fn_save_answer` (chống lưu trộm sau giờ thi - Đóng H4). Bốc đề thi qua `fn_start_exam` (Đóng H3). | **SELECT**: Xem bài làm chi tiết từng câu của học sinh lớp mình phụ trách theo đúng môn. | **ALL (CRUD)**: Toàn quyền tra cứu chi tiết bài làm của mọi thí sinh phục vụ hậu kiểm. |
 | 9 | `notifications` | **ALL**: Xem và đánh dấu đã đọc các thông báo của chính mình (`user_id = auth.uid()`). | **ALL**: Nhận thông báo tự động khi Admin duyệt/từ chối câu hỏi hoặc khi học sinh nộp bài thi mới. | **ALL (CRUD)**: Toàn quyền quản trị và gửi thông báo hệ thống. |
 | 10 | `ai_chat_logs` | **SELECT / INSERT**: Hỏi đáp trợ lý AI và xem lịch sử hỏi đáp bài thi của chính mình. | **SELECT**: Xem lịch sử học sinh hỏi đáp AI trong các bài thi thử thuộc lớp mình phụ trách. | **ALL (CRUD)**: Toàn quyền quản trị nhật ký AI Chatbot. |
 | 11 | `question_import_logs` | **Không có quyền truy cập**. | **SELECT / INSERT**: Xem lịch sử và kết quả các lượt import file câu hỏi Excel do chính mình tải lên. | **ALL (CRUD)**: Toàn quyền theo dõi và quản lý mọi phiên import câu hỏi trên toàn hệ thống. |
@@ -385,10 +414,21 @@ const { data: examData, error } = await supabase.rpc('fn_start_exam', {
 // }
 ```
 
-### 6.2. Nộp bài và Nhận kết quả chấm điểm an toàn (Khắc phục Warning 3 & Warning 4)
+### 6.2. Lưu câu trả lời từng câu an toàn & Đồng bộ thời gian (Khắc phục H4)
 ```typescript
-// 2. Học sinh nộp bài: Gọi RPC fn_submit_exam_attempt
-// Cách 1: Nộp kèm mảng câu trả lời (p_answers) trong một payload duy nhất
+// 2. Học sinh tích chọn đáp án (Auto-save real-time): Gọi RPC fn_save_answer
+// Server kiểm tra started_at và duration_minutes; từ chối lưu và khóa bài nếu quá giờ
+const { data: saveResult, error } = await supabase.rpc('fn_save_answer', {
+  p_attempt_id: examData.attempt_id,
+  p_question_id: "q-1",
+  p_selected_option_ids: ["opt-1"] // mảng UUID hỗ trợ cả 1 hoặc nhiều đáp án
+});
+```
+
+### 6.3. Nộp bài và Nhận kết quả chấm điểm an toàn (Khắc phục Warning 3, 4 & H1, H2)
+```typescript
+// 3. Học sinh nộp bài: Gọi RPC fn_submit_exam_attempt
+// Cách 1: Nộp kèm mảng câu trả lời cuối cùng (p_answers):
 const { data: result, error } = await supabase.rpc('fn_submit_exam_attempt', {
   p_attempt_id: examData.attempt_id,
   p_answers: [
@@ -398,7 +438,7 @@ const { data: result, error } = await supabase.rpc('fn_submit_exam_attempt', {
   p_auto_submitted: false
 });
 
-// Cách 2: Nếu đã lưu câu trả lời theo thời gian thực vào bảng exam_attempt_answers:
+// Cách 2: Nộp chấm trực tiếp các câu đã auto-save qua fn_save_answer:
 // const { data: result } = await supabase.rpc('fn_submit_exam_attempt', {
 //   p_attempt_id: examData.attempt_id,
 //   p_auto_submitted: false // p_answers mặc định là null
@@ -415,18 +455,26 @@ const { data: result, error } = await supabase.rpc('fn_submit_exam_attempt', {
 // }
 ```
 
-### 6.3. Xem lại bài thi sau khi nộp (Khắc phục Warning 1 - Bảo mật riêng tư)
+### 6.4. Xem lại bài thi sau khi nộp (Khắc phục Warning 1 - Bảo mật riêng tư)
 ```typescript
-// 3. Học sinh xem lại bài thi: Gọi RPC fn_get_attempt_review
+// 4. Học sinh xem lại bài thi: Gọi RPC fn_get_attempt_review
 // Hàm tự động từ chối nếu không phải chính chủ thí sinh hoặc giáo viên/admin phụ trách
 const { data: reviewData, error } = await supabase.rpc('fn_get_attempt_review', {
   p_attempt_id: examData.attempt_id
 });
 ```
 
-### 6.4. Tra cứu Bảng xếp hạng theo Học sinh
+### 6.5. Xóa mềm bài thi cá nhân (Flow 02)
 ```typescript
-// 4. Tra cứu Top 10 học sinh dẫn đầu môn Hóa học
+// 5. Học sinh ẩn bài thi khỏi danh sách cá nhân: Gọi RPC fn_delete_student_attempt
+const { data: deleteResult, error } = await supabase.rpc('fn_delete_student_attempt', {
+  p_attempt_id: examData.attempt_id
+});
+```
+
+### 6.6. Tra cứu Bảng xếp hạng theo Học sinh
+```typescript
+// 6. Tra cứu Top 10 học sinh dẫn đầu môn Hóa học
 const { data: leaderboard, error } = await supabase
   .from('view_leaderboard')
   .select('*')

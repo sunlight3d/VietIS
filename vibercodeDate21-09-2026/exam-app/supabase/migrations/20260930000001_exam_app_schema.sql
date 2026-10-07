@@ -744,7 +744,128 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5.9. Hàm lấy đề thi cho học sinh (CHỐNG F12: Ẩn hoàn toàn is_correct và explanation)
+-- 5.9. Hàm lưu câu trả lời từng câu an toàn (Flow 03 & Flow 04)
+-- BẢO MẬT CHUẨN KIẾN TRÚC:
+-- - Triệt tiêu lỗ hổng H4: Kiểm tra server time (now() <= started_at + duration_minutes * 60 + 60s buffer)
+-- - Ngăn chặn gian lận: Chỉ cho phép lưu khi bài thi đang 'in_progress' và thuộc sở hữu của chính thí sinh
+-- - Tự động khóa bài thi 'timed_out' nếu đã quá thời gian quy định
+CREATE OR REPLACE FUNCTION public.fn_save_answer(
+    p_attempt_id UUID,
+    p_question_id UUID,
+    p_selected_option_ids UUID[]
+)
+RETURNS JSONB AS $$
+DECLARE
+    v_attempt RECORD;
+    v_elapsed_seconds INT;
+    v_max_duration_seconds INT;
+BEGIN
+    -- 1. Kiểm tra đăng nhập
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Bạn cần đăng nhập để thực hiện thao tác này!';
+    END IF;
+
+    -- 2. Kiểm tra sự tồn tại và quyền sở hữu bài thi
+    SELECT * INTO v_attempt 
+    FROM public.exam_attempts 
+    WHERE id = p_attempt_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy lượt thi với ID %', p_attempt_id;
+    END IF;
+
+    IF v_attempt.user_id <> auth.uid() AND NOT public.is_admin() THEN
+        RAISE EXCEPTION 'Bảo mật: Bạn không có quyền lưu câu trả lời cho bài thi này!';
+    END IF;
+
+    -- 3. Kiểm tra trạng thái bài thi
+    IF v_attempt.status <> 'in_progress' THEN
+        RAISE EXCEPTION 'Bài thi không ở trạng thái đang làm bài (Trạng thái hiện tại: %)!', v_attempt.status;
+    END IF;
+
+    -- 4. Kiểm tra thời gian làm bài (Triệt tiêu lỗ hổng H4: Chống gửi đáp án khi đã hết giờ)
+    -- Cho phép buffer 60 giây để bù trừ độ trễ đường truyền mạng
+    v_elapsed_seconds := EXTRACT(EPOCH FROM (now() - v_attempt.started_at))::INT;
+    v_max_duration_seconds := (v_attempt.duration_minutes * 60) + 60;
+
+    IF v_elapsed_seconds > v_max_duration_seconds THEN
+        -- Tự động đánh dấu bài thi hết giờ (timed_out)
+        UPDATE public.exam_attempts 
+        SET status = 'timed_out', 
+            auto_submitted = true,
+            time_spent_seconds = v_attempt.duration_minutes * 60,
+            updated_at = now()
+        WHERE id = p_attempt_id;
+
+        RAISE EXCEPTION 'Thời gian làm bài đã kết thúc! Bài thi đã tự động khóa.';
+    END IF;
+
+    -- 5. Kiểm tra câu hỏi có thuộc đề thi của lượt thi này không
+    IF NOT EXISTS (
+        SELECT 1 FROM public.exam_attempt_answers 
+        WHERE attempt_id = p_attempt_id AND question_id = p_question_id
+    ) THEN
+        RAISE EXCEPTION 'Câu hỏi không tồn tại trong đề thi của lượt thi này!';
+    END IF;
+
+    -- 6. Lưu câu trả lời an toàn
+    UPDATE public.exam_attempt_answers
+    SET selected_option_ids = COALESCE(p_selected_option_ids, '{}'::UUID[]),
+        answered_at = now()
+    WHERE attempt_id = p_attempt_id AND question_id = p_question_id;
+
+    -- 7. Cập nhật thời gian làm bài (time_spent_seconds)
+    UPDATE public.exam_attempts 
+    SET time_spent_seconds = v_elapsed_seconds,
+        updated_at = now()
+    WHERE id = p_attempt_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'attempt_id', p_attempt_id,
+        'question_id', p_question_id,
+        'selected_option_ids', p_selected_option_ids,
+        'time_spent_seconds', v_elapsed_seconds,
+        'saved_at', now()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5.10. Hàm xóa mềm lượt thi phía học sinh (Flow 02)
+-- BẢO MẬT: Học sinh không có quyền direct UPDATE trên exam_attempts, thao tác xóa mềm 100% qua RPC này.
+-- Dữ liệu chỉ ẩn ở giao diện cá nhân học sinh (is_student_deleted = true), giáo viên & admin vẫn bảo toàn báo cáo.
+CREATE OR REPLACE FUNCTION public.fn_delete_student_attempt(p_attempt_id UUID)
+RETURNS JSONB AS $$
+DECLARE
+    v_attempt RECORD;
+BEGIN
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Bạn cần đăng nhập để thực hiện thao tác này!';
+    END IF;
+
+    SELECT * INTO v_attempt FROM public.exam_attempts WHERE id = p_attempt_id;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Không tìm thấy lượt thi!';
+    END IF;
+
+    IF v_attempt.user_id <> auth.uid() AND NOT public.is_admin() THEN
+        RAISE EXCEPTION 'Bảo mật: Bạn không có quyền xóa lượt thi của thí sinh khác!';
+    END IF;
+
+    UPDATE public.exam_attempts
+    SET is_student_deleted = true,
+        updated_at = now()
+    WHERE id = p_attempt_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'attempt_id', p_attempt_id,
+        'is_student_deleted', true
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5.11. Hàm lấy đề thi cho học sinh (CHỐNG F12: Ẩn hoàn toàn is_correct và explanation)
 -- KHẮC PHỤC WARNING 2: Tự động bốc câu hỏi nếu exam_attempt_answers chưa được nạp
 CREATE OR REPLACE FUNCTION public.fn_get_exam_questions(p_attempt_id UUID)
 RETURNS JSONB AS $$
@@ -865,7 +986,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5.10. Hàm xem lại bài thi sau khi nộp (Hiện đáp án đúng & giải thích)
+-- 5.12. Hàm xem lại bài thi sau khi nộp (Hiện đáp án đúng & giải thích)
 -- KHẮC PHỤC WARNING 1: BẢO MẬT QUYỀN RIÊNG TƯ - CHỐNG XEM TRỘM BÀI BẠN KHÁC
 CREATE OR REPLACE FUNCTION public.fn_get_attempt_review(p_attempt_id UUID)
 RETURNS JSONB AS $$
@@ -1098,9 +1219,14 @@ CREATE POLICY "question_options_manage" ON public.question_options
     );
 
 -- 7.7. Bảng exam_attempts
--- BẢO MẬT & TOÀN VẸN BÁO CÁO:
--- Học sinh xóa mềm (is_student_deleted = true) chỉ ẩn ở màn hình học sinh.
--- Giáo viên bộ môn của lớp và Admin luôn nhìn thấy để chấm điểm & lập báo cáo.
+-- BẢO MẬT CHUẨN KIẾN TRÚC:
+-- KHÓA TOÀN BỘ QUYỀN INSERT/UPDATE TRỰC TIẾP CỦA HỌC SINH TRÊN exam_attempts
+-- Học sinh thao tác 100% qua RPC SECURITY DEFINER:
+-- 1. fn_start_exam (khởi tạo đề và bốc câu hỏi)
+-- 2. fn_save_answer (lưu câu trả lời real-time & kiểm tra thời gian)
+-- 3. fn_submit_exam_attempt (chấm điểm & nộp bài)
+-- 4. fn_delete_student_attempt (xóa mềm cá nhân)
+-- Đóng triệt để các lỗ hổng H1 (tự sửa điểm), H2 (can thiệp số câu/điểm đạt), H4 (nộp muộn)
 CREATE POLICY "exam_attempts_select" ON public.exam_attempts 
     FOR SELECT TO authenticated 
     USING (
@@ -1109,16 +1235,23 @@ CREATE POLICY "exam_attempts_select" ON public.exam_attempts
         OR public.is_admin()
     );
 
-CREATE POLICY "exam_attempts_insert_student" ON public.exam_attempts 
+CREATE POLICY "exam_attempts_insert_admin" ON public.exam_attempts 
     FOR INSERT TO authenticated 
-    WITH CHECK (user_id = auth.uid());
+    WITH CHECK (public.is_admin());
 
-CREATE POLICY "exam_attempts_update_student_or_admin" ON public.exam_attempts 
+CREATE POLICY "exam_attempts_update_admin" ON public.exam_attempts 
     FOR UPDATE TO authenticated 
-    USING (user_id = auth.uid() OR public.is_admin())
-    WITH CHECK (user_id = auth.uid() OR public.is_admin());
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
+
+CREATE POLICY "exam_attempts_delete_admin" ON public.exam_attempts 
+    FOR DELETE TO authenticated 
+    USING (public.is_admin());
 
 -- 7.8. Bảng exam_attempt_answers
+-- BẢO MẬT CHUẨN KIẾN TRÚC:
+-- KHÓA TOÀN BỘ QUYỀN INSERT/UPDATE TRỰC TIẾP CỦA HỌC SINH TRÊN exam_attempt_answers
+-- Chỉ cho phép SELECT khi đã nộp bài hoặc xem review; ghi dữ liệu 100% qua fn_save_answer & fn_start_exam
 CREATE POLICY "attempt_answers_select" ON public.exam_attempt_answers 
     FOR SELECT TO authenticated 
     USING (
@@ -1132,23 +1265,18 @@ CREATE POLICY "attempt_answers_select" ON public.exam_attempt_answers
         )
     );
 
-CREATE POLICY "attempt_answers_insert_student" ON public.exam_attempt_answers 
+CREATE POLICY "attempt_answers_insert_admin" ON public.exam_attempt_answers 
     FOR INSERT TO authenticated 
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM public.exam_attempts ea 
-            WHERE ea.id = attempt_id AND ea.user_id = auth.uid() AND ea.status = 'in_progress'
-        )
-    );
+    WITH CHECK (public.is_admin());
 
-CREATE POLICY "attempt_answers_update_student" ON public.exam_attempt_answers 
+CREATE POLICY "attempt_answers_update_admin" ON public.exam_attempt_answers 
     FOR UPDATE TO authenticated 
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.exam_attempts ea 
-            WHERE ea.id = attempt_id AND ea.user_id = auth.uid() AND ea.status = 'in_progress'
-        )
-    );
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
+
+CREATE POLICY "attempt_answers_delete_admin" ON public.exam_attempt_answers 
+    FOR DELETE TO authenticated 
+    USING (public.is_admin());
 
 -- 7.9. Bảng ai_chat_logs
 CREATE POLICY "ai_logs_select" ON public.ai_chat_logs 
