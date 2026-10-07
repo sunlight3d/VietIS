@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bộ Thiết Kế Kiểm Thử Toàn Diện (Test Designs) | Exam-App v2.4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#6366f1', 600: '#4f46e5' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+  </style>
+  <script>
+    function getThemePreference() {
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        return 'dark';
+      }
+      return 'light';
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    }
+
+    applyTheme(getThemePreference());
+
+    function toggleTheme() {
+      const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.theme = next;
+      applyTheme(next);
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
+
+  <!-- Top Hero Header -->
+  <header class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white py-12 px-4 shadow-2xl border-b border-indigo-500/20">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none"></div>
+
+    <div class="max-w-6xl mx-auto relative z-10">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold uppercase tracking-wider">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Hệ Thống Kiểm Thử Chuẩn ISTQB & OWASP</span>
+          <span>•</span>
+          <span class="text-cyan-300">Exam-App v2.4</span>
+        </div>
+
+        <div class="flex items-center space-x-2.5">
+          <a href="../flows/index.html" class="px-3.5 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 backdrop-blur-md border border-indigo-400/30 text-indigo-200 text-xs font-bold transition flex items-center space-x-1.5">
+            <span>🔄 10 Quy Trình Flows</span>
+          </a>
+          <a href="../docs/luoc-do-co-so-du-lieu.html" class="px-3.5 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-md border border-emerald-400/30 text-emerald-200 text-xs font-bold transition flex items-center space-x-1.5">
+            <span>🗄️ CSDL ERD & RLS (v2.4)</span>
+          </a>
+
+          <!-- Theme Toggle -->
+          <button onclick="toggleTheme()" class="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition flex items-center space-x-1">
+            <span class="dark:hidden flex items-center">☀️ Sáng</span>
+            <span class="hidden dark:flex items-center">🌙 Tối</span>
+          </button>
+        </div>
+      </div>
+
+      <h1 class="text-3xl md:text-5xl font-black mb-3 tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+        Ma Trận & Thiết Kế Kiểm Thử (Test Design Suite)
+      </h1>
+      <p class="text-slate-300 text-sm md:text-base max-w-3xl leading-relaxed">
+        Phủ sóng toàn diện 10 flows nghiệp vụ, 11 bảng CSDL, 17 functions/RPCs và triệt tiêu 100% 4 lỗ hổng bảo mật cốt lõi (<span class="text-amber-300 font-bold">H1</span>: Sửa điểm, <span class="text-amber-300 font-bold">H2</span>: Hack số câu, <span class="text-amber-300 font-bold">H3</span>: Lộ F12, <span class="text-amber-300 font-bold">H4</span>: Gian lận hết giờ).
+      </p>
+
+      <!-- Metric Stats Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+        <div class="bg-white/10 dark:bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+          <div class="text-xs uppercase tracking-wider text-slate-300 font-semibold mb-1">Tổng Số Test Cases</div>
+          <div class="text-2xl md:text-3xl font-black text-cyan-400">91 <span class="text-xs font-normal text-slate-400">ca kiểm thử</span></div>
+        </div>
+        <div class="bg-white/10 dark:bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+          <div class="text-xs uppercase tracking-wider text-red-300 font-semibold mb-1">Mức P0 (Blocker / Critical)</div>
+          <div class="text-2xl md:text-3xl font-black text-rose-400">39 <span class="text-xs font-normal text-slate-400">bảo mật & cốt lõi</span></div>
+        </div>
+        <div class="bg-white/10 dark:bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+          <div class="text-xs uppercase tracking-wider text-amber-300 font-semibold mb-1">Mức P1 (High Priority)</div>
+          <div class="text-2xl md:text-3xl font-black text-amber-400">39 <span class="text-xs font-normal text-slate-400">nghiệp vụ chính</span></div>
+        </div>
+        <div class="bg-white/10 dark:bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+          <div class="text-xs uppercase tracking-wider text-emerald-300 font-semibold mb-1">Bảo Mật H1 - H4 & RLS</div>
+          <div class="text-2xl md:text-3xl font-black text-emerald-400">100% <span class="text-xs font-normal text-slate-400">đóng triệt để</span></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Search & Filter Controls -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm mb-8">
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </span>
+          <input type="text" id="searchInput" oninput="filterTestCases()" placeholder="Tìm kiếm theo mã TC (ví dụ TC-SECU), tên ca kiểm thử, flow..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <!-- Filter Selects -->
+        <div class="flex items-center space-x-2">
+          <select id="suiteFilter" onchange="filterTestCases()" class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs md:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="ALL">Tất Cả 11 Test Suites</option>
+            <option value="TS-01">TS-01: Xác thực & Phân quyền (Flow 01)</option>
+            <option value="TS-02">TS-02: Lịch sử thi & Xóa mềm (Flow 02)</option>
+            <option value="TS-03">TS-03: Thi thử & AI Chatbot (Flow 03)</option>
+            <option value="TS-04">TS-04: Thi thật & Auto-Save (Flow 04)</option>
+            <option value="TS-05">TS-05: Cấu hình đề thi (Flow 05)</option>
+            <option value="TS-06">TS-06: Quản lý lớp & Phân công (Flow 06)</option>
+            <option value="TS-07">TS-07: Giáo viên & Báo cáo (Flow 07)</option>
+            <option value="TS-08">TS-08: Duyệt câu hỏi 2 cấp (Flow 08)</option>
+            <option value="TS-09">TS-09: Quản trị kho đề & Excel (Flow 09)</option>
+            <option value="TS-10">TS-10: Bảng xếp hạng & Dashboard (Flow 10)</option>
+            <option value="TS-11">TS-11: Chuyên sâu RLS & H1-H4</option>
+          </select>
+
+          <select id="priorityFilter" onchange="filterTestCases()" class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs md:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="ALL">Mọi Độ Ưu Tiên</option>
+            <option value="P0">P0 (Critical / Blocker)</option>
+            <option value="P1">P1 (High)</option>
+            <option value="P2">P2 (Medium)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test Suites Grid -->
+    <div id="suitesContainer" class="space-y-6">
+
+      <!-- SUITE 01 -->
+      <section class="suite-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm" data-suite="TS-01">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-3">
+            <span class="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-black text-sm">
+              TS-01
+            </span>
+            <div>
+              <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Xác Thực, Đăng Nhập & Phân Quyền Truy Cập</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold">Flow 01</span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Kiểm thử đăng ký, BCrypt hash, bắt buộc chọn lớp, chặn tự nâng quyền Admin, JWT auth và điều hướng 3 vai trò.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">4 P0</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">3 P1</span>
+            <span class="px-2.5 py-1 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">1 P2</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- TC-AUTH-01 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đăng ký tài khoản học sinh hợp lệ với đầy đủ thông tin và chọn lớp</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Role: Student • BCrypt hash • class_id</span>
+          </div>
+
+          <!-- TC-AUTH-02 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-02</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Chống tự nâng quyền: Gửi payload đăng ký kèm role: 'admin'</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Security / Cưỡng chế role = 'student'</span>
+          </div>
+
+          <!-- TC-AUTH-03 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-03</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đăng ký với Email đã tồn tại trong hệ thống</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Báo lỗi trùng email (HTTP 409)</span>
+          </div>
+
+          <!-- TC-AUTH-04 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-04</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đăng ký thiếu lớp học (class_id rỗng hoặc null)</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Validation bắt buộc chọn lớp</span>
+          </div>
+
+          <!-- TC-AUTH-05 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-05</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đăng nhập tài khoản Email/Password hợp lệ</span>
+            </div>
+            <span class="text-[11px] text-emerald-500 font-bold">Cấp JWT Token & Thiết lập phiên</span>
+          </div>
+
+          <!-- TC-AUTH-06 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-06</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đăng nhập sai mật khẩu hoặc tài khoản không tồn tại</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Thông báo trung tính chống dò pass</span>
+          </div>
+
+          <!-- TC-AUTH-07 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-07</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đăng nhập qua Google OAuth 2.0 (User mới chọn lớp / User cũ vào thẳng)</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">OAuth 2.0 Integration</span>
+          </div>
+
+          <!-- TC-AUTH-08 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-indigo-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">TC-AUTH-08</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Điều hướng theo vai trò (Role Router) & Chặn khách vãng lai</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Access Control / Strict 3 Roles</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUITE 02 -->
+      <section class="suite-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm" data-suite="TS-02">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-3">
+            <span class="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-black text-sm">
+              TS-02
+            </span>
+            <div>
+              <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Lịch Sử Thi, Bảng Xếp Loại & Xóa Mềm Cá Nhân</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-bold">Flow 02</span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Kiểm thử xem lại bài qua fn_get_attempt_review, quy chuẩn thang điểm 10 Xanh/Đỏ, xóa mềm qua RPC fn_delete_student_attempt.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">3 P0</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">3 P1</span>
+            <span class="px-2.5 py-1 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">1 P2</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- TC-HIST-01 to 07 -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Hiển thị danh sách lịch sử bài thi của chính học sinh</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Lọc theo user_id = auth.uid()</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-02</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Quy chuẩn Thang điểm 10 và Mã màu Đạt (>=5.0 Xanh) / Chưa đạt (<5.0 Đỏ)</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">5 mức xếp loại: Xuất sắc -> Yếu</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-03</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Xem chi tiết bài làm, đáp án đúng và giải thích qua fn_get_attempt_review</span>
+            </div>
+            <span class="text-[11px] text-emerald-500 font-bold">RPC Review an toàn</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-04</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Bảo mật riêng tư: Học sinh cố tình xem bài thi của bạn khác qua RPC fn_get_attempt_review</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Raise Exception / Chặn F12 trộm bài</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-05</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Thực hiện xóa mềm bài thi cá nhân qua RPC fn_delete_student_attempt</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">is_student_deleted = true</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-06</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Bảo toàn dữ liệu giáo viên và admin khi học sinh xóa mềm bài thi</span>
+            </div>
+            <span class="text-[11px] text-emerald-500 font-bold">Toàn vẹn báo cáo & xếp loại lớp</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-emerald-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">TC-HIST-07</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Thử nghiệm gọi lệnh UPDATE trực tiếp bảng exam_attempts để xóa bài</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">RLS chặn 100% (Mã lỗi 42501)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUITE 03 -->
+      <section class="suite-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm" data-suite="TS-03">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-3">
+            <span class="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 font-black text-sm">
+              TS-03
+            </span>
+            <div>
+              <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Thi Thử & Tương Tác Trợ Lý Chatbot AI</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-bold">Flow 03</span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Khởi tạo qua fn_start_exam(practice), lưu đáp án qua fn_save_answer, chống lộ câu nhiều lựa chọn, lưu vết ai_chat_logs.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">2 P0</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">4 P1</span>
+            <span class="px-2.5 py-1 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">2 P2</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Bắt đầu lượt thi thử qua RPC fn_start_exam(mode: 'practice')</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Không đếm ngược tự khóa</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-02</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Kết xuất công thức Hóa học, Sinh học, Toán học bằng LaTeX KaTeX</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Render KaTeX $...$</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-03</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Chọn câu hỏi đơn đáp án (Radio) & Phản hồi tức thì</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">fn_save_answer & hiện lời giải ngay</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-04</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Chống lộ đáp án câu nhiều lựa chọn (Checkbox)</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chỉ phản hồi khi bấm "Kiểm tra"</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-05</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tương tác hỏi đáp Trợ lý AI Chatbot giải thích bài làm</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">AI giải thích sâu bản chất học thuật</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-06</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Lưu vết lịch sử trò chuyện AI vào bảng ai_chat_logs</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Data Persistence / Audit</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-07</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Hoàn tất buổi thi thử và chấm điểm qua fn_submit_exam_attempt</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Chấm điểm & cập nhật completed</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-purple-400 transition" data-priority="P2">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-blue-500 text-white shadow-sm">P2</span>
+              <span class="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">TC-PRAC-08</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Xác minh bài thi thử được ghi nhận vào Lịch sử cá nhân và Thống kê</span>
+            </div>
+            <span class="text-[11px] text-emerald-500 font-bold">Thống kê học tập toàn diện</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUITE 04 -->
+      <section class="suite-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm" data-suite="TS-04">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-3">
+            <span class="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-black text-sm">
+              TS-04
+            </span>
+            <div>
+              <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Thi Thật, Auto-Save & Tự Động Thu Bài (Chống H1 - H4)</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 font-bold">Flow 04</span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Phòng thi chính quy nghiêm ngặt: Server-side timer chống H4, giấu is_correct chống H3, chống sửa điểm H1, chống hack số câu H2.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">7 P0</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">4 P1</span>
+            <span class="px-2.5 py-1 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">1 P2</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- Real exam items -->
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Bắt đầu lượt thi thật qua RPC fn_start_exam(mode: 'real')</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Cố định started_at & total_questions</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-02</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Khóa direct INSERT trên exam_attempts khi học sinh cố tạo bài thi trực tiếp</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chống H1 / H2 (Mã lỗi 42501)</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-03</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Bảo mật chống F12 (H3): Kiểm tra payload đề thi không chứa đáp án đúng</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chống H3: Giấu is_correct & explanation</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-04</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Lưu tiến độ thời gian thực qua RPC fn_save_answer khi còn trong giờ thi</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Auto-save chống mất bài khi rớt mạng</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-05</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Chống gian lận quá giờ (H4): Gửi lưu câu trả lời sau khi thời gian thi đã kết thúc</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chống H4: Server Timer Reject</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-06</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Thử nghiệm chỉnh lùi đồng hồ máy khách (Client clock skew) để gian lận giờ</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chống H4: Dựa trên now() máy chủ</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-07</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Học sinh hoàn thành sớm và bấm nút "Nộp bài" chủ động</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">fn_submit_exam_attempt(auto: false)</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-08</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Đồng hồ đếm ngược về 00:00: Tự động đóng băng UI và tự nộp bài</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Auto-submit khi hết giờ</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-09</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Chống hack điểm tuyệt đối (H1): Thử gửi payload chấm điểm score = 10 từ client</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chống H1: Chấm điểm 100% trên DB</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-10</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Chống hack bỏ trống câu hỏi: Thí sinh bỏ trắng toàn bộ đề thi</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Tính điểm chia cho total_questions</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-11</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Bảo toàn điểm số cho bài thi tự nộp (timed_out)</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Hiển thị trong bảng xếp hạng</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-rose-400 transition" data-priority="P2">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-blue-500 text-white shadow-sm">P2</span>
+              <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">TC-REAL-12</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Xem lại bài thi sau khi nộp thành công qua fn_get_attempt_review</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Post-exam review</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUITE 11 (SECURITY & PENETRATION TESTING) -->
+      <section class="suite-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm" data-suite="TS-11">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-3">
+            <span class="p-2.5 rounded-2xl bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 font-black text-sm">
+              TS-11
+            </span>
+            <div>
+              <h2 class="text-base md:text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Chuyên Sâu Bảo Mật CSDL, Thâm Nhập (Pen-test) & RLS</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold">H1 - H4 & RLS</span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Thực chiến tấn công REST API, SQL injection, bypass timer, cross-subject data leak, trộm bài bạn khác, đánh cắp hash password.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">8 P0</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">2 P1</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-H1-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công chèn bài thi có sẵn điểm 10 qua REST API (POST /exam_attempts)</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chặn H1: RLS 42501 (HTTP 403)</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-H1-02</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công sửa điểm bài thi đang làm dở qua REST API (PATCH /exam_attempts)</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chặn H1: RLS 42501 (HTTP 403)</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-H2-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công giảm số câu hỏi xuống 1 để hack điểm tuyệt đối khi nộp bài</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chặn H2: Cố định snapshot</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-H3-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công soi đáp án đúng bằng DevTools Network hoặc REST query question_options</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chặn H3: is_correct bị ẩn 100%</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-H4-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công lưu đáp án sau khi hết thời gian thi trên máy chủ qua fn_save_answer</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Chặn H4: Server Timer khóa timed_out</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-RLS-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công truy xuất chéo môn học: Giáo viên môn Hóa query dữ liệu môn Sinh</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Teacher Scope Isolation</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P0">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-rose-500 text-white shadow-sm">P0</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-RLS-02</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công xem trộm bài thi bạn khác qua RPC fn_get_attempt_review</span>
+            </div>
+            <span class="text-[11px] text-rose-500 font-bold">Privacy Check (Exception)</span>
+          </div>
+
+          <div class="tc-item flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 gap-2 hover:border-red-400 transition" data-priority="P1">
+            <div class="flex items-center space-x-3">
+              <span class="px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold bg-amber-500 text-white shadow-sm">P1</span>
+              <span class="font-mono text-xs font-bold text-red-600 dark:text-red-400">TC-SECU-DATA-01</span>
+              <span class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200">Tấn công đánh cắp mật khẩu băm qua View profiles hoặc bảng users</span>
+            </div>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">profiles không chứa hash_password</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- View All Files Footer Banner -->
+    <div class="mt-12 bg-gradient-to-r from-slate-900 to-indigo-950 rounded-3xl p-6 text-white border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h3 class="text-base md:text-lg font-bold mb-1">Tra Cứu Chi Tiết Từng File Markdown Test Design</h3>
+        <p class="text-xs md:text-sm text-slate-300">Tất cả 11 Test Suites đã được lưu trữ hoàn chỉnh tại thư mục <code>exam-app/test-designs/</code>.</p>
+      </div>
+      <div class="flex items-center space-x-2">
+        <a href="00-tong-quan-va-ma-tran-test-design.md" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">Xem Master Matrix</a>
+        <a href="TS-11-chuyen-sau-bao-mat-csdl-rls-h1-h4.md" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition">Xem Pen-Test H1-H4</a>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    function filterTestCases() {
+      const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+      const suiteVal = document.getElementById('suiteFilter').value;
+      const priorityVal = document.getElementById('priorityFilter').value;
+
+      const suiteCards = document.querySelectorAll('.suite-card');
+
+      suiteCards.forEach(suite => {
+        const suiteId = suite.getAttribute('data-suite');
+        const matchSuite = (suiteVal === 'ALL' || suiteVal === suiteId);
+
+        let visibleInSuite = 0;
+        const tcItems = suite.querySelectorAll('.tc-item');
+
+        tcItems.forEach(tc => {
+          const tcText = tc.textContent.toLowerCase();
+          const tcPriority = tc.getAttribute('data-priority');
+
+          const matchSearch = (!searchVal || tcText.includes(searchVal));
+          const matchPriority = (priorityVal === 'ALL' || priorityVal === tcPriority);
+
+          if (matchSearch && matchPriority && matchSuite) {
+            tc.style.display = 'flex';
+            visibleInSuite++;
+          } else {
+            tc.style.display = 'none';
+          }
+        });
+
+        if (visibleInSuite > 0 && matchSuite) {
+          suite.style.display = 'block';
+        } else {
+          suite.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
